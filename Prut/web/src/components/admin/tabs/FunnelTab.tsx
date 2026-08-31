@@ -277,7 +277,7 @@ export default function FunnelTab() {
           <div>
             <h2 className="text-2xl font-black text-white tracking-tight">המשפך המלא</h2>
             <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider">
-              Full Conversion Funnel — {RANGE_LABELS[range]}
+              Full Conversion Funnel, {RANGE_LABELS[range]}
             </p>
           </div>
         </div>

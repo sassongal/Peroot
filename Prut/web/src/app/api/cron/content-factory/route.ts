@@ -259,7 +259,7 @@ export async function GET(request: NextRequest) {
             promptInsertError,
           );
           result.errors.push(
-            `Prompt insert failed: "${promptData.title}" — ${promptInsertError.message}`,
+            `Prompt insert failed: "${promptData.title}", ${promptInsertError.message}`,
           );
         } else {
           insertedTitles.push(insertedPrompt.title as string);
@@ -342,7 +342,7 @@ export async function GET(request: NextRequest) {
         logger.info(`[Cron/ContentFactory] Draft-SLA digest sent (${totalPending} pending)`);
       } else if (totalPending > 0) {
         logger.warn(
-          `[Cron/ContentFactory] ${totalPending} drafts pending review but ADMIN_EMAILS is unset — no digest sent`,
+          `[Cron/ContentFactory] ${totalPending} drafts pending review but ADMIN_EMAILS is unset, no digest sent`,
         );
       }
     } catch (slaErr) {

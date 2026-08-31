@@ -223,7 +223,7 @@ export function PersonalLibraryHeader() {
             >
               תצוגת הגרף
             </button>{" "}
-            — היא מציגה חזותית את הקשרים בין הפרומפטים שלכם.
+            , היא מציגה חזותית את הקשרים בין הפרומפטים שלכם.
           </span>
           <button
             onClick={() => setShowGraphHint(false)}

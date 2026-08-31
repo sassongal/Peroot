@@ -37,7 +37,7 @@ export const GET = withAdmin(async (req) => {
 
     if ((activityLogs?.length ?? 0) === ACTIVITY_LOG_LIMIT) {
       logger.warn(
-        `[Admin Experiments] activity_logs hit limit of ${ACTIVITY_LOG_LIMIT} rows — results may be incomplete. Consider switching to aggregate RPC.`,
+        `[Admin Experiments] activity_logs hit limit of ${ACTIVITY_LOG_LIMIT} rows, results may be incomplete. Consider switching to aggregate RPC.`,
       );
     }
 
@@ -103,7 +103,7 @@ export const GET = withAdmin(async (req) => {
 
     if ((profiles?.length ?? 0) === PROFILES_LIMIT) {
       logger.warn(
-        `[Admin Experiments] profiles hit limit of ${PROFILES_LIMIT} rows — segment counts may be incomplete.`,
+        `[Admin Experiments] profiles hit limit of ${PROFILES_LIMIT} rows, segment counts may be incomplete.`,
       );
     }
 

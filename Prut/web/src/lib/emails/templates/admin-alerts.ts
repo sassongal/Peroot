@@ -34,7 +34,7 @@ export function adminCronChurnAlertEmail(params: {
   return emailLayoutBrandedInternal(`
     <p style="margin:0;font-size:15px;line-height:1.6;">
       סנכרון מנויים (cron) תיקן משתמש/ת Pro שפג תוקף. מזהה: <strong style="direction:ltr;display:inline-block;">${escapeHtml(userId)}</strong><br/>
-      אימייל: <strong style="direction:ltr;display:inline-block;">${escapeHtml(customerEmail || "—")}</strong>
+      אימייל: <strong style="direction:ltr;display:inline-block;">${escapeHtml(customerEmail || ", ")}</strong>
     </p>
   `);
 }
@@ -77,7 +77,7 @@ export function adminLsAnomalyAlertEmail(params: {
     : "";
 
   return emailLayoutBrandedInternal(`
-    <h2 style="color:#dc2626;font-size:20px;font-weight:800;margin:0 0 4px;">חריגות מנויים — LemonSqueezy Cross-Check</h2>
+    <h2 style="color:#dc2626;font-size:20px;font-weight:800;margin:0 0 4px;">חריגות מנויים, LemonSqueezy Cross-Check</h2>
     <p style="color:#64748b;font-size:13px;margin:0 0 12px;">${escapeHtml(new Date().toISOString())}</p>
     ${ghostSection}${dupSection}${mismatchSection}
     <p style="margin:16px 0 0;font-size:12px;color:#94a3b8;">נשלח ע"י sync-subscriptions cron</p>

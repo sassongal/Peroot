@@ -60,16 +60,16 @@ export const skill: PlatformSkill = {
     "Atmosphere: mood or emotional tone, 1 sentence",
     "Negative prompt with artifact-specific terms: morphing, warping, flickering, distortion, judder",
     "Color palette stated explicitly (3-5 colors)",
-    "50-120 words total; no keyword lists — flowing descriptive prose",
+    "50-120 words total; no keyword lists, flowing descriptive prose",
     "Single scene or single action beat per generation",
   ],
   chainOfThoughtExamples: [
     {
       concept: "שחקנית בוכה בגשם",
       reasoning:
-        "Wan formula: subject (actress, appearance) + movement (subtle — tears, shoulders) + scene (rain, street) + camera (push-in to close-up) + lighting (rain diffuses light, backlight creates halo) + atmosphere (raw grief). Add negative prompt for faces and rain artifacts.",
+        "Wan formula: subject (actress, appearance) + movement (subtle, tears, shoulders) + scene (rain, street) + camera (push-in to close-up) + lighting (rain diffuses light, backlight creates halo) + atmosphere (raw grief). Add negative prompt for faces and rain artifacts.",
       output:
-        "A woman in her 30s with dark wet hair stands motionless on an empty rain-soaked sidewalk at night, tears streaming silently down her face, shoulders slightly bowed. Camera: slow push-in from medium to extreme close-up on her face, rain droplets catching the backlight from a streetlamp behind her, creating a soft halo. The wet pavement reflects a blurred amber glow from a shop window. Color: near-monochrome — charcoal, pale skin, amber halo. Atmosphere: devastating stillness, private grief. Negative prompt: face morphing, flickering rain, warping, temporal artifacts.",
+        "A woman in her 30s with dark wet hair stands motionless on an empty rain-soaked sidewalk at night, tears streaming silently down her face, shoulders slightly bowed. Camera: slow push-in from medium to extreme close-up on her face, rain droplets catching the backlight from a streetlamp behind her, creating a soft halo. The wet pavement reflects a blurred amber glow from a shop window. Color: near-monochrome, charcoal, pale skin, amber halo. Atmosphere: devastating stillness, private grief. Negative prompt: face morphing, flickering rain, warping, temporal artifacts.",
     },
   ],
   refinementExamples: [

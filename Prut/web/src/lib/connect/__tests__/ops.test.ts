@@ -139,7 +139,7 @@ describe("conversation/project context", () => {
     };
     const input = ConnectEnhanceSchema.parse({
       prompt: "כתוב פוסט השקה",
-      context: "המוצר: Peroot Connect — חיבור סוכני AI. קהל: משווקים. מטרה: הרשמות.",
+      context: "המוצר: Peroot Connect, חיבור סוכני AI. קהל: משווקים. מטרה: הרשמות.",
     });
     await connectEnhance(input, KEY, "user-1", handler);
     const blocks = seen.context as Array<Record<string, unknown>>;
@@ -151,7 +151,7 @@ describe("conversation/project context", () => {
       stage: "ready",
       display: expect.objectContaining({
         title: "הקשר מהשיחה והפרויקט",
-        rawText: "המוצר: Peroot Connect — חיבור סוכני AI. קהל: משווקים. מטרה: הרשמות.",
+        rawText: "המוצר: Peroot Connect, חיבור סוכני AI. קהל: משווקים. מטרה: הרשמות.",
         keyFacts: [],
         metadata: {},
       }),

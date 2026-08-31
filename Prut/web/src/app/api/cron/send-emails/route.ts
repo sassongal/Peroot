@@ -18,13 +18,13 @@ export async function GET(request: NextRequest) {
   if (authFailure) return authFailure;
 
   if (!isOnboardingEmailAutomationEnabled()) {
-    logger.info("[Cron/Emails] Skipped — set ONBOARDING_EMAILS_ENABLED=true for signup welcome");
+    logger.info("[Cron/Emails] Skipped, set ONBOARDING_EMAILS_ENABLED=true for signup welcome");
     return NextResponse.json({ skipped: true, reason: "Onboarding emails disabled" });
   }
 
   if (!isOnboardingCronFallbackEnabled()) {
     logger.info(
-      "[Cron/Emails] Skipped — ONBOARDING_CRON_FALLBACK_ENABLED is not true (callback-only onboarding; enable for stuck-sequence recovery)",
+      "[Cron/Emails] Skipped, ONBOARDING_CRON_FALLBACK_ENABLED is not true (callback-only onboarding; enable for stuck-sequence recovery)",
     );
     return NextResponse.json({
       skipped: true,

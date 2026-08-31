@@ -135,19 +135,19 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
 
       <p className="text-[10px] leading-snug text-slate-500 px-2 mb-2 space-y-1">
         <span className="block">
-          <strong className="text-slate-400 font-medium">מועדפים</strong> — קיצור לפרומפטים שסימנת
+          <strong className="text-slate-400 font-medium">מועדפים</strong> , קיצור לפרומפטים שסימנת
           בכוכב (מסונכרן לחשבון אחרי התחברות).
         </span>
         <span className="block">
-          <strong className="text-slate-400 font-medium">מוצמדים</strong> — פרומפטים שסומנו
+          <strong className="text-slate-400 font-medium">מוצמדים</strong> , פרומפטים שסומנו
           כמוצמדים.
         </span>
         <span className="block">
-          <strong className="text-slate-400 font-medium">תבניות</strong> — פרומפטים שמוגדרים כתבנית
+          <strong className="text-slate-400 font-medium">תבניות</strong> , פרומפטים שמוגדרים כתבנית
           אישית (לא דף התבניות הציבורי).
         </span>
         <span className="block">
-          <strong className="text-slate-400 font-medium">היסטוריה</strong> — הפרומפטים האחרונים
+          <strong className="text-slate-400 font-medium">היסטוריה</strong> , הפרומפטים האחרונים
           ששיפרת, לצפייה ושימוש חוזר.
         </span>
       </p>

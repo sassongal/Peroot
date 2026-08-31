@@ -35,7 +35,7 @@ interface JsonExample {
  */
 const STABLE_DIFFUSION_JSON: JsonExample[] = [
   {
-    concept: 'פורטרט קולנועי של לוחמת סמוראית ביער במבוק',
+    concept: "פורטרט קולנועי של לוחמת סמוראית ביער במבוק",
     output: `{
   "prompt": "(masterpiece:1.3), (best quality:1.3), cinematic portrait of a female samurai warrior, (lone female samurai:1.2), traditional lacquered armor in deep crimson and black, polished katana in hand, fierce determined expression, (bamboo forest at dusk:1.2), volumetric god rays piercing through bamboo, shallow depth of field, 85mm lens, photorealistic, (sharp focus on eyes:1.4), cinematic color grading, (Kurosawa aesthetic:1.1)",
   "negative_prompt": "worst quality, low quality, blurry, deformed, ugly, watermark, text, signature, cartoon, anime, extra fingers, mutated hands, bad anatomy, disfigured, amateur",
@@ -56,7 +56,7 @@ const STABLE_DIFFUSION_JSON: JsonExample[] = [
 }`,
   },
   {
-    concept: 'איור אנימה של מכשפה צעירה עם חתול שחור',
+    concept: "איור אנימה של מכשפה צעירה עם חתול שחור",
     output: `{
   "prompt": "(masterpiece:1.3), (best quality:1.3), (anime style:1.2), young witch girl around 16 years old, (long silver hair:1.1), purple eyes, pointy witch hat, black cloak with moon embroidery, (black cat familiar on shoulder:1.2), ancient library background, floating spellbooks, warm candlelight, magical glow, (detailed face:1.3), (vibrant colors:1.1), Studio Ghibli inspired, soft shading",
   "negative_prompt": "worst quality, low quality, blurry, deformed, realistic, photo, photorealistic, western cartoon, 3d, ugly, bad hands, extra fingers, mutated, watermark, text, signature",
@@ -79,7 +79,7 @@ const STABLE_DIFFUSION_JSON: JsonExample[] = [
 }`,
   },
   {
-    concept: 'צילום מוצר של שעון יוקרתי על שיש שחור',
+    concept: "צילום מוצר של שעון יוקרתי על שיש שחור",
     output: `{
   "prompt": "(product photography:1.3), luxury mechanical wristwatch, (rose gold case:1.2), (black dial with white indices:1.1), exposed tourbillon mechanism, brown alligator leather strap, resting on polished black marble slab, soft studio lighting from left, subtle rim light on metal, (extreme detail:1.3), (commercial product shot:1.2), clean minimalist composition, (sharp focus:1.4), 100mm macro lens, f/8, ISO 100",
   "negative_prompt": "worst quality, low quality, blurry, deformed, watermark, text, signature, cluttered background, people, hands, oversaturated, digital noise, amateur",
@@ -109,7 +109,7 @@ const STABLE_DIFFUSION_JSON: JsonExample[] = [
  */
 const NANOBANANA_JSON: JsonExample[] = [
   {
-    concept: 'דיוקן אדיטוריאלי של שף מאחורי דלפק מסעדה',
+    concept: "דיוקן אדיטוריאלי של שף מאחורי דלפק מסעדה",
     output: `{
   "subject": {
     "description": "A confident Israeli chef in his late 40s with a trimmed salt-and-pepper beard, wearing a crisp white double-breasted chef's coat with rolled sleeves revealing a tattooed forearm, holding a sharp Japanese santoku knife mid-prep over a butcher block filled with fresh herbs and produce",
@@ -139,7 +139,7 @@ const NANOBANANA_JSON: JsonExample[] = [
 }`,
   },
   {
-    concept: 'צילום אדריכלות של בית מודרני בלילה',
+    concept: "צילום אדריכלות של בית מודרני בלילה",
     output: `{
   "subject": {
     "description": "A striking mid-century modern hillside home with floor-to-ceiling glass walls revealing warmly lit interiors, cantilevered roof line, exposed concrete and natural cedar cladding, an infinity pool in the foreground reflecting the illuminated house",
@@ -169,7 +169,7 @@ const NANOBANANA_JSON: JsonExample[] = [
 }`,
   },
   {
-    concept: 'רגע אינטימי בין אם לתינוק בבוקר חורף',
+    concept: "רגע אינטימי בין אם לתינוק בבוקר חורף",
     output: `{
   "subject": {
     "description": "A young mother in her early 30s with wavy chestnut hair tied in a loose bun, wearing an oversized cream knit sweater, cradling her 6-month-old baby who is wrapped in a soft mustard-yellow wool blanket, both of them sitting by a large window with a steaming ceramic mug of coffee on the sill",
@@ -207,8 +207,8 @@ const NANOBANANA_JSON: JsonExample[] = [
  * to resolve the PLATFORM_PROMPTS template.
  */
 const EXAMPLES: Record<string, JsonExample[]> = {
-  'stable-diffusion-json': STABLE_DIFFUSION_JSON,
-  'nanobanana-json': NANOBANANA_JSON,
+  "stable-diffusion-json": STABLE_DIFFUSION_JSON,
+  "nanobanana-json": NANOBANANA_JSON,
 };
 
 /**
@@ -221,27 +221,29 @@ const EXAMPLES: Record<string, JsonExample[]> = {
  */
 export function getJsonExamplesBlock(platformKey: string, limit: number = 3): string {
   const pool = EXAMPLES[platformKey];
-  if (!pool || pool.length === 0) return '';
+  if (!pool || pool.length === 0) return "";
 
   const selected = pool.slice(0, Math.max(1, Math.min(limit, pool.length)));
 
   const lines: string[] = [
-    '',
-    '',
-    'ADDITIONAL EXAMPLES (fully-filled JSON — follow this exact structure and depth of detail):',
-    '',
+    "",
+    "",
+    "ADDITIONAL EXAMPLES (fully-filled JSON, follow this exact structure and depth of detail):",
+    "",
   ];
 
   for (const ex of selected) {
     lines.push(`CONCEPT: ${ex.concept}`);
-    lines.push('OUTPUT:');
+    lines.push("OUTPUT:");
     lines.push(ex.output);
-    lines.push('');
+    lines.push("");
   }
 
-  lines.push('CRITICAL: Every example above is valid parseable JSON. Your output MUST also be valid parseable JSON with NO markdown fences, NO prose before or after, NO trailing commas, NO comments.');
+  lines.push(
+    "CRITICAL: Every example above is valid parseable JSON. Your output MUST also be valid parseable JSON with NO markdown fences, NO prose before or after, NO trailing commas, NO comments.",
+  );
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**

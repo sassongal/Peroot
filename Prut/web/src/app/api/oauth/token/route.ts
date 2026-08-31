@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
   const limit = await checkRateLimit(`oauth:token:${clientId || ip}`, "connectKey");
   if (!limit.success) {
-    return tokenError(429, "invalid_request", "Too many requests — try again shortly");
+    return tokenError(429, "invalid_request", "Too many requests, try again shortly");
   }
 
   try {

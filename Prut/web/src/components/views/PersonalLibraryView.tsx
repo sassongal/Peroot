@@ -77,19 +77,19 @@ function GuestGate() {
             {
               Icon: BookOpen,
               color: "text-amber-500",
-              label: "ספרייה אישית — כל הפרומפטים שלך במקום אחד",
+              label: "ספרייה אישית, כל הפרומפטים שלך במקום אחד",
             },
             {
               Icon: Star,
               color: "text-yellow-500",
-              label: "מועדפים — גישה מהירה לפרומפטים שאהבת",
+              label: "מועדפים, גישה מהירה לפרומפטים שאהבת",
             },
             {
               Icon: Network,
               color: "text-indigo-500",
-              label: "גרף ידע — ויזואליזציה של הקשרים בין הפרומפטים",
+              label: "גרף ידע, ויזואליזציה של הקשרים בין הפרומפטים",
             },
-            { Icon: History, color: "text-blue-500", label: "היסטוריה — כל הפרומפטים שיצרת" },
+            { Icon: History, color: "text-blue-500", label: "היסטוריה, כל הפרומפטים שיצרת" },
           ].map(({ Icon, color, label }) => (
             <li key={label} className="flex items-start gap-3">
               <Icon className={cn("w-4 h-4 mt-0.5 shrink-0", color)} />

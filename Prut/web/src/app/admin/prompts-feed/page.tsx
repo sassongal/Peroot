@@ -158,7 +158,7 @@ export default function AdminPromptsFeedPage() {
                 פיד פרומפטים
               </h1>
               <p className="text-sm text-zinc-500 mt-1">
-                נתונים אמיתיים מטבלת <code className="text-amber-300">history</code> — מה המשתמש כתב
+                נתונים אמיתיים מטבלת <code className="text-amber-300">history</code> , מה המשתמש כתב
                 ומה המערכת יצרה
               </p>
             </div>

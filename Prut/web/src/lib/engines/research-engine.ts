@@ -39,7 +39,7 @@ RESEARCH PROMPT ARCHITECTURE - produce ALL sections:
 - Define what "answered" looks like - what evidence would satisfy each sub-question
 
 ## 3. תיחום המחקר (Scope)
-Explicit boundaries keep deep-research tools focused — this is the highest-leverage section per the tools' own docs:
+Explicit boundaries keep deep-research tools focused, this is the highest-leverage section per the tools' own docs:
 - **טווח זמן**: from-to dates for the evidence ("התמקד ב-2024 ואילך; ציין אם ממצא מוקדם יותר קריטי")
 - **גאוגרפיה / שוק**: which regions, markets, or languages are in scope
 - **בפנים / בחוץ**: 2-3 explicit inclusions AND exclusions ("כולל: מתחרים ישירים. לא כולל: שוק ה-B2C")
@@ -96,13 +96,15 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
 
     // Research-specific context framing: treat attachments as primary sources
     if (input.context && input.context.length > 0) {
-      result.systemPrompt += `\n\n[RESEARCH_SOURCE_DIRECTIVE]
-החומר המצורף הוא **מקור ראשוני** למחקר — לא רקע כללי:
+      result.systemPrompt += `
+
+[RESEARCH_SOURCE_DIRECTIVE]
+החומר המצורף הוא **מקור ראשוני** למחקר, לא רקע כללי:
 1. צטט נתונים, מספרים ומסקנות ספציפיות מהמקורות בפרומפט המחקר שאתה בונה.
 2. הנח את הכלי לבצע אימות צולב (cross-verification) של טענות מהחומר מול מקורות חיצוניים.
 3. הגדר את החומר כ"מקור מוסמך" בסעיף דרישות מקורות וראיות, עם דירוג ◉ מאומת.
 4. שלב את תת-הנושאים מהחומר בפירוק MECE של שאלת המחקר.
-5. אל תסכם את החומר — שלב את תוכנו ישירות בהנחיות המתודולוגיה.`;
+5. אל תסכם את החומר, שלב את תוכנו ישירות בהנחיות המתודולוגיה.`;
     }
 
     // Inject concept classification (LLM-level semantic understanding)
@@ -180,7 +182,7 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
    - שאלת המחקר המרכזית: האם היא חדה, ממוקדת ועונה בבירור מהו "נענה"?
    - פירוק MECE: האם תת-השאלות מכסות את כל המרחב (Collectively Exhaustive) ואינן חופפות (Mutually Exclusive)?
    - תיחום (Scope): האם טווח זמן, גאוגרפיה, הכללות והחרגות מוגדרים במפורש?
-   - עקרונות מתודולוגיים: אימות צולב, ניתוח ביקורתי והשערות מתחרות — כעקרונות, לא כרצף כפוי (כלי המחקר מתכננים את צעדיהם בעצמם)?
+   - עקרונות מתודולוגיים: אימות צולב, ניתוח ביקורתי והשערות מתחרות, כעקרונות, לא כרצף כפוי (כלי המחקר מתכננים את צעדיהם בעצמם)?
    - דרישות מקורות וראיות: האם מינימום מקורות, סוגי מקורות, ורמות אמינות מפורטים?
    - פרוטוקול הפלט: האם מבנה הדוח (תקציר מנהלים, ממצאים, מגמות, פערים, המלצות, ביבליוגרפיה) מוגדר?
    - הנחיות זהב: האם כוללות הפרכה לוגית, איסור על המצאת עובדות, ודירוג וודאות?

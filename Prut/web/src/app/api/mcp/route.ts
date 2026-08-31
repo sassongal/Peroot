@@ -59,7 +59,7 @@ const TOOLS = [
     name: "enhance_prompt",
     title: "שדרוג פרומפט",
     description:
-      "הופך כל פרומפט לפרומפט מושלם ומורחב דרך מנועי Peroot — כולל הסקילים לכל פלטפורמה, העובדות האישיות של המשתמש ופרופילי מודלים. בחר mode לפי הכוונה: STANDARD לטקסט, IMAGE_GENERATION לתמונות, VIDEO_GENERATION לוידאו, DEEP_RESEARCH למחקר, AGENT_BUILDER לסוכנים. target_model קובע לאיזה מודל יעד הפרומפט מותאם (בדיוק כמו הבורר בפלטפורמה). Turns any prompt into a perfected, expanded one via Peroot's engines.",
+      "הופך כל פרומפט לפרומפט מושלם ומורחב דרך מנועי Peroot, כולל הסקילים לכל פלטפורמה, העובדות האישיות של המשתמש ופרופילי מודלים. בחר mode לפי הכוונה: STANDARD לטקסט, IMAGE_GENERATION לתמונות, VIDEO_GENERATION לוידאו, DEEP_RESEARCH למחקר, AGENT_BUILDER לסוכנים. target_model קובע לאיזה מודל יעד הפרומפט מותאם (בדיוק כמו הבורר בפלטפורמה). Turns any prompt into a perfected, expanded one via Peroot's engines.",
     inputSchema: {
       type: "object",
       properties: {
@@ -84,12 +84,12 @@ const TOOLS = [
           type: "object",
           additionalProperties: { type: "string" },
           description:
-            "פרמטרים פר-מוד: IMAGE — image_platform (midjourney / dalle / flux / stable-diffusion / imagen / nanobanana / general), aspect_ratio, style · VIDEO — video_platform (sora / veo / runway / kling / wan / higgsfield / minimax / general), camera_movement, duration, style, mood · AGENT — system_instructions. בחירת פלטפורמה מייצרת פרומפט בפורמט המדויק שלה (פרמטרים, מבנה, בלוק דיאלוג וכו').",
+            "פרמטרים פר-מוד: IMAGE, image_platform (midjourney / dalle / flux / stable-diffusion / imagen / nanobanana / general), aspect_ratio, style · VIDEO, video_platform (sora / veo / runway / kling / wan / higgsfield / minimax / general), camera_movement, duration, style, mood · AGENT, system_instructions. בחירת פלטפורמה מייצרת פרומפט בפורמט המדויק שלה (פרמטרים, מבנה, בלוק דיאלוג וכו').",
         },
         context: {
           type: "string",
           description:
-            "תמצית קצרה (עד 4000 תווים) של הקשר השיחה והפרויקט: מה המוצר/הפרויקט, קהל היעד, המטרה, אילוצים. תמצת בעצמך — אל תדביק טרנסקריפט. כלול רק כשההקשר באמת משפר את הפרומפט; זה מקרקע את השדרוג במה שהמשתמש עובד עליו בפועל.",
+            "תמצית קצרה (עד 4000 תווים) של הקשר השיחה והפרויקט: מה המוצר/הפרויקט, קהל היעד, המטרה, אילוצים. תמצת בעצמך, אל תדביק טרנסקריפט. כלול רק כשההקשר באמת משפר את הפרומפט; זה מקרקע את השדרוג במה שהמשתמש עובד עליו בפועל.",
         },
       },
       required: ["prompt"],
@@ -118,7 +118,7 @@ const TOOLS = [
     name: "search_my_prompts",
     title: "חיפוש בספרייה שלי",
     description:
-      "חיפוש עמום בספרייה האישית של המשתמש. השתמש לפני כתיבת פרומפט מאפס — ייתכן שכבר קיים אחד טוב.",
+      "חיפוש עמום בספרייה האישית של המשתמש. השתמש לפני כתיבת פרומפט מאפס, ייתכן שכבר קיים אחד טוב.",
     inputSchema: {
       type: "object",
       properties: {
@@ -154,7 +154,7 @@ const TOOLS = [
     name: "get_quota",
     title: "בדיקת מכסה",
     description:
-      "כמה שדרוגים נשארו למשתמש ומתי המכסה מתחדשת. חינמי — קרא לפני enhance_prompt כדי להזהיר לפני שנגמר.",
+      "כמה שדרוגים נשארו למשתמש ומתי המכסה מתחדשת. חינמי, קרא לפני enhance_prompt כדי להזהיר לפני שנגמר.",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -175,7 +175,7 @@ const TOOLS = [
     name: "fill_template",
     title: "מילוי תבנית",
     description:
-      "ממלא תבנית מהספרייה הציבורית: מחליף כל {משתנה} בערך שסופק ומחזיר גם אילו משתנים חסרים — שאל את המשתמש עליהם והשלם. חינמי.",
+      "ממלא תבנית מהספרייה הציבורית: מחליף כל {משתנה} בערך שסופק ומחזיר גם אילו משתנים חסרים, שאל את המשתמש עליהם והשלם. חינמי.",
     inputSchema: {
       type: "object",
       properties: {
@@ -199,7 +199,7 @@ const TOOLS = [
       properties: {
         fact: {
           type: "string",
-          description: "העובדה (3–300 תווים), למשל: אני משווק דיגיטלי לעסקים קטנים",
+          description: "העובדה (3-300 תווים), למשל: אני משווק דיגיטלי לעסקים קטנים",
         },
         category: {
           type: "string",
@@ -219,7 +219,7 @@ const TOOLS = [
     name: "rate_prompt",
     title: "דירוג שדרוג",
     description:
-      "משוב 👍/👎 על שדרוג — עוזר ל-Peroot להשתפר. rating: 1 (טוב) או -1 (לא טוב). חינמי.",
+      "משוב 👍/👎 על שדרוג, עוזר ל-Peroot להשתפר. rating: 1 (טוב) או -1 (לא טוב). חינמי.",
     inputSchema: {
       type: "object",
       properties: {
@@ -235,7 +235,7 @@ const TOOLS = [
     name: "related_prompts",
     title: "שכנים ב-Memory Palace",
     description:
-      "מחזיר את הפרומפטים הקרובים ביותר לפרומפט נתון בגרף ה-Memory Palace של המשתמש (דמיון מילות מפתח + שימוש משותף — אותו מנוע כמו בפלטפורמה). השתמש כדי להציע למשתמש פרומפטים קשורים או להרכיב הקשר. חינמי.",
+      "מחזיר את הפרומפטים הקרובים ביותר לפרומפט נתון בגרף ה-Memory Palace של המשתמש (דמיון מילות מפתח + שימוש משותף, אותו מנוע כמו בפלטפורמה). השתמש כדי להציע למשתמש פרומפטים קשורים או להרכיב הקשר. חינמי.",
     inputSchema: {
       type: "object",
       properties: {
@@ -249,14 +249,14 @@ const TOOLS = [
     name: "list_chains",
     title: "רשימת שרשראות",
     description:
-      "רשימת שרשראות הפרומפטים (Chains) השמורות של המשתמש — תהליכים רב-שלביים שבנה בפלטפורמה. חינמי.",
+      "רשימת שרשראות הפרומפטים (Chains) השמורות של המשתמש, תהליכים רב-שלביים שבנה בפלטפורמה. חינמי.",
     inputSchema: { type: "object", properties: {} },
   },
   {
     name: "get_chain",
     title: "שליפת שרשרת להרצה",
     description:
-      "מחזיר שרשרת מלאה עם כל השלבים. ההרצה עליך (הסוכן): 1) שאל את המשתמש על ערכי המשתנים של כל שלב, 2) הרץ את השלבים לפי order — לכל שלב קרא ל-enhance_prompt עם prompt_text אחרי מילוי המשתנים, 3) כששלב מגדיר input_from_step — הזן לתוכו את פלט השלב הקודם, 4) הצג למשתמש את התוצר הסופי. כל שלב צורך קרדיט אחד.",
+      "מחזיר שרשרת מלאה עם כל השלבים. ההרצה עליך (הסוכן): 1) שאל את המשתמש על ערכי המשתנים של כל שלב, 2) הרץ את השלבים לפי order, לכל שלב קרא ל-enhance_prompt עם prompt_text אחרי מילוי המשתנים, 3) כששלב מגדיר input_from_step, הזן לתוכו את פלט השלב הקודם, 4) הצג למשתמש את התוצר הסופי. כל שלב צורך קרדיט אחד.",
     inputSchema: {
       type: "object",
       properties: { id: { type: "string", description: "UUID של השרשרת (מ-list_chains)" } },
@@ -272,7 +272,7 @@ const PROMPT_ARG = [{ name: "prompt", description: "הפרומפט/הבקשה ש
 function modeCommand(mode: string, he: string): string {
   return (
     `שדרג את הפרומפט הבא דרך Peroot: קרא ל-enhance_prompt עם mode="${mode}" והפרומפט של המשתמש. ` +
-    `אם יש בשיחה הקשר רלוונטי (מוצר/פרויקט, קהל יעד, מטרה) — תמצת אותו לפסקה קצרה והעבר בפרמטר context. ` +
+    `אם יש בשיחה הקשר רלוונטי (מוצר/פרויקט, קהל יעד, מטרה), תמצת אותו לפסקה קצרה והעבר בפרמטר context. ` +
     `הצג למשתמש את התוצאה המלאה, וציין כמה קרדיטים נשארו (credits_remaining). ${he}`
   );
 }
@@ -299,7 +299,7 @@ const PROMPT_BUILDERS: Record<
   video: {
     arguments: PROMPT_ARG,
     build: (a) =>
-      `${modeCommand("VIDEO_GENERATION", "אפשר לבחור פלטפורמה עם video_platform ב-mode_options (sora/veo/runway/kling…); אם חסרים camera_movement או duration — שאל את המשתמש.")}\n\nהפרומפט: ${a.prompt ?? ""}`,
+      `${modeCommand("VIDEO_GENERATION", "אפשר לבחור פלטפורמה עם video_platform ב-mode_options (sora/veo/runway/kling…); אם חסרים camera_movement או duration, שאל את המשתמש.")}\n\nהפרומפט: ${a.prompt ?? ""}`,
   },
   research: {
     arguments: PROMPT_ARG,
@@ -325,7 +325,7 @@ const PROMPT_BUILDERS: Record<
   },
   help: {
     build: () =>
-      "הצג למשתמש סיכום קצר בעברית של יכולות Peroot Connect: פקודות — enhance (שדרוג), image/video/research/agent (מודים), save (שמירה), find (חיפוש), quota (מכסה). כלים נוספים — תבניות מהספרייה הציבורית (search_public_library + fill_template), זיכרון אישי (remember_fact/list_facts), שכני Memory Palace (related_prompts), שרשראות (list_chains/get_chain), ומשוב (rate_prompt). הסבר ששדרוג צורך קרדיט אחד מהמכסה (חינמי: 1 ליום, PRO: 150 לחודש) ושאר הכלים חינמיים.",
+      "הצג למשתמש סיכום קצר בעברית של יכולות Peroot Connect: פקודות, enhance (שדרוג), image/video/research/agent (מודים), save (שמירה), find (חיפוש), quota (מכסה). כלים נוספים, תבניות מהספרייה הציבורית (search_public_library + fill_template), זיכרון אישי (remember_fact/list_facts), שכני Memory Palace (related_prompts), שרשראות (list_chains/get_chain), ומשוב (rate_prompt). הסבר ששדרוג צורך קרדיט אחד מהמכסה (חינמי: 1 ליום, PRO: 150 לחודש) ושאר הכלים חינמיים.",
   },
 };
 
@@ -397,11 +397,11 @@ export async function POST(req: Request) {
         capabilities: { tools: { listChanged: false }, prompts: { listChanged: false } },
         serverInfo: {
           name: "peroot",
-          title: "Peroot — מנוע הפרומפטים",
+          title: "Peroot, מנוע הפרומפטים",
           version: "1.0.0",
         },
         instructions:
-          "Peroot הופך כל פרומפט לפרומפט מושלם ומורחב. לפני יצירת תמונה/וידאו/מחקר/סוכן — שדרג קודם עם enhance_prompt במוד המתאים. חשוב: אם בשיחה יש הקשר רלוונטי (על איזה מוצר/פרויקט מדובר, קהל יעד, מטרה) — תמצת אותו לפסקה קצרה והעבר בפרמטר context, כדי שהשדרוג יתבסס על מה שהמשתמש באמת עובד עליו ולא על ניחוש. שמירה לספרייה רק לבקשת המשתמש (save_prompt). לפני שדרוג למשתמש חינמי כדאי לבדוק get_quota.",
+          "Peroot הופך כל פרומפט לפרומפט מושלם ומורחב. לפני יצירת תמונה/וידאו/מחקר/סוכן, שדרג קודם עם enhance_prompt במוד המתאים. חשוב: אם בשיחה יש הקשר רלוונטי (על איזה מוצר/פרויקט מדובר, קהל יעד, מטרה), תמצת אותו לפסקה קצרה והעבר בפרמטר context, כדי שהשדרוג יתבסס על מה שהמשתמש באמת עובד עליו ולא על ניחוש. שמירה לספרייה רק לבקשת המשתמש (save_prompt). לפני שדרוג למשתמש חינמי כדאי לבדוק get_quota.",
       });
 
     case "notifications/initialized":
@@ -542,7 +542,7 @@ async function callTool(
         (args.variables ?? {}) as Record<string, string>,
       );
       const text = r.missing.length
-        ? `${r.filled}\n\n⚠️ חסרים ערכים ל: ${r.missing.join(", ")} — שאל את המשתמש והשלם.`
+        ? `${r.filled}\n\n⚠️ חסרים ערכים ל: ${r.missing.join(", ")}, שאל את המשתמש והשלם.`
         : r.filled;
       return toolText(text, { ...r });
     }
@@ -558,7 +558,7 @@ async function callTool(
       const facts = await connectListFacts(userId);
       const text = facts.length
         ? facts.map((f, i) => `${i + 1}. ${f.fact} (${f.category})`).join("\n")
-        : "הזיכרון ריק — אפשר לבקש ממני לזכור דברים עליך";
+        : "הזיכרון ריק, אפשר לבקש ממני לזכור דברים עליך";
       return toolText(text, { facts });
     }
     case "rate_prompt": {
@@ -572,7 +572,7 @@ async function callTool(
         enhanced_text: typeof args.enhanced_text === "string" ? args.enhanced_text : undefined,
         mode: typeof args.mode === "string" ? args.mode : undefined,
       });
-      return toolText(rating === 1 ? "תודה על המשוב החיובי! 👍" : "תודה — המשוב נרשם 👎", {
+      return toolText(rating === 1 ? "תודה על המשוב החיובי! 👍" : "תודה, המשוב נרשם 👎", {
         saved: true,
       });
     }
@@ -591,13 +591,13 @@ async function callTool(
       const chains = await connectListChains(userId);
       const text = chains.length
         ? chains.map((c, i) => `${i + 1}. ${c.title} · ${c.steps_count} שלבים (${c.id})`).join("\n")
-        : "אין שרשראות שמורות — אפשר לבנות בפלטפורמה";
+        : "אין שרשראות שמורות, אפשר לבנות בפלטפורמה";
       return toolText(text, { chains });
     }
     case "get_chain": {
       const chain = await connectGetChain(userId, String(args.id ?? ""));
       return toolText(
-        `שרשרת "${chain.title}" — ${chain.steps.length} שלבים. הרץ אותם לפי הסדר עם enhance_prompt; מלא משתנים ושרשר פלטים לפי input_from_step.`,
+        `שרשרת "${chain.title}", ${chain.steps.length} שלבים. הרץ אותם לפי הסדר עם enhance_prompt; מלא משתנים ושרשר פלטים לפי input_from_step.`,
         { ...chain },
       );
     }

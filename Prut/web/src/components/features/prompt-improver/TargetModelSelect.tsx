@@ -64,7 +64,7 @@ function optionByValue(v: TargetModel) {
 }
 
 const TARGET_MODEL_HELP =
-  "מכוון את מבנה הפרומפט המשודרג למודל שבו תריץ אותו בפועל (ChatGPT, Claude, Gemini). לא מחליף את מודל ה-AI של Peroot. «כללי» — ללא התאמה ספציפית למותג מודל.";
+  "מכוון את מבנה הפרומפט המשודרג למודל שבו תריץ אותו בפועל (ChatGPT, Claude, Gemini). לא מחליף את מודל ה-AI של Peroot. «כללי», ללא התאמה ספציפית למותג מודל.";
 
 interface TargetModelSelectProps {
   value: TargetModel;

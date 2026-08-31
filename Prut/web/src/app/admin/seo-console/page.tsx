@@ -89,7 +89,7 @@ function DeltaBadge({ pct }: { pct: number }) {
 }
 
 function VerdictBadge({ verdict }: { verdict?: string | null }) {
-  if (!verdict) return <span className="text-zinc-500 text-xs">—</span>;
+  if (!verdict) return <span className="text-zinc-500 text-xs">, </span>;
   const v = verdict.toLowerCase();
   if (v === "pass" || v === "verdict_pass")
     return (
@@ -350,8 +350,8 @@ function SitemapsPanel({ sitemaps, loading }: { sitemaps: Sitemap[]; loading: bo
                   <div key={j} className="bg-zinc-800/60 rounded-lg px-3 py-2 text-xs space-y-0.5">
                     <div className="text-zinc-400 font-medium capitalize">{c.type}</div>
                     <div className="text-zinc-500">
-                      הוגש: {c.submitted ?? "—"} | מתוייג:{" "}
-                      <span className="text-white font-bold">{c.indexed ?? "—"}</span>
+                      הוגש: {c.submitted ?? ", "} | מתוייג:{" "}
+                      <span className="text-white font-bold">{c.indexed ?? ", "}</span>
                     </div>
                   </div>
                 ))}
@@ -442,7 +442,7 @@ function InspectPanel() {
             {fields.map((f) => (
               <div key={f.label} className="space-y-1">
                 <div className="text-xs text-zinc-500 font-medium">{f.label}</div>
-                <div className="text-sm text-white font-medium">{f.value ?? "—"}</div>
+                <div className="text-sm text-white font-medium">{f.value ?? ", "}</div>
               </div>
             ))}
           </div>
@@ -540,7 +540,7 @@ export default function SeoConsolePage() {
               SEO Console
             </h1>
             <p className="text-zinc-400 font-medium tracking-wide text-sm">
-              Google Search Console — ביצועי חיפוש אורגני
+              Google Search Console, ביצועי חיפוש אורגני
             </p>
           </div>
           <div className="flex items-center gap-2">

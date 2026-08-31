@@ -718,7 +718,7 @@ export default function AdminDashboardPage() {
             color="emerald"
             href="/admin/revenue"
             flashing={kpiFlash}
-            tooltip="MRR — Monthly Recurring Revenue בשקלים. מחושב כ: מספר מנויים פעילים (active + on_trial + past_due + paid) × ₪10 לחודש. מוצג בשקלים כי המחיר בשקלים."
+            tooltip="MRR, Monthly Recurring Revenue בשקלים. מחושב כ: מספר מנויים פעילים (active + on_trial + past_due + paid) × ₪10 לחודש. מוצג בשקלים כי המחיר בשקלים."
           />
           <KpiCard
             label="API Costs MTD"
@@ -750,25 +750,25 @@ export default function AdminDashboardPage() {
             label="DAU"
             value={data.dau}
             icon={Target}
-            tooltip="Daily Active Users — משתמשים ייחודיים שביצעו לפחות גנרציה אחת היום. מחושב מטבלת history."
+            tooltip="Daily Active Users, משתמשים ייחודיים שביצעו לפחות גנרציה אחת היום. מחושב מטבלת history."
           />
           <EngagementCard
             label="WAU"
             value={data.wau}
             icon={BarChart3}
-            tooltip="Weekly Active Users — משתמשים ייחודיים שפעלו ב-7 הימים האחרונים. אינדיקטור לשימור שבועי."
+            tooltip="Weekly Active Users, משתמשים ייחודיים שפעלו ב-7 הימים האחרונים. אינדיקטור לשימור שבועי."
           />
           <EngagementCard
             label="MAU"
             value={data.mau}
             icon={Activity}
-            tooltip="Monthly Active Users — משתמשים ייחודיים שפעלו ב-30 הימים האחרונים. הבסיס לחישוב ARPU ו-avg prompts/user."
+            tooltip="Monthly Active Users, משתמשים ייחודיים שפעלו ב-30 הימים האחרונים. הבסיס לחישוב ARPU ו-avg prompts/user."
           />
           <EngagementCard
             label="Conversion"
             value={`${data.conversionRate}%`}
             icon={Percent}
-            tooltip="אחוז ה-Conversion — Pro Users / Total Users. מראה כמה אחוז מהמשתמשים הרשומים שדרגו לפלן Pro."
+            tooltip="אחוז ה-Conversion, Pro Users / Total Users. מראה כמה אחוז מהמשתמשים הרשומים שדרגו לפלן Pro."
           />
         </div>
 

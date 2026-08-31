@@ -64,7 +64,7 @@ export class EnhancedScorer {
         level: "low",
         label: "ריק",
         breakdown: [],
-        topWeaknesses: ["הפרומפט ריק — התחל לתאר את המטרה"],
+        topWeaknesses: ["הפרומפט ריק, התחל לתאר את המטרה"],
         estimatedImpact: "הוסף משפט או שניים על מה להשיג",
         strengths: [],
         domain: detectedDomain,
@@ -126,9 +126,9 @@ export class EnhancedScorer {
     let estimatedImpact: string;
     if (topGap && topGap.gap >= 4) {
       const lab = DIMENSION_LABEL_HE[topGap.chunk.key] ?? topGap.chunk.key;
-      estimatedImpact = `השפעה גבוהה: ${lab} — עד +${topGap.gap} נקודות אם תסגור את הפער`;
+      estimatedImpact = `השפעה גבוהה: ${lab}, עד +${topGap.gap} נקודות אם תסגור את הפער`;
     } else {
-      estimatedImpact = "הפרומפט מאוזן — שיפורים קטנים בלבד";
+      estimatedImpact = "הפרומפט מאוזן, שיפורים קטנים בלבד";
     }
 
     return {
@@ -158,7 +158,7 @@ function generateImprovementPlan(score: EnhancedScore): string[] {
 
   for (const d of sortedByGap) {
     const missingStr = d.missing.length > 0 ? ` (חסר: ${d.missing[0]})` : "";
-    suggestions.push(`${d.tip}${missingStr} — פוטנציאל +${d.gap} נקודות`);
+    suggestions.push(`${d.tip}${missingStr}, פוטנציאל +${d.gap} נקודות`);
   }
 
   const clarityDim = score.breakdown.find((d) => d.dimension === "clarity");

@@ -48,8 +48,8 @@ export async function POST(req: Request) {
     return connectError(
       400,
       "invalid_request",
-      "בקשה לא תקינה" + (detail ? ` — ${detail}` : ""),
-      "Invalid request" + (detail ? ` — ${detail}` : ""),
+      "בקשה לא תקינה" + (detail ? `, ${detail}` : ""),
+      "Invalid request" + (detail ? `, ${detail}` : ""),
     );
   }
   const started = Date.now();

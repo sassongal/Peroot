@@ -106,7 +106,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // descriptions differ across the ~650 library pages; the suffix stays short
   // and carries the category for variation.
   const baseDesc = prompt.use_case?.trim() || prompt.prompt?.slice(0, 140)?.trim() || "";
-  const description = `${baseDesc.slice(0, 120)} · פרומפט ${categoryData.labelHe} מלא בעברית, חינם — כולל שדרוג אוטומטי ב-Peroot.`;
+  const description = `${baseDesc.slice(0, 120)} · פרומפט ${categoryData.labelHe} מלא בעברית, חינם, כולל שדרוג אוטומטי ב-Peroot.`;
   const canonicalUrl = `/prompts/${slug}/${id}`;
   const ogImage = buildOgImageUrl(prompt.title, description, categoryData.labelHe);
 
@@ -272,13 +272,13 @@ export default async function PromptPage({ params }: Props) {
               </li>
               {p.variables && p.variables.length > 0 && (
                 <li>
-                  החליפו את המשתנים בסוגריים המסולסלים — {p.variables.length} שדות להתאמה אישית —
+                  החליפו את המשתנים בסוגריים המסולסלים, {p.variables.length} שדות להתאמה אישית,
                   בפרטים שלכם.
                 </li>
               )}
               <li>
-                רוצים גרסה חדה יותר? לחצו על &quot;שדרגו פרומפט זה ב-Peroot&quot; — המערכת תרחיב
-                אותו עם הקשר, מבנה מקצועי ודירוג איכות, מותאם למודל היעד שלכם. חינם.
+                רוצים גרסה חדה יותר? לחצו על &quot;שדרגו פרומפט זה ב-Peroot&quot;, המערכת תרחיב אותו
+                עם הקשר, מבנה מקצועי ודירוג איכות, מותאם למודל היעד שלכם. חינם.
               </li>
             </ol>
           </section>

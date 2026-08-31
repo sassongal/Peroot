@@ -123,7 +123,7 @@ export function TabContent() {
     const failed = toDelete.length - succeeded.size;
     if (failed === 0) toast.success(`נמחקו ${succeeded.size} פריטים`);
     else if (succeeded.size === 0) toast.error("המחיקה נכשלה. נסו שוב.");
-    else toast.error(`נמחקו ${succeeded.size}, ${failed} נכשלו — נסו שוב`);
+    else toast.error(`נמחקו ${succeeded.size}, ${failed} נכשלו, נסו שוב`);
     setBulkDeleting(false);
   };
 
@@ -261,7 +261,7 @@ export function TabContent() {
                         {item.category}
                       </span>
                     ) : (
-                      <span className="text-zinc-700 text-[10px]">—</span>
+                      <span className="text-zinc-700 text-[10px]">, </span>
                     )}
                   </td>
                   <td className="px-5 py-3.5">

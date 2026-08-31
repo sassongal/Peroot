@@ -9,7 +9,7 @@ import { getVideoSkill, getImageSkill, isDeprecated } from "@/lib/engines/skills
  * (previously missed "אתה אנליסט / אתה סופר / אתה data scientist" since the
  * original regex matched only a hardcoded noun list).
  */
-describe("EnhancedScorer — role detection", () => {
+describe("EnhancedScorer, role detection", () => {
   function roleDim(text: string) {
     const res = EnhancedScorer.score(text, CapabilityMode.STANDARD);
     return res.breakdown.find((d) => d.dimension === "role");
@@ -26,7 +26,7 @@ describe("EnhancedScorer — role detection", () => {
     expect(dim!.score).toBe(7);
   });
 
-  it('"אתה סופר טכני בכיר" scores full — "senior" counts as credentials', () => {
+  it('"אתה סופר טכני בכיר" scores full, "senior" counts as credentials', () => {
     const dim = roleDim("אתה סופר טכני בכיר. כתוב מאמר על מיקרו-שירותים.");
     expect(dim!.score).toBe(dim!.maxScore);
   });
@@ -61,7 +61,7 @@ describe("EnhancedScorer vs scoreInput (shared dimensions)", () => {
   });
 });
 
-describe("Skills registry — wan + sora deprecation", () => {
+describe("Skills registry, wan + sora deprecation", () => {
   it("wan is registered in VIDEO_SKILLS", () => {
     const skill = getVideoSkill("wan");
     expect(skill).toBeDefined();
@@ -84,7 +84,7 @@ describe("Skills registry — wan + sora deprecation", () => {
   });
 });
 
-describe("scoreVideoAudio — audio dimension scoring", () => {
+describe("scoreVideoAudio, audio dimension scoring", () => {
   const FULL_AUDIO_BLOCK = `
 A cat walks across a moonlit rooftop.
 
@@ -173,7 +173,7 @@ SFX: soft pawsteps on tile
   });
 });
 
-describe("EnhancedScorer — overall smoke", () => {
+describe("EnhancedScorer, overall smoke", () => {
   it("full research prompt still scores at least 60 after role fix", () => {
     const prompt = `
 אתה אנליסט מחקרי בכיר עם 15 שנות ניסיון.

@@ -49,7 +49,7 @@ const defaultProps = {
   capabilityMode: CapabilityMode.STANDARD,
 };
 
-describe("ResultSection — redesign", () => {
+describe("ResultSection, redesign", () => {
   it("renders 'חזרה לעריכה' button", () => {
     render(<ResultSection {...defaultProps} />);
     expect(screen.getByRole("button", { name: /חזרה לעריכה/ })).toBeInTheDocument();

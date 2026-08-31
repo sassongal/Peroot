@@ -36,7 +36,7 @@ export function AuthForm() {
   const urlError = errorCode
     ? ((
         {
-          "auth-failed": "ההתחברות נכשלה — ייתכן שהקישור פג תוקף או שההתחברות בוטלה. נסו שוב.",
+          "auth-failed": "ההתחברות נכשלה, ייתכן שהקישור פג תוקף או שההתחברות בוטלה. נסו שוב.",
           "no-code": "ההתחברות לא הושלמה. נסו שוב.",
         } as Record<string, string>
       )[errorCode] ?? "אירעה שגיאה בהתחברות. נסו שוב.")

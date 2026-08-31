@@ -44,7 +44,7 @@ describe("context cache", () => {
     const hit = await getCachedBlock("abc", "free", "file");
     expect(hit?.injected.body).toBe("b");
   });
-  it("is keyed by tier — free miss after pro write", async () => {
+  it("is keyed by tier, free miss after pro write", async () => {
     await putCachedBlock(block, "pro");
     expect(await getCachedBlock("abc", "free", "file")).toBeNull();
     expect(await getCachedBlock("abc", "pro", "file")).not.toBeNull();

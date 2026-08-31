@@ -92,7 +92,7 @@ export function ContextChips({
 
         {isOverLimit && (
           <span className="text-red-400 font-bold">
-            יותר מדי context — הסירו קובץ (מקסימום {formatTokenCount(effectiveLimit)} tokens)
+            יותר מדי context, הסירו קובץ (מקסימום {formatTokenCount(effectiveLimit)} tokens)
           </span>
         )}
 

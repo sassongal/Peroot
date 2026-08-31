@@ -56,7 +56,7 @@ function isVisualEngineMode(mode: string): boolean {
 
 function visualEngineFootnoteHe(mode: string): string | null {
   if (!isVisualEngineMode(mode)) return null;
-  return "הוראות לפי פלטפורמה (Midjourney, Runway וכו׳) מוגדרות בקוד. כאן ב-DB: תבנית general + עקיפות אופציונליות ב-default_params — ראו עורך המנוע.";
+  return "הוראות לפי פלטפורמה (Midjourney, Runway וכו׳) מוגדרות בקוד. כאן ב-DB: תבנית general + עקיפות אופציונליות ב-default_params, ראו עורך המנוע.";
 }
 
 export function EnginesListTab() {

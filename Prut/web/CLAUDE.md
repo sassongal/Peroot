@@ -203,6 +203,13 @@ Credit-gated user routes go through `withUser` (`src/lib/api-middleware.ts`).
 - Rate limiting: Upstash Redis sliding window
 - Hebrew-first UI — all user-facing strings in Hebrew
 - All AI system prompts written in Hebrew
+- **No em/en dashes law (owner decision, 2026-08-31):** no U+2014/U+2013 in ANY
+  text a human sees: UI strings, JSX text, engine templates, AI-generated output,
+  emails, blog/library content. Use a comma, colon, period, or plain hyphen for
+  ranges (2-3). Enforced by ESLint (`no-restricted-syntax` on literals/JSX in
+  eslint.config.mjs) and scrubbed deterministically in content-factory output
+  (`stripAiDashes`). Goal: everything must read as human-written, so also avoid
+  formulaic AI phrasing in copy and generated content. Code comments are exempt.
 - Server Components by default, `"use client"` only when necessary
 
 ## Personal Library Architecture

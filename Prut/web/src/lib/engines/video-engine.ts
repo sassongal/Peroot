@@ -25,7 +25,7 @@ import { TRAILER } from "@/lib/prompt-stream/trailer";
 const PLATFORM_OVERRIDES: Record<VideoPlatform, string> = {
   general: `OUTPUT FORMAT: A single flowing cinematic paragraph in English. Weave ALL elements (camera movement, subject, action, environment, lighting, style, mood) into natural flowing prose. No numbered sections, no headers, no bullet points. Start directly with the shot description. 30-80 words.
 
-CRITICAL — OUTPUT PURITY:
+CRITICAL, OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER output:
 - "Here's a video prompt:"
 - "I've created/crafted a prompt:"
@@ -41,25 +41,25 @@ Concept: "ציפור ממריאה מענף"
 Output: A slow-motion close-up captures a vibrant blue kingfisher launching from a moss-covered branch, wings spreading wide as droplets of morning dew scatter into the golden sunrise light, the background of a misty forest lake blurs into a dreamy bokeh, filmed with a 200mm telephoto lens.`,
 
   sora: `PLATFORM: OpenAI Sora 2
-Sora 2 (per OpenAI's official prompting guide) generates synchronized audio-video with strong physics and performance. Duration and resolution are APP/API SETTINGS (4/8/12/16/20 seconds) — never write them into the prose. Prompt structure matters more than length: a focused prompt beats an exhaustive one, and over-specification trades away the model's creativity.
+Sora 2 (per OpenAI's official prompting guide) generates synchronized audio-video with strong physics and performance. Duration and resolution are APP/API SETTINGS (4/8/12/16/20 seconds), never write them into the prose. Prompt structure matters more than length: a focused prompt beats an exhaustive one, and over-specification trades away the model's creativity.
 
 Four-block structure, in this order:
-1. SCENE PROSE — characters (identity, wardrobe, distinctive features), setting, atmosphere. Concrete nouns and materials, not vague adjectives.
-2. CINEMATOGRAPHY — framing (wide/medium/close-up), lens feel, depth of field, lighting direction and quality, color mood.
-3. ACTION AS TIMED BEATS — sequence the motion: "she takes four steps, pauses at the window, then turns." Each beat is one concrete physical action. 2-4 beats per clip.
-4. DIALOGUE BLOCK (only if speech is wanted) — a separate labeled block below the prose:
+1. SCENE PROSE, characters (identity, wardrobe, distinctive features), setting, atmosphere. Concrete nouns and materials, not vague adjectives.
+2. CINEMATOGRAPHY, framing (wide/medium/close-up), lens feel, depth of field, lighting direction and quality, color mood.
+3. ACTION AS TIMED BEATS, sequence the motion: "she takes four steps, pauses at the window, then turns." Each beat is one concrete physical action. 2-4 beats per clip.
+4. DIALOGUE BLOCK (only if speech is wanted), a separate labeled block below the prose:
    Dialogue:
    - Character: "exact line"
-   Keep exchanges SHORT — roughly 1-2 short lines per 4 seconds of clip. Long speeches break sync.
+   Keep exchanges SHORT, roughly 1-2 short lines per 4 seconds of clip. Long speeches break sync.
 5. Optional sound cues woven in: ambient and diegetic sounds ("rain taps the tin roof", "distant traffic hum").
 
 Rules:
-- Vague quality adjectives ("beautiful", "cinematic", "stunning") add nothing — describe the LIGHT, the MATERIALS, the MOTION instead.
+- Vague quality adjectives ("beautiful", "cinematic", "stunning") add nothing, describe the LIGHT, the MATERIALS, the MOTION instead.
 - One coherent scene per generation; consistent character descriptors if part of a series.
-- Image input (when provided in-app) anchors the first frame — then describe only what happens next.
+- Image input (when provided in-app) anchors the first frame, then describe only what happens next.
 - 60-150 words total including dialogue. Output in English only.
 
-CRITICAL — OUTPUT PURITY:
+CRITICAL, OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER output:
 - "Here's a video prompt for Sora:"
 - "I've created/crafted a prompt:"
@@ -76,7 +76,7 @@ Dialogue:
 Ambient: low chatter, cups clinking, milk steamer hiss.`,
 
   runway: `PLATFORM: Runway Gen-4 / Gen-4.5
-Runway Gen-4 interprets prompts as a single continuous shot (official guidance: one scene per generation — avoid cramming multiple unrelated scene changes into one prompt). It understands camera terminology and lighting physics deeply. Gen-4.5 raises motion quality, temporal consistency, and prompt adherence; still describe one coherent continuous shot unless the Runway UI explicitly offers a multi-clip / keyframe workflow you are targeting.
+Runway Gen-4 interprets prompts as a single continuous shot (official guidance: one scene per generation, avoid cramming multiple unrelated scene changes into one prompt). It understands camera terminology and lighting physics deeply. Gen-4.5 raises motion quality, temporal consistency, and prompt adherence; still describe one coherent continuous shot unless the Runway UI explicitly offers a multi-clip / keyframe workflow you are targeting.
 
 Four essential components:
 1. Subject Motion - clearly describe movement of primary object/character
@@ -89,26 +89,26 @@ Structure: [Shot type]: [camera movement] [subject + action]. [scene motion]. [s
 Rules:
 - Start with the Shot Type (close up, wide shot, aerial view) to ground composition.
 - ALWAYS specify camera move: dolly, pan, tilt, tracking, crane, orbit, push-in, pull-out, handheld, static, whip pan, rack focus.
-- Use specific verbs: "sprints", "glides", "leaps" — not generic descriptions.
+- Use specific verbs: "sprints", "glides", "leaps", not generic descriptions.
 - One action per sentence for clarity. Maintain logical flow.
-- Write in natural language sentences — NOT comma-separated keywords.
-- ONE scene per clip. Describe only what SHOULD happen — no negative prompting. Runway does NOT support negative prompts. Negative phrasing may produce opposite results.
+- Write in natural language sentences, NOT comma-separated keywords.
+- ONE scene per clip. Describe only what SHOULD happen, no negative prompting. Runway does NOT support negative prompts. Negative phrasing may produce opposite results.
 - Use positive phrasing describing what you want, not what you don't want.
 - Include one mood/atmosphere sentence at the end.
 - Cinematic references when appropriate: "Kubrick one-point perspective", "Malick golden hour."
 - Motion intensity: "gentle", "slight" for subtle; "sweeping", "explosive" for dramatic.
-- Camera speed vocabulary: "slow dolly" vs "rapid whip pan" — choose deliberately for mood.
+- Camera speed vocabulary: "slow dolly" vs "rapid whip pan", choose deliberately for mood.
 - Gen-4 Turbo: shorter prompts (20-30 words) for fast iteration. Full Gen-4: 30-60 words for cinematic quality.
 - Design shot with clear beginning and continuation point for extending clips.
 - Aspect ratios: 16:9 (cinematic), 9:16 (vertical), 1:1 (social).
-- Duration: Official Gen-4 video outputs are 5 or 10 seconds per clip — design a single motion arc that fits 5s or 10s, not ~4s.
+- Duration: Official Gen-4 video outputs are 5 or 10 seconds per clip, design a single motion arc that fits 5s or 10s, not ~4s.
 - Sweet spot: 30-60 words. Over 80 words degrades coherence.
 - Genre-adapt: Action/Thriller = fast verbs, dynamic angles. Drama = slow movements, close-ups. Documentary = steady pans, natural light. Horror = creeping motion, low light.
 - Output in English only.
 
-Gen-4.5: Prefer one uninterrupted cinematic beat per generation; if the product exposes advanced controls (e.g. keyframes / multiple segments), follow that UI’s structure — do not invent multi-scene formats that contradict Gen-4’s “single scene” prompting basics.
+Gen-4.5: Prefer one uninterrupted cinematic beat per generation; if the product exposes advanced controls (e.g. keyframes / multiple segments), follow that UI’s structure, do not invent multi-scene formats that contradict Gen-4’s “single scene” prompting basics.
 
-CRITICAL — OUTPUT PURITY:
+CRITICAL, OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER output:
 - "Here's a video prompt for Runway:"
 - "I've created/crafted a prompt:"
@@ -124,7 +124,7 @@ Concept: "אישה הולכת ברחוב גשום"
 Output: Wide shot. Slow tracking shot follows a woman in a red coat walking along a rain-soaked cobblestone street at dusk. Neon shop signs reflect in puddles as she passes. Wind catches her umbrella slightly. Shallow depth of field, anamorphic lens flare from distant headlights. Moody neo-noir atmosphere.`,
 
   kling: `PLATFORM: Kling VIDEO 3.0
-Kling VIDEO 3.0 (per Kling’s official model guide) emphasizes: native audio with multilingual dialogue and accents, multi-shot narratives, element/subject reference for consistency, native in-frame text, and flexible duration up to ~15s. It excels at physics-aware motion and expressive performance. Resolution in standard product flows is commonly 720p/1080p — do not promise “native 4K” unless the user’s app tier or export explicitly shows 4K.
+Kling VIDEO 3.0 (per Kling’s official model guide) emphasizes: native audio with multilingual dialogue and accents, multi-shot narratives, element/subject reference for consistency, native in-frame text, and flexible duration up to ~15s. It excels at physics-aware motion and expressive performance. Resolution in standard product flows is commonly 720p/1080p, do not promise “native 4K” unless the user’s app tier or export explicitly shows 4K.
 
 Six-element prompt structure:
 (Camera Movement) + (Shot Type) + (Subject + Action) + (Environment + Lighting) + (Style + Mood) + (Physics Details)
@@ -132,7 +132,7 @@ Six-element prompt structure:
 Rules:
 - Describe weight transfer, momentum, acceleration, deceleration for EVERY movement.
 - Include explicit motion endpoints: "hand rises from waist to above head", "body shifts weight from left to right foot."
-- Limit context to 3-5 core visual elements — overloading degrades output quality.
+- Limit context to 3-5 core visual elements, overloading degrades output quality.
 - Always specify camera movement ("tracking shot following from side") and motion endpoints ("then settles back into place") to prevent failures.
 - Specify speed: "slow dolly", "rapid pan", "gentle tilt." Match movement to mood.
 - Connect simultaneous actions with "while" or "as"; sequential with "then." Max 2 simultaneous movements per sentence.
@@ -142,7 +142,7 @@ Rules:
 - Multi-shot storyboarding: Specify duration, shot size, perspective, narrative, and camera per shot.
 - Complex camera: combine dolly + tilt, tracking + zoom freely. Also: dolly zoom (vertigo), telephoto compression, shallow DOF.
 - Duration: 3s to 15s flexible. 5s for one action, 10s for action + reaction.
-- Optional negative list (3-7 items max) if your pipeline supports it: "Negative: morphing, melting, distorted hands, extra limbs, blurry, flickering, jittery movement" — skip if the interface has no negative field.
+- Optional negative list (3-7 items max) if your pipeline supports it: "Negative: morphing, melting, distorted hands, extra limbs, blurry, flickering, jittery movement", skip if the interface has no negative field.
 - Resolution: Match the user’s selected resolution in-app (720p/1080p common per official docs). Aspect ratios: 16:9, 9:16, 1:1 typical.
 - Camera language: Kling understands lens references (35mm, 85mm) and camera brands (ARRI, RED).
 - Native audio: Kling 3.0 supports lip-synced dialogue in multiple languages. Add dialogue lines if relevant.
@@ -155,7 +155,7 @@ Rules:
 
 Lip-sync dialogue example: include dialogue in format: Character says: "exact line" (delivery: warm, confident). Kling 3.0 supports multilingual lip-sync.
 
-CRITICAL — OUTPUT PURITY:
+CRITICAL, OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER output:
 - "Here's a video prompt for Kling:"
 - "I've created/crafted a prompt:"
@@ -184,7 +184,7 @@ Rules:
 - Do NOT use Midjourney-style tags or Stable Diffusion keyword lists.
 - 50-150 words. Output in English only.
 
-CRITICAL — OUTPUT PURITY:
+CRITICAL, OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER add preamble, meta-commentary, or explanation.
 Start IMMEDIATELY with the subject description.
 
@@ -193,7 +193,7 @@ Concept: "נשר טס מעל קניון"
 Output: A golden eagle with wings fully extended soaring over a vast red-rock canyon at dusk, riding thermal updrafts along the sheer cliff face. The camera follows from behind in a low tracking arc, revealing layers of striated sandstone glowing amber and burgundy in the fading light. Cinematic wide lens, high-contrast golden light from low sun angle, deep shadow pools in the canyon floor. Atmosphere: majestic solitude, vast geological scale. Negative prompt: morphing, warping, flickering, distortion, artifacts.`,
 
   veo: `PLATFORM: Google Veo 3 / Veo 3.1 (Gemini API)
-Veo is Google DeepMind’s video model with strong synchronized audio generation (dialogue, SFX, ambience, music) when you describe sound explicitly — other platforms also offer audio, but Veo’s Gemini API workflow rewards splitting detailed visual + audio intent. Character consistency and physically plausible motion/materials are core strengths.
+Veo is Google DeepMind’s video model with strong synchronized audio generation (dialogue, SFX, ambience, music) when you describe sound explicitly, other platforms also offer audio, but Veo’s Gemini API workflow rewards splitting detailed visual + audio intent. Character consistency and physically plausible motion/materials are core strengths.
 
 Seven primary elements for effective prompts:
 1. Shot framing and motion - How to frame and how the camera moves
@@ -222,19 +222,19 @@ Use separate sentences to describe audio. Label clearly with "Audio:" to separat
 - Ambient: One sentence describing the sonic environment - "quiet cafe murmur layered with rain on windows."
 - Music: Instrument + tempo + mood - "solo cello, andante, melancholic."
 
-IMPORTANT: If you don't explicitly define the background audio, Veo will guess — and sometimes hallucinates inappropriate sounds (common issue: "live studio audience" laughter). ALWAYS specify the audio you want.
+IMPORTANT: If you don't explicitly define the background audio, Veo will guess, and sometimes hallucinates inappropriate sounds (common issue: "live studio audience" laughter). ALWAYS specify the audio you want.
 
 Rules:
-- ALWAYS include an Audio section — in Veo this is how you steer dialogue, SFX, and ambience; vague audio requests invite wrong ambience.
+- ALWAYS include an Audio section, in Veo this is how you steer dialogue, SFX, and ambience; vague audio requests invite wrong ambience.
 - Natural language only - no special syntax.
-- Duration: Per Gemini API docs, \`durationSeconds\` is typically "4", "6", or "8"; 1080p and 4K often require 8s and have extra constraints (e.g. reference images). Add "Duration: Xs" using values your user can actually select — do not assume 5–15s unless the UI exposes it.
+- Duration: Per Gemini API docs, \`durationSeconds\` is typically "4", "6", or "8"; 1080p and 4K often require 8s and have extra constraints (e.g. reference images). Add "Duration: Xs" using values your user can actually select, do not assume 5-15s unless the UI exposes it.
 - Resolution: Veo 3.1 can output 720p, 1080p, or 4K depending on model tier (4K not available on Veo 3.1 Lite in API docs).
 - Sweet spot: 50-100 words visual + 20-40 words audio.
 - Output in English only.
 
-Veo 3.1 (API): Adds richer audio, reference images (“ingredients”), first/last frame control, and scene extension — still keep each generation prompt focused; use extension features in-product for length. Audio discipline remains the fastest quality win.
+Veo 3.1 (API): Adds richer audio, reference images (“ingredients”), first/last frame control, and scene extension, still keep each generation prompt focused; use extension features in-product for length. Audio discipline remains the fastest quality win.
 
-CRITICAL — OUTPUT PURITY:
+CRITICAL, OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER output:
 - "Here's a video prompt for Veo:"
 - "I've created/crafted a prompt:"
@@ -259,9 +259,9 @@ Music: "acoustic guitar, gentle fingerpicking, warm and inviting."`,
 Higgsfield uses a three-layer prompt system. Most failures come from mixing layers. Each layer controls ONE visual job. Also hosts Kling 3.0, Sora 2, Veo 3.1 as available models.
 
 THREE-LAYER SYSTEM (separate these, do NOT mix):
-Layer 1 — IMAGE (static visual rules): Lighting, lens, framing. Creates a locked keyframe.
-Layer 2 — IDENTITY (character appearance): Face, age, costume. Do NOT put in motion layer.
-Layer 3 — MOTION (camera + subject movement): Cinematography commands only.
+Layer 1, IMAGE (static visual rules): Lighting, lens, framing. Creates a locked keyframe.
+Layer 2, IDENTITY (character appearance): Face, age, costume. Do NOT put in motion layer.
+Layer 3, MOTION (camera + subject movement): Cinematography commands only.
 
 For a single-prompt output, combine as stacked directives:
 
@@ -272,7 +272,7 @@ Structure:
 [Style: aesthetic tags]
 
 Rules:
-- Short, direct sentences — never long descriptive paragraphs.
+- Short, direct sentences, never long descriptive paragraphs.
 - Use active verbs: "darts through", "leaps across", "slowly pushes in", "whip-pans to reveal."
 - Aesthetic tags force specific looks: "Shot on full-frame cinema camera", "anamorphic lens flare", "16mm film grain."
 - Timing cues: "at the beginning", "halfway through", "in the final moment" or precise: "at 0s", "at 2s", "at 3.5s."
@@ -289,7 +289,7 @@ Rules:
 
 Compound timing cues are critical: "at 0s: subject enters frame → at 1.5s: turns to camera → at 3s: begins speaking". Always include Total duration.
 
-CRITICAL — OUTPUT PURITY:
+CRITICAL, OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER output:
 - "Here's a video prompt for Higgsfield:"
 - "I've created/crafted a prompt:"
@@ -304,7 +304,7 @@ EXAMPLE:
 Concept: "ריקוד ברחוב"
 Output: [Camera: wide angle, handheld]
 [Subject: Young man in white sneakers and black joggers, urban backdrop]
-[Motion: Launches into fluid breakdance — drops to one knee at 0s, spins into windmill at 1s, freezes in baby freeze at 3s, snaps upright at 3.5s]
+[Motion: Launches into fluid breakdance, drops to one knee at 0s, spins into windmill at 1s, freezes in baby freeze at 3s, snaps upright at 3.5s]
 [Style: Shot on full-frame cinema camera, golden hour backlight, music video aesthetic]`,
 
   minimax: `PLATFORM: Minimax Hailuo 2.3
@@ -312,20 +312,20 @@ Hailuo 2.3 excels at human body movement and facial expressions. Best-in-class f
 
 Formula: [Camera bracket commands] + Subject (appearance, action, emotion, mood) + Scene + Style.
 
-CAMERA BRACKET SYNTAX (unique to Hailuo — use [ ] for camera control):
-[Truck left/right] — lateral movement
-[Pan left/right] — horizontal rotation
-[Push in/Pull out] — move toward/away from subject
-[Pedestal up/down] — vertical elevation
-[Tilt up/down] — vertical rotation
-[Zoom in/out] — focal length change
-[Shake] — handheld effect
-[Tracking shot] — follow subject
-[Static shot] — no movement
+CAMERA BRACKET SYNTAX (unique to Hailuo, use [ ] for camera control):
+[Truck left/right], lateral movement
+[Pan left/right], horizontal rotation
+[Push in/Pull out], move toward/away from subject
+[Pedestal up/down], vertical elevation
+[Tilt up/down], vertical rotation
+[Zoom in/out], focal length change
+[Shake], handheld effect
+[Tracking shot], follow subject
+[Static shot], no movement
 Combine up to 3 movements: [Pan left, Pedestal up, Push in]
 
 Rules:
-- Focus EXTENSIVELY on body movement and facial expressions — this is Hailuo's superpower.
+- Focus EXTENSIVELY on body movement and facial expressions, this is Hailuo's superpower.
 - Describe gestures in explicit choreographic detail: "turns head slowly 30 degrees to the left while raising right hand palm-up."
 - Include micro-expressions: "corners of mouth curl into a half-smile", "eyes narrow slightly", "brow furrows then relaxes."
 - Body language shifts: "shoulders drop as tension releases", "weight shifts forward onto toes."
@@ -341,7 +341,7 @@ Rules:
 
 Anime/illustration trigger: include "anime style" or "cel-shaded" in style description. For anime, emphasize dramatic expressions and speedlines. Micro-expression vocabulary: "pupils dilate", "lip quivers", "jaw tightens", "nostrils flare", "brow arches".
 
-CRITICAL — OUTPUT PURITY:
+CRITICAL, OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER output:
 - "Here's a video prompt for Minimax:"
 - "I've created/crafted a prompt:"
@@ -354,7 +354,7 @@ Your FIRST WORD must be a [Camera bracket command]. Example: "[Push in]", "[Trac
 
 EXAMPLE:
 Concept: "אישה מקבלת בשורה טובה"
-Output: [Push in, Static shot] A woman in her late 20s, dark wavy hair, wearing a casual cream sweater, sits at a desk holding her phone. Her eyes scan the screen — brow slightly furrowed. Then her eyebrows rise, corners of mouth twitch upward, eyes widen. She gasps softly, free hand rises to cover her mouth as a full smile breaks through. Shoulders lift with excitement, she bounces slightly in her chair. Soft natural window light from the left, warm tones, shallow depth of field.`,
+Output: [Push in, Static shot] A woman in her late 20s, dark wavy hair, wearing a casual cream sweater, sits at a desk holding her phone. Her eyes scan the screen, brow slightly furrowed. Then her eyebrows rise, corners of mouth twitch upward, eyes widen. She gasps softly, free hand rises to cover her mouth as a full smile breaks through. Shoulders lift with excitement, she bounces slightly in her chair. Soft natural window light from the left, warm tones, shallow depth of field.`,
 };
 
 // ── Platform-specific user prompts ──
@@ -372,7 +372,7 @@ Concept: {{input}}
 
 Output ONLY the ready-to-paste Sora prompt. No meta-text.`,
 
-  runway: `Generate the ACTUAL Runway Gen-4 / Gen-4.5 prompt that will be DIRECTLY pasted into Runway. Lead with camera movement. Write in natural sentences, 30-60 words. One continuous scene only (5s or 10s clip — motion must fit that window). Positive phrasing only. Include a cinematic reference.
+  runway: `Generate the ACTUAL Runway Gen-4 / Gen-4.5 prompt that will be DIRECTLY pasted into Runway. Lead with camera movement. Write in natural sentences, 30-60 words. One continuous scene only (5s or 10s clip, motion must fit that window). Positive phrasing only. Include a cinematic reference.
 
 Concept: {{input}}
 
@@ -390,7 +390,7 @@ Concept: {{input}}
 
 Output ONLY the ready-to-paste Wan prompt. No meta-text.`,
 
-  veo: `Generate the ACTUAL Google Veo 3 / 3.1 prompt that will be DIRECTLY pasted into Veo (Gemini API / app). Write a visual paragraph covering all 7 elements (shot framing, style, lighting, character, location, action, dialogue) PLUS a separate Audio section with dialogue/SFX/ambient/music. ALWAYS include the Audio section — unspecified ambience drifts. Use Duration: 4s, 6s, or 8s to match API options (1080p/4K often tied to 8s). 50-100 words visual + 20-40 words audio. Precise, concrete, sensory.
+  veo: `Generate the ACTUAL Google Veo 3 / 3.1 prompt that will be DIRECTLY pasted into Veo (Gemini API / app). Write a visual paragraph covering all 7 elements (shot framing, style, lighting, character, location, action, dialogue) PLUS a separate Audio section with dialogue/SFX/ambient/music. ALWAYS include the Audio section, unspecified ambience drifts. Use Duration: 4s, 6s, or 8s to match API options (1080p/4K often tied to 8s). 50-100 words visual + 20-40 words audio. Precise, concrete, sensory.
 
 Concept: {{input}}
 
@@ -518,7 +518,7 @@ export class VideoEngine extends BaseEngine {
             : ratio === "1:1"
               ? "square balanced composition"
               : `composition suited for a ${ratio} frame`;
-      variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${ratio}. Design the shot for ${compositionHint} — do NOT add aspect ratio text or parameters to the prompt; aspect ratio is set in the platform UI/API.`;
+      variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${ratio}. Design the shot for ${compositionHint}, do NOT add aspect ratio text or parameters to the prompt; aspect ratio is set in the platform UI/API.`;
     } else {
       variables.aspect_ratio_hint = "";
     }
@@ -558,12 +558,14 @@ export class VideoEngine extends BaseEngine {
 
     // Context attachments as cinematic reference material
     if (input.context && input.context.length > 0) {
-      finalSystem += `\n\n[CINEMATIC_REFERENCE_MATERIAL]
-המשתמש צירף חומר מקור — השתמש בו כ-**השראה קולנועית ומגבלות ויזואליות** לפרומפט הווידאו:
-- תמונות מצורפות: נתח קומפוזיציה, תאורה, פלטת צבעים, ואווירה — ושלב בפרומפט כ-reference visuals.
+      finalSystem += `
+
+[CINEMATIC_REFERENCE_MATERIAL]
+המשתמש צירף חומר מקור, השתמש בו כ-**השראה קולנועית ומגבלות ויזואליות** לפרומפט הווידאו:
+- תמונות מצורפות: נתח קומפוזיציה, תאורה, פלטת צבעים, ואווירה, ושלב בפרומפט כ-reference visuals.
 - סטוריבורד/מסמך: חלץ תיאור סצנות, תנועת מצלמה, ואלמנטים נרטיביים.
 - URLים: חלץ סגנון ויזואלי, look & feel, ו-cinematic language מהתוכן.
-- שלב את הפרטים ישירות — אל תכתוב "בהתבסס על הקובץ".
+- שלב את הפרטים ישירות, אל תכתוב "בהתבסס על הקובץ".
 
 `;
       for (const attachment of input.context) {
@@ -610,19 +612,19 @@ export class VideoEngine extends BaseEngine {
 
     const hasContext = !!(input.context && input.context.length > 0);
     const contextQualityRule = hasContext
-      ? "\nCONTEXT INTEGRATION (mandatory): Reference material is attached — incorporate palette, mood, composition, and cinematic style from references. Ignoring attachments is a FAILURE."
+      ? "\nCONTEXT INTEGRATION (mandatory): Reference material is attached, incorporate palette, mood, composition, and cinematic style from references. Ignoring attachments is a FAILURE."
       : "";
     const contextQuestionHint = hasContext
-      ? "\nCONTEXT-AWARE: reference material is attached — ask about INTENT (exact replication? mood inspiration? style guide?) not about the file contents."
+      ? "\nCONTEXT-AWARE: reference material is attached, ask about INTENT (exact replication? mood inspiration? style guide?) not about the file contents."
       : "";
 
     // English cinematic GENIUS_QUESTIONS focused on the 7 video layers + platform-specific gate
     finalSystem += `\n\n<internal_quality_check hidden="true">
 Silently verify before generating (NEVER include any of this in output):
-1. CAMERA: Shot type, lens feel, and primary camera move — one dominant move, not five.
+1. CAMERA: Shot type, lens feel, and primary camera move, one dominant move, not five.
 2. SUBJECT: Appearance, blocking, and intent (what they do in-frame).
 3. MOTION: Physical arc with endpoints (weight, momentum, speed words).
-4. ENVIRONMENT: Location, time, weather/atmosphere — enough to ground the clip.
+4. ENVIRONMENT: Location, time, weather/atmosphere, enough to ground the clip.
 5. SCENE MOTION: Environmental dynamics (wind, water, crowd, particles) if relevant.
 6. LIGHTING: Direction, quality, color temperature, and mood.
 7. STYLE: Film reference or grading vocabulary when it tightens the look.
@@ -651,7 +653,7 @@ CRITICAL: Never put the literal substring ${TRAILER.QUESTIONS} inside the Englis
           return `[${title}] ${text.slice(0, 600)}`;
         })
         .join("\n");
-      finalUserPrompt += `\n\n[חומר ויזואלי מצורף — שלב אלמנטים קולנועיים מהחומר בפרומפט]\n${summary}`;
+      finalUserPrompt += `\n\n[חומר ויזואלי מצורף, שלב אלמנטים קולנועיים מהחומר בפרומפט]\n${summary}`;
     }
 
     return {
@@ -694,7 +696,7 @@ CRITICAL: Never put the literal substring ${TRAILER.QUESTIONS} inside the Englis
       kling:
         "\nPlatform-specific: Verify physics-based motion detail (weight, momentum, endpoints). Check 4-part structure. Confirm duration and aspect ratio. Add negative prompt if missing.",
       wan: "\nPlatform-specific: Verify prose structure (subject + movement + scene + camera + lighting + atmosphere). Confirm Negative prompt line is artifact-specific to the scene type. Check no keyword-list syntax.",
-      veo: "\nPlatform-specific: Verify Audio section exists with all 4 elements (dialogue/SFX/ambient/music) — missing audio causes hallucinated sounds. Check character identifiers for consistency. Verify all 7 elements covered. Confirm duration specified.",
+      veo: "\nPlatform-specific: Verify Audio section exists with all 4 elements (dialogue/SFX/ambient/music), missing audio causes hallucinated sounds. Check character identifiers for consistency. Verify all 7 elements covered. Confirm duration specified.",
       higgsfield:
         "\nPlatform-specific: Verify directive command syntax (not prose). Check timing cues present. Confirm style tags appended. Verify active verbs used.",
       minimax:

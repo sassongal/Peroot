@@ -97,7 +97,7 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
       tier: input.tier,
     });
   } catch (err) {
-    logger.warn("[context-engine] enrich failed — returning warning block", err);
+    logger.warn("[context-engine] enrich failed, returning warning block", err);
     const wb = warningBlock(
       id,
       input,
@@ -202,7 +202,7 @@ function warningBlock(
       summary: rawText
         ? rawText.slice(0, 400)
         : input.type === "image"
-          ? "[תמונה — הניתוח האוטומטי לא הצליח; התמונה לא זמינה כטקסט]"
+          ? "[תמונה, הניתוח האוטומטי לא הצליח; התמונה לא זמינה כטקסט]"
           : "",
       keyFacts: [],
       entities: [],

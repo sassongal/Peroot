@@ -29,6 +29,9 @@ Files showing up from the sibling subdir in `git status` are normal, not a leak.
 ## Non-negotiables
 
 - **Hebrew-first.** All user-facing strings, category names, toasts, AI system prompts in Hebrew.
+- **No em/en dashes in anything a human sees** (UI, generated content, emails). Comma,
+  colon, or plain hyphen instead. Everything must read human-written, not AI-written.
+  Enforced by ESLint in `Prut/web`; details in `Prut/web/CLAUDE.md`, Conventions.
 - **`src/proxy.ts`, never `src/middleware.ts`.** Next.js 16 renamed it; having both is a fatal build error.
 - **Never commit secrets.** The repo is **public**. `.env*`, `**/.mcp.json` and
   `**/.claude/settings.local.json` hold live tokens and are gitignored — keep it

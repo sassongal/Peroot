@@ -575,7 +575,7 @@ export function ResultSection({
                 dir="rtl"
               >
                 <span className="text-[10px] font-medium text-(--text-muted)">
-                  דלתות מהירות — שיפור על בסיס התוצאה:
+                  דלתות מהירות, שיפור על בסיס התוצאה:
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {QUICK_REFINE_ACTIONS.map((action) => (
@@ -696,7 +696,7 @@ export function ResultSection({
                   </span>
                   <span
                     className="cursor-help text-(--text-muted) hover:text-(--text-secondary) transition-colors"
-                    title="כל שדה מחליף את החלון הצבוע המתאים בתוך הפרומפט. הפרומפט מתעדכן בזמן אמת. אפשר לדלג על שדות — הם יישארו כפלייסהולדר עד שתמלא אותם."
+                    title="כל שדה מחליף את החלון הצבוע המתאים בתוך הפרומפט. הפרומפט מתעדכן בזמן אמת. אפשר לדלג על שדות, הם יישארו כפלייסהולדר עד שתמלא אותם."
                     aria-label="הסבר על משתנים"
                   >
                     <HelpCircle className="w-3.5 h-3.5" />
@@ -773,7 +773,7 @@ export function ResultSection({
             >
               <div
                 className="flex items-center gap-1.5"
-                title="משתנה שעדיין לא מולא — מופיע כתווית כחולה בפרומפט"
+                title="משתנה שעדיין לא מולא, מופיע כתווית כחולה בפרומפט"
               >
                 <span
                   className="w-2.5 h-2.5 rounded-sm bg-sky-500/15 border border-sky-500/50"
@@ -783,7 +783,7 @@ export function ResultSection({
               </div>
               <div
                 className="flex items-center gap-1.5"
-                title="משתנה שמילאת — מופיע כהדגשה ירוקה בפרומפט"
+                title="משתנה שמילאת, מופיע כהדגשה ירוקה בפרומפט"
               >
                 <span
                   className="w-2.5 h-2.5 rounded-sm bg-emerald-500/15 border border-emerald-500/50"

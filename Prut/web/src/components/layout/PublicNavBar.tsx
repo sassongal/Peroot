@@ -26,7 +26,7 @@ const NAV_LINKS: { href: string; label: string }[] = [
 
 const MORE_LINKS: { href: string; label: string }[] = [
   ...NAV_LINKS,
-  { href: "/connect", label: "Peroot Connect — חיבור סוכנים" },
+  { href: "/connect", label: "Peroot Connect, חיבור סוכנים" },
   { href: "/about", label: "אודות" },
   { href: "/contact", label: "צור קשר" },
 ];
@@ -71,7 +71,7 @@ export function PublicNavBar() {
           <Link
             href="/"
             className="flex items-center me-1 sm:me-4 shrink-0"
-            aria-label="Peroot — לדף הבית"
+            aria-label="Peroot, לדף הבית"
           >
             <Image
               src="/images/peroot_logo_pack/logo_dark_240.png"
@@ -153,8 +153,8 @@ export function PublicNavBar() {
           <Link
             href="/connect"
             className="hidden sm:flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/8 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-            aria-label="Peroot Connect — חבר את הסוכן שלך"
-            title="Peroot Connect — חבר את הסוכן שלך"
+            aria-label="Peroot Connect, חבר את הסוכן שלך"
+            title="Peroot Connect, חבר את הסוכן שלך"
           >
             <Plug className="w-4 h-4" />
           </Link>

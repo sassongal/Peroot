@@ -545,7 +545,7 @@ export default function TrafficTab() {
             </span>
           </div>
           <p className="text-zinc-500 font-medium tracking-tight text-sm">
-            תעבורה, מעורבות ומקורות הגעה — {data.range} ימים אחרונים
+            תעבורה, מעורבות ומקורות הגעה, {data.range} ימים אחרונים
           </p>
         </div>
 

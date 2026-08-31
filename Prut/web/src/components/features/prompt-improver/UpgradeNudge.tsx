@@ -100,7 +100,7 @@ export default function UpgradeNudge({
             {t.nudge?.exhausted_title || "נגמרו הקרדיטים היומיים"}
           </h3>
           <p className="text-sm text-slate-400">
-            שדרג ל-Pro וקבל 150 שיפורים בחודש — ללא הגבלה יומית
+            שדרג ל-Pro וקבל 150 שיפורים בחודש, ללא הגבלה יומית
           </p>
         </div>
 
@@ -128,7 +128,7 @@ export default function UpgradeNudge({
           >
             <Clock className="w-3 h-3" />
             {resetDate
-              ? `${t.nudge?.wait_for_reset || "המתן לאיפוס"} — ${resetDate}`
+              ? `${t.nudge?.wait_for_reset || "המתן לאיפוס"}, ${resetDate}`
               : "הקרדיטים מתחדשים בתוך 24 שעות מהשימוש האחרון"}
           </button>
         </div>

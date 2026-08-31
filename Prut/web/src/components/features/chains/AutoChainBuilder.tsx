@@ -71,20 +71,23 @@ export function AutoChainBuilder({
     }
   }, [goal, isGenerating, userRole, recentCategories]);
 
-  const handleSave = useCallback(async (chain: GeneratedChain) => {
-    const steps = chain.steps.map((s, i) => ({
-      id: crypto.randomUUID(),
-      prompt_text: s.prompt,
-      title: s.title,
-      order: i,
-      mode: s.mode,
-      variables: s.variables,
-      input_from_step: s.input_from_step,
-      output_description: s.output_description,
-    }));
-    await onSaveChain(chain.title, chain.description, steps);
-    onClose();
-  }, [onSaveChain, onClose]);
+  const handleSave = useCallback(
+    async (chain: GeneratedChain) => {
+      const steps = chain.steps.map((s, i) => ({
+        id: crypto.randomUUID(),
+        prompt_text: s.prompt,
+        title: s.title,
+        order: i,
+        mode: s.mode,
+        variables: s.variables,
+        input_from_step: s.input_from_step,
+        output_description: s.output_description,
+      }));
+      await onSaveChain(chain.title, chain.description, steps);
+      onClose();
+    },
+    [onSaveChain, onClose],
+  );
 
   // Show preview if we have a generated chain
   if (generatedChain) {
@@ -95,7 +98,7 @@ export function AutoChainBuilder({
       >
         <div
           className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0f0f0f] border border-white/10 rounded-2xl mx-4"
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <ChainPreview
             chain={generatedChain}
@@ -118,7 +121,7 @@ export function AutoChainBuilder({
       <div
         className="w-full max-w-lg max-h-[85vh] overflow-y-auto bg-[#0f0f0f] border border-white/10 rounded-2xl p-6 mx-4"
         dir="rtl"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -144,8 +147,8 @@ export function AutoChainBuilder({
           <label className="text-sm font-medium text-slate-300">מה המטרה הסופית?</label>
           <textarea
             value={goal}
-            onChange={e => setGoal(e.target.value)}
-            placeholder="לדוגמה: Newsletter שבועי בתחום הטכנולוגיה — כולל מחקר, כתיבת תוכן, subject lines ופוסט לסושיאל"
+            onChange={(e) => setGoal(e.target.value)}
+            placeholder="לדוגמה: Newsletter שבועי בתחום הטכנולוגיה, כולל מחקר, כתיבת תוכן, subject lines ופוסט לסושיאל"
             className="w-full h-28 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/30 resize-none"
             disabled={isGenerating}
           />
@@ -191,7 +194,7 @@ export function AutoChainBuilder({
               "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all",
               isGenerating
                 ? "bg-amber-500/10 border border-amber-500/20 text-amber-300 cursor-wait"
-                : "bg-linear-to-l from-amber-500 to-orange-500 text-black hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                : "bg-linear-to-l from-amber-500 to-orange-500 text-black hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed",
             )}
           >
             {isGenerating ? (

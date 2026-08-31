@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getOAuthClient, OAUTH_SCOPE } from "@/lib/connect/oauth";
 
 export const metadata: Metadata = {
-  title: "אישור חיבור — Peroot Connect",
+  title: "אישור חיבור, Peroot Connect",
   robots: { index: false, follow: false },
 };
 

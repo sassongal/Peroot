@@ -30,7 +30,7 @@ export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
     return (
       <div data-testid="stage-error" className="flex items-center gap-2 text-red-600 text-sm">
         <X className="w-4 h-4" />
-        <span>לא הצלחנו — נסה שוב?</span>
+        <span>לא הצלחנו, נסה שוב?</span>
       </div>
     );
   }

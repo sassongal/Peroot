@@ -224,7 +224,7 @@ export function useFavorites() {
       // Roll back the optimistic toggle so the star reflects the true server
       // state instead of silently losing the change on the next reload.
       setFavorites(snapshot);
-      logger.error("[favorites] toggle failed — rolled back", err);
+      logger.error("[favorites] toggle failed, rolled back", err);
       toast.error("שמירת המועדף נכשלה. בדקו את החיבור ונסו שוב.");
       return false;
     }

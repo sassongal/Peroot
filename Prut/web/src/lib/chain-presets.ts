@@ -46,10 +46,10 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 מבנה הניוזלטר:
 1. פתיח מעניין (2-3 משפטים שמעוררים סקרנות)
-2. סקציה 1 — הנושא המרכזי (150-200 מילים)
-3. סקציה 2 — תובנה מעשית (100-150 מילים)
-4. סקציה 3 — טיפ מהיר או כלי שימושי (50-80 מילים)
-5. CTA — קריאה לפעולה בסיום
+2. סקציה 1, הנושא המרכזי (150-200 מילים)
+3. סקציה 2, תובנה מעשית (100-150 מילים)
+4. סקציה 3, טיפ מהיר או כלי שימושי (50-80 מילים)
+5. CTA, קריאה לפעולה בסיום
 
 סגנון:
 - טון שיחתי-מקצועי
@@ -68,12 +68,12 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (גוף ה-Newsletter), צור:
 
-1. **5 אפשרויות ל-Subject Line** — כל אחת עם:
+1. **5 אפשרויות ל-Subject Line**, כל אחת עם:
    - הכותרת עצמה
    - סוג הגישה (סקרנות / ערך / דחיפות / שאלה / מספר)
    - ציון open-rate צפוי (1-10)
 
-2. **Preview text** (2-3 אפשרויות) — הטקסט שמופיע אחרי ה-subject
+2. **Preview text** (2-3 אפשרויות), הטקסט שמופיע אחרי ה-subject
 
 3. **Pre-header** מומלץ
 
@@ -95,10 +95,10 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 בהתבסס על הפלט הקודם (תוכן ה-Newsletter), כתוב פוסט LinkedIn שמקדם את ה-Newsletter.
 
 מבנה הפוסט:
-1. Hook — שורה ראשונה שעוצרת גלילה (שאלה / סטטיסטיקה / טענה מפתיעה)
-2. גוף — 3-4 תובנות מפתח מה-Newsletter (bullet points)
-3. CTA — הנעה להירשם / לקרוא
-4. האשטגים — 3-5 רלוונטיים
+1. Hook, שורה ראשונה שעוצרת גלילה (שאלה / סטטיסטיקה / טענה מפתיעה)
+2. גוף, 3-4 תובנות מפתח מה-Newsletter (bullet points)
+3. CTA, הנעה להירשם / לקרוא
+4. האשטגים, 3-5 רלוונטיים
 
 כללים:
 - אורך: 150-250 מילים
@@ -126,7 +126,7 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 הפלט:
 1. הנושא המרכזי של השבוע
-2. 5 זוויות שונות — כל אחת תהפוך לפוסט
+2. 5 זוויות שונות, כל אחת תהפוך לפוסט
 3. הנרטיב שמחבר את כל הפוסטים
 4. האשטג ייחודי לסדרה
 5. טון וסגנון מומלצים
@@ -173,10 +173,10 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (5 פוסטים), צור תוכן Stories משלים:
 
-לכל פוסט — 3 Stories:
+לכל פוסט, 3 Stories:
 1. Teaser (לפני הפוסט)
 2. Highlight (מהפוסט עצמו)
-3. Engagement (אחרי — סקר/שאלה/quiz)
+3. Engagement (אחרי, סקר/שאלה/quiz)
 
 כולל:
 - טקסט לכל Story
@@ -216,9 +216,7 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 - התמקד בעברית
 - העדף מילות מפתח עם כוונת חיפוש ברורה
 - כלול long-tail keywords`,
-        variables: [
-          { name: "topic", label: "נושא המאמר", default: "" },
-        ],
+        variables: [{ name: "topic", label: "נושא המאמר", default: "" }],
         input_from_step: null,
         output_description: "רשימת מילות מפתח + שאלות נפוצות + כוונת חיפוש",
       },
@@ -230,13 +228,13 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (מחקר מילות מפתח), צור מתווה מפורט למאמר:
 
-1. כותרת ראשית (H1) — כולל מילת מפתח ראשית
-2. מבוא (100 מילים) — hook + הבטחת ערך
-3. 4-6 סקציות (H2) — כל אחת עם:
+1. כותרת ראשית (H1), כולל מילת מפתח ראשית
+2. מבוא (100 מילים), hook + הבטחת ערך
+3. 4-6 סקציות (H2), כל אחת עם:
    - כותרת משנה
    - 2-3 נקודות עיקריות
    - מילת מפתח משנית משולבת
-4. FAQ — 3-5 שאלות (מה-PAA)
+4. FAQ, 3-5 שאלות (מה-PAA)
 5. סיכום + CTA
 
 כללים:
@@ -275,12 +273,12 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (המאמר), צור:
 
-1. **Meta Title** (50-60 תווים) — 3 אפשרויות
-2. **Meta Description** (150-160 תווים) — 3 אפשרויות
+1. **Meta Title** (50-60 תווים), 3 אפשרויות
+2. **Meta Description** (150-160 תווים), 3 אפשרויות
 3. **URL Slug** מומלץ
-4. **Schema Markup** (JSON-LD) — Article schema
+4. **Schema Markup** (JSON-LD), Article schema
 5. **Alt text** ל-3 תמונות מומלצות
-6. **Internal linking** — 3 הצעות לקישורים פנימיים
+6. **Internal linking**, 3 הצעות לקישורים פנימיים
 
 כללים:
 - Meta title חייב לכלול מילת מפתח ראשית
@@ -298,9 +296,9 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (המאמר ו-meta tags), כתוב 3 פוסטים שונים לקידום המאמר:
 
-1. **פוסט LinkedIn** — מקצועי, 150-200 מילים, תובנה + קישור
-2. **פוסט Twitter/X** — 280 תווים, hook + קישור
-3. **פוסט Facebook** — שיחתי, 100-150 מילים, שאלה + קישור
+1. **פוסט LinkedIn**, מקצועי, 150-200 מילים, תובנה + קישור
+2. **פוסט Twitter/X**, 280 תווים, hook + קישור
+3. **פוסט Facebook**, שיחתי, 100-150 מילים, שאלה + קישור
 
 לכל פוסט:
 - האשטגים מותאמים לפלטפורמה
@@ -336,9 +334,7 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 4. שאלות הבהרה (אם חסר מידע)
 5. מתחרים אפשריים
 6. דגשים מיוחדים שהלקוח ציין`,
-        variables: [
-          { name: "client_brief", label: "בריף מהלקוח", default: "" },
-        ],
+        variables: [{ name: "client_brief", label: "בריף מהלקוח", default: "" }],
         input_from_step: null,
         output_description: "ניתוח מובנה של הצרכים והאתגרים",
       },
@@ -350,11 +346,11 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (ניתוח הבריף), הגדר scope מפורט:
 
-1. **Deliverables** — רשימת תוצרים מדויקת
-2. **Timeline** — שלבי ביצוע + אבני דרך
-3. **Out of Scope** — מה לא כלול (חשוב!)
-4. **תלויות** — מה נדרש מהלקוח
-5. **סיכונים** — 2-3 סיכונים + mitigation
+1. **Deliverables**, רשימת תוצרים מדויקת
+2. **Timeline**, שלבי ביצוע + אבני דרך
+3. **Out of Scope**, מה לא כלול (חשוב!)
+4. **תלויות**, מה נדרש מהלקוח
+5. **סיכונים**, 2-3 סיכונים + mitigation
 
 פורמט מקצועי, ברור, בעברית.`,
         variables: [],
@@ -369,10 +365,10 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (Scope), בנה הצעת תמחור:
 
-1. **חלוקה לשלבים** — עלות לכל שלב
+1. **חלוקה לשלבים**, עלות לכל שלב
 2. **3 מסלולים** (Basic / Pro / Premium)
 3. **תנאי תשלום** מומלצים
-4. **בונוסים** — מה נותנים מעבר (ערך נוסף)
+4. **בונוסים**, מה נותנים מעבר (ערך נוסף)
 5. **תוקף ההצעה**
 
 כללים:
@@ -498,16 +494,14 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 הגדר קהל יעד מפורט לקמפיין בנושא {product}:
 
-1. **דמוגרפיה** — גיל, מגדר, מיקום, הכנסה
-2. **פסיכוגרפיה** — ערכים, תחומי עניין, כאבים
-3. **התנהגות** — איפה מבלים אונליין, מה קונים
-4. **Buyer Persona** — 2 פרסונות מפורטות
-5. **Targeting recommendations** — קהלים ב-Facebook/Google
+1. **דמוגרפיה**, גיל, מגדר, מיקום, הכנסה
+2. **פסיכוגרפיה**, ערכים, תחומי עניין, כאבים
+3. **התנהגות**, איפה מבלים אונליין, מה קונים
+4. **Buyer Persona**, 2 פרסונות מפורטות
+5. **Targeting recommendations**, קהלים ב-Facebook/Google
 
 בעברית.`,
-        variables: [
-          { name: "product", label: "מוצר/שירות", default: "" },
-        ],
+        variables: [{ name: "product", label: "מוצר/שירות", default: "" }],
         input_from_step: null,
         output_description: "2 Buyer Personas + targeting recommendations",
       },
@@ -542,16 +536,16 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (קופיי מודעות), צור מתווה דף נחיתה:
 
-1. **Hero Section** — כותרת + תת-כותרת + CTA + תמונה
-2. **Social Proof** — ציטוטים / לוגואים / מספרים
-3. **Benefits** — 3-4 יתרונות עם אייקונים
-4. **How It Works** — 3 שלבים
-5. **FAQ** — 5 שאלות נפוצות
-6. **CTA final** — הנעה אחרונה
+1. **Hero Section**, כותרת + תת-כותרת + CTA + תמונה
+2. **Social Proof**, ציטוטים / לוגואים / מספרים
+3. **Benefits**, 3-4 יתרונות עם אייקונים
+4. **How It Works**, 3 שלבים
+5. **FAQ**, 5 שאלות נפוצות
+6. **CTA final**, הנעה אחרונה
 
 כללים:
 - מיקוד ב-conversion אחד
-- Above the fold — הכל ברור
+- Above the fold, הכל ברור
 - Mobile first
 - בעברית`,
         variables: [],
@@ -566,9 +560,9 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (דף נחיתה), כתוב סדרת 3 מיילים:
 
-**מייל 1** (מיידי) — תודה + delivery של ההבטחה
-**מייל 2** (יום 2) — ערך נוסף + social proof
-**מייל 3** (יום 5) — הצעה / urgency / CTA חזק
+**מייל 1** (מיידי), תודה + delivery של ההבטחה
+**מייל 2** (יום 2), ערך נוסף + social proof
+**מייל 3** (יום 5), הצעה / urgency / CTA חזק
 
 לכל מייל:
 - Subject line (3 אפשרויות)
@@ -601,8 +595,8 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 1. נושא השיעור
 2. מטרות למידה (2-3)
 3. מהלך השיעור:
-   - פתיחה (5 דק) — hook
-   - גוף (30 דק) — פעילויות
+   - פתיחה (5 דק), hook
+   - גוף (30 דק), פעילויות
    - סיכום (10 דק)
 4. אמצעי הוראה (מצגת/סרטון/חומר)
 5. משימת בית
@@ -624,7 +618,7 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם (5 שיעורים), צור דפי עבודה:
 
-לכל שיעור — דף עבודה אחד:
+לכל שיעור, דף עבודה אחד:
 1. כותרת ושם התלמיד
 2. 3-4 תרגילים מדורגים
 3. שאלת חשיבה / אתגר
@@ -677,16 +671,14 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בצע ניתוח מתחרים עבור {product_type}:
 
-1. 3 מתחרים עיקריים — מה הם עושים טוב/רע
+1. 3 מתחרים עיקריים, מה הם עושים טוב/רע
 2. USP (Unique Selling Proposition) שלנו vs. שלהם
 3. Pain points של הקהל שלא מקבלים מענה
 4. מסרים שעובדים בתעשייה
 5. הזדמנויות לבידול
 
 בעברית.`,
-        variables: [
-          { name: "product_type", label: "מוצר/שירות", default: "" },
-        ],
+        variables: [{ name: "product_type", label: "מוצר/שירות", default: "" }],
         input_from_step: null,
         output_description: "ניתוח מתחרים + USP + הזדמנויות",
       },
@@ -754,9 +746,7 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 6. Target Audience + Persona
 
 בעברית.`,
-        variables: [
-          { name: "product_name", label: "שם המוצר", default: "" },
-        ],
+        variables: [{ name: "product_name", label: "שם המוצר", default: "" }],
         input_from_step: null,
         output_description: "מסר מרכזי + value proposition + key messages",
       },
@@ -769,7 +759,7 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 בהתבסס על הפלט הקודם, כתוב הודעה לעיתונות:
 
 1. כותרת (headline + subheadline)
-2. פסקה ראשונה — מי, מה, מתי, למה
+2. פסקה ראשונה, מי, מה, מתי, למה
 3. ציטוט מהמנכ"ל
 4. פרטים טכניים / תכונות
 5. זמינות ומחיר
@@ -789,10 +779,10 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 
 בהתבסס על הפלט הקודם, צור חבילת פוסטים להשקה:
 
-1. **Teaser** (שבוע לפני) — 2 פוסטים מסתוריים
-2. **Launch Day** — 3 פוסטים (LinkedIn, Instagram, Twitter)
-3. **Day After** — 1 פוסט תגובות ראשוניות
-4. **Week After** — 1 פוסט סיכום
+1. **Teaser** (שבוע לפני), 2 פוסטים מסתוריים
+2. **Launch Day**, 3 פוסטים (LinkedIn, Instagram, Twitter)
+3. **Day After**, 1 פוסט תגובות ראשוניות
+4. **Week After**, 1 פוסט סיכום
 
 לכל פוסט: טקסט + האשטגים + visual description.
 בעברית.`,
@@ -825,9 +815,7 @@ export const CHAIN_PRESETS: GeneratedChain[] = [
 5. שאלות שהתוכן עונה עליהן
 
 בעברית.`,
-        variables: [
-          { name: "original_content", label: "הדבק את התוכן המקורי", default: "" },
-        ],
+        variables: [{ name: "original_content", label: "הדבק את התוכן המקורי", default: "" }],
         input_from_step: null,
         output_description: "גרעיני תוכן: תובנות, נתונים, סיפורים, טיפים",
       },

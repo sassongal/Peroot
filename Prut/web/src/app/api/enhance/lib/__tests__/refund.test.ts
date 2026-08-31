@@ -24,7 +24,7 @@ beforeEach(() => {
   sentry.mockReset();
 });
 
-describe("refundEnhanceCredit — the enhance-flow refund matrix", () => {
+describe("refundEnhanceCredit, the enhance-flow refund matrix", () => {
   // (userId, guestId, isRefinement) → who gets refunded
   it("authenticated user → refunds the user, never the guest (regardless of guestId/isRefinement)", async () => {
     for (const guestId of [null, "guest-1"]) {

@@ -128,7 +128,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
       url = `https://gemini.google.com/app`;
       // Gemini doesn't accept a prefill param — copy + open
       void navigator.clipboard.writeText(text);
-      toast.success("הפרומפט הועתק — הדבק ב-Gemini");
+      toast.success("הפרומפט הועתק, הדבק ב-Gemini");
     }
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
@@ -148,7 +148,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
         .join("\n\n---\n\n");
       void navigator.clipboard.writeText(all);
       window.open("https://gemini.google.com/app", "_blank", "noopener,noreferrer");
-      toast.success("כל השלבים הועתקו — הדבק ב-Gemini");
+      toast.success("כל השלבים הועתקו, הדבק ב-Gemini");
       return;
     }
     chain.steps.forEach((_, i) => {
@@ -308,7 +308,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
         {completedSteps.has(currentStep) && (
           <div className="mt-3">
             <label className="text-[10px] text-(--text-muted) uppercase tracking-wider">
-              הדבק את הפלט של שלב זה (אופציונלי — יוזרק לשלב הבא):
+              הדבק את הפלט של שלב זה (אופציונלי, יוזרק לשלב הבא):
             </label>
             <textarea
               value={stepOutputs[currentStep] || ""}

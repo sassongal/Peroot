@@ -620,7 +620,7 @@ export function PersonalLibraryProvider({
               await ctxRef.current.restorePrompts(deleted);
               toast.success("הפרומפטים שוחזרו");
             } catch {
-              toast.error("השחזור נכשל — הפרומפטים לא נמחקו לצמיתות, נסה שוב.");
+              toast.error("השחזור נכשל, הפרומפטים לא נמחקו לצמיתות, נסה שוב.");
             }
           },
         },
@@ -672,7 +672,7 @@ export function PersonalLibraryProvider({
       );
       toast.success(
         missingCount > 0
-          ? `תגיות עודכנו ל-${found.length} פריטים. ${missingCount} לא נטענו — גללו אליהם ונסו שוב.`
+          ? `תגיות עודכנו ל-${found.length} פריטים. ${missingCount} לא נטענו, גללו אליהם ונסו שוב.`
           : "תגיות עודכנו",
       );
       setShowTagDialog(false);

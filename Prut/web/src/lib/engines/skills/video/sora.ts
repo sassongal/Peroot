@@ -7,7 +7,7 @@ export const skill: PlatformSkill = {
   examples: [
     {
       concept: "חללית נוחתת על כוכב זר",
-      output: `A battered silver spacecraft with glowing blue thrusters descends through a swirling orange atmosphere toward an alien landscape of dark obsidian plains and towering crystalline formations. The pilot — a woman with close-cropped auburn hair, wearing a grey flight suit with mission patches, visor raised — grips the controls. Duration: 12s.
+      output: `A battered silver spacecraft with glowing blue thrusters descends through a swirling orange atmosphere toward an alien landscape of dark obsidian plains and towering crystalline formations. The pilot, a woman with close-cropped auburn hair, wearing a grey flight suit with mission patches, visor raised, grips the controls. Duration: 12s.
 
 Cinematography:
 Camera shot: 50mm lens, begins inside cockpit over the pilot's shoulder, then cuts to wide exterior as the ship breaks through the cloud layer
@@ -25,7 +25,7 @@ Style: Anamorphic 2.0x, Villeneuve-scale grandeur, practical-feeling VFX, IMAX c
     },
     {
       concept: "אב ובת אופים עוגה יחד",
-      output: `A warm sunlit kitchen with butcher-block counters and white subway tile backsplash. A father in his mid-30s — tall, dark beard, rolled-up flannel sleeves — stands beside his 5-year-old daughter who has curly blonde hair, a pink apron dusted with flour, and stands on a wooden step stool. Duration: 8s.
+      output: `A warm sunlit kitchen with butcher-block counters and white subway tile backsplash. A father in his mid-30s, tall, dark beard, rolled-up flannel sleeves, stands beside his 5-year-old daughter who has curly blonde hair, a pink apron dusted with flour, and stands on a wooden step stool. Duration: 8s.
 
 Cinematography:
 Camera shot: 35mm lens, eye-level medium shot, gentle handheld sway
@@ -38,7 +38,7 @@ Actions:
 - She giggles and claps her flour-covered hands together creating a small puff
 
 Dialogue:
-Daughter: "Daddy, look — it's snowing!"
+Daughter: "Daddy, look, it's snowing!"
 Father: (laughing) "Inside snow, huh? Your grandma is going to love this mess."
 
 Lighting: Soft morning window light from the right, warm fill from overhead pendant lamp; palette: cream, honey gold, soft white, blush pink.
@@ -104,7 +104,7 @@ Style: Fincher-level product photography precision, anamorphic flare on highligh
     },
     {
       concept: "קוסם מבצע טריק קלפים ברחוב",
-      output: `A narrow cobblestone street in the Latin Quarter of Paris, late afternoon. A street magician — a man in his late 20s with sharp dark eyes, a fitted black vest over a white henley, sleeves rolled to the elbows, silver rings on his fingers — stands before a small crowd. Duration: 10s.
+      output: `A narrow cobblestone street in the Latin Quarter of Paris, late afternoon. A street magician, a man in his late 20s with sharp dark eyes, a fitted black vest over a white henley, sleeves rolled to the elbows, silver rings on his fingers, stands before a small crowd. Duration: 10s.
 
 Cinematography:
 Camera shot: 50mm, starts at medium shot, pushes to close-up on hands at the climax
@@ -114,10 +114,10 @@ Actions:
 - Magician fans a deck of cards between both hands in the first two seconds, cards spreading in a perfect arc, each one catching the light
 - At three seconds he invites a woman from the crowd to pick a card, she reaches forward tentatively
 - He shuffles the deck with a cascade flourish at five seconds, cards waterfalling between hands
-- At eight seconds he slaps the deck on the table and flips the top card — her card — as the crowd erupts, the woman's hands flying to her mouth
+- At eight seconds he slaps the deck on the table and flips the top card, her card, as the crowd erupts, the woman's hands flying to her mouth
 
 Dialogue:
-Magician: "Now watch very carefully — the card doesn't choose you, you choose the card."
+Magician: "Now watch very carefully, the card doesn't choose you, you choose the card."
 Woman: (gasping) "No way... that's impossible!"
 
 Lighting: Warm golden hour light raking down the narrow street, soft shadows from awnings, Parisian storefronts glowing in background; palette: warm stone, ivory, charcoal, gold.
@@ -126,7 +126,7 @@ Style: Handheld intimacy, Linklater-style street realism, 35mm grain, available 
     },
     {
       concept: "דרקון מתעורר במערה",
-      output: `A vast underground cavern filled with mountains of ancient gold coins, jeweled goblets, and rusted swords. In the center, a colossal dragon — emerald scales the size of shields, horns like gnarled oak branches, a ridge of spines running down its back — lies coiled in sleep. Its belly glows faintly from internal fire. Duration: 12s.
+      output: `A vast underground cavern filled with mountains of ancient gold coins, jeweled goblets, and rusted swords. In the center, a colossal dragon, emerald scales the size of shields, horns like gnarled oak branches, a ridge of spines running down its back, lies coiled in sleep. Its belly glows faintly from internal fire. Duration: 12s.
 
 Cinematography:
 Camera shot: Wide establishing shot on 24mm, slowly pushing in toward the dragon's massive head
@@ -145,7 +145,7 @@ Style: Peter Jackson epic scale, 65mm IMAX, VFX-heavy with practical weight, dee
     },
     {
       concept: "צלם מתעד חתונה בגשם",
-      output: `A country estate garden where an outdoor wedding reception continues despite sudden rain. A wedding photographer — a woman in her 30s with a pixie cut, wearing a dark blazer with camera straps crossed over her chest, Canon R5 in hand — moves through the chaos. Duration: 10s.
+      output: `A country estate garden where an outdoor wedding reception continues despite sudden rain. A wedding photographer, a woman in her 30s with a pixie cut, wearing a dark blazer with camera straps crossed over her chest, Canon R5 in hand, moves through the chaos. Duration: 10s.
 
 Cinematography:
 Camera shot: 35mm, medium shot tracking the photographer, shallow DOF
@@ -158,8 +158,8 @@ Actions:
 - The bride grabs the groom's face and kisses him at seven seconds, rain soaking them both, the photographer circling them for the shot
 
 Dialogue:
-Bride: (laughing through rain) "This is perfect — this is actually perfect!"
-Photographer: "Don't stop, don't stop — that's the cover shot!"
+Bride: (laughing through rain) "This is perfect, this is actually perfect!"
+Photographer: "Don't stop, don't stop, that's the cover shot!"
 
 Lighting: Overcast grey sky with warm string lights glowing along the table, camera flash creating staccato highlights on rain; palette: ivory, sage green, warm gold, storm grey.
 Style: Documentary wedding film aesthetic, Robert Richardson natural light sensibility, beautiful chaos.`,
@@ -167,7 +167,7 @@ Style: Documentary wedding film aesthetic, Robert Richardson natural light sensi
     },
     {
       concept: "מנתח רובוט מבצע ניתוח עתידני",
-      output: `A sterile white surgical suite in a futuristic hospital. A humanoid robot surgeon — matte white chassis with articulated surgical arms ending in micro-tool fingers, a single blue optical sensor as its "eye" — stands over a patient on a hovering surgical table. Holographic displays float around the operating field. Duration: 10s.
+      output: `A sterile white surgical suite in a futuristic hospital. A humanoid robot surgeon, matte white chassis with articulated surgical arms ending in micro-tool fingers, a single blue optical sensor as its "eye", stands over a patient on a hovering surgical table. Holographic displays float around the operating field. Duration: 10s.
 
 Cinematography:
 Camera shot: 50mm, begins at wide establishing, moves to extreme close-up on the robot's precise instruments
@@ -185,7 +185,7 @@ Style: Ex Machina precision, Kubrickian symmetry, 4K ultra-sharp with shallow DO
     },
     {
       concept: "ילד מגלה כלב גור ברחוב",
-      output: `A quiet residential street lined with autumn maple trees dropping red and gold leaves. A boy around 8 years old — dark hair, oversized denim jacket, backpack slung over one shoulder — walks home from school kicking a small rock. Duration: 8s.
+      output: `A quiet residential street lined with autumn maple trees dropping red and gold leaves. A boy around 8 years old, dark hair, oversized denim jacket, backpack slung over one shoulder, walks home from school kicking a small rock. Duration: 8s.
 
 Cinematography:
 Camera shot: 35mm, medium shot at the boy's eye level, gentle handheld following from behind
@@ -193,7 +193,7 @@ Mood: Pure discovery, instant love
 
 Actions:
 - The boy stops mid-kick at the first second, head turning toward a cardboard box beside a lamppost
-- At two seconds he crouches down and peers inside — a tiny golden retriever puppy looks up at him with huge brown eyes
+- At two seconds he crouches down and peers inside, a tiny golden retriever puppy looks up at him with huge brown eyes
 - His mouth falls open at three seconds, then transforms into the widest grin, eyes watering
 - At five seconds he reaches in with both hands and carefully lifts the puppy, which immediately licks his chin, and the boy dissolves into helpless giggles, pressing the puppy to his chest
 - He stands at seven seconds, looking around the empty street as if asking permission, then tucks the puppy inside his jacket
@@ -225,7 +225,7 @@ Style: Nike commercial grade, slow-motion at 120fps for the sprint, macro-to-act
     },
     {
       concept: "גיטריסט מנגן סולו בהופעה חיה",
-      output: `A packed concert venue, haze machines filling the air with thick atmosphere. A lead guitarist — a man in his 40s with long grey-streaked hair, worn leather jacket, vintage Fender Stratocaster in sunburst finish — stands center stage in a pool of white spotlight. Duration: 10s.
+      output: `A packed concert venue, haze machines filling the air with thick atmosphere. A lead guitarist, a man in his 40s with long grey-streaked hair, worn leather jacket, vintage Fender Stratocaster in sunburst finish, stands center stage in a pool of white spotlight. Duration: 10s.
 
 Cinematography:
 Camera shot: 50mm anamorphic, starts at medium shot, crash-zooms to close-up on fretboard at the solo climax
@@ -238,7 +238,7 @@ Actions:
 - At eight seconds he hits the final sustained note, holding the guitar up toward the ceiling, feedback ringing, the crowd erupting
 
 Dialogue:
-(No spoken dialogue — the guitar's wailing solo fills the entire audio space)
+(No spoken dialogue, the guitar's wailing solo fills the entire audio space)
 
 Lighting: Single harsh white spot from directly above cutting through blue haze, crowd lit by red and purple wash; palette: spotlight white, haze blue, leather brown, guitar sunburst amber.
 Style: Concert film aesthetic, Scorsese-Shine a Light energy, 35mm pushed stock grain, anamorphic flares through haze.`,
@@ -248,17 +248,17 @@ Style: Concert film aesthetic, Scorsese-Shine a Light energy, 35mm pushed stock 
   mistakes: [
     {
       bad: "A spaceship lands on a planet. It looks cool and cinematic.",
-      good: "A battered silver spacecraft with glowing blue thrusters descends through a swirling orange atmosphere toward an alien landscape of dark obsidian plains. The pilot — a woman with close-cropped auburn hair, grey flight suit, visor raised — grips the controls. Duration: 12s.\n\nActions:\n- Ship rattles as it hits turbulence in the first three seconds\n- Ship punches through clouds at six seconds revealing the vista\n- Landing struts deploy as the ship settles, kicking up iridescent dust",
+      good: "A battered silver spacecraft with glowing blue thrusters descends through a swirling orange atmosphere toward an alien landscape of dark obsidian plains. The pilot, a woman with close-cropped auburn hair, grey flight suit, visor raised, grips the controls. Duration: 12s.\n\nActions:\n- Ship rattles as it hits turbulence in the first three seconds\n- Ship punches through clouds at six seconds revealing the vista\n- Landing struts deploy as the ship settles, kicking up iridescent dust",
       why: "Sora requires structured sections (Cinematography, Actions, Lighting, Style) and a specified duration. Vague descriptions without structure produce unfocused results.",
     },
     {
       bad: "Duration: 8s. A man walks into a room and sits down. Actions: - He walks. - He sits.",
       good: "Duration: 8s.\n\nActions:\n- Man pushes open the heavy oak door in the first two seconds, warm light spilling across his face\n- He pauses in the doorway at three seconds, scanning the room, right hand still on the handle\n- At five seconds he crosses to a leather armchair and lowers himself into it with a weary exhale\n- At seven seconds he loosens his tie and leans back, eyes closing",
-      why: 'Sora actions need beat-timed specificity — "in the first two seconds," "at five seconds." Each action should be a vivid micro-moment, not a generic description. Aim for 5+ timed action beats.',
+      why: 'Sora actions need beat-timed specificity, "in the first two seconds," "at five seconds." Each action should be a vivid micro-moment, not a generic description. Aim for 5+ timed action beats.',
     },
     {
       bad: "A woman talks to a man in a cafe. She has brown hair. He wears a blue shirt.",
-      good: "A woman — dark brown hair in a low bun, tortoiseshell glasses, olive linen blazer with a silver pendant, three freckles across her left cheek — sits across from a man — sandy hair parted left, fitted navy henley with sleeves pushed to the elbows, a faded tattoo of a compass on his right forearm. Duration: 8s.",
+      good: "A woman, dark brown hair in a low bun, tortoiseshell glasses, olive linen blazer with a silver pendant, three freckles across her left cheek, sits across from a man, sandy hair parted left, fitted navy henley with sleeves pushed to the elbows, a faded tattoo of a compass on his right forearm. Duration: 8s.",
       why: "Characters need 5+ identifying details for Sora to maintain consistency. Include hair, clothing, accessories, distinguishing marks, and posture to prevent the model from morphing features between frames.",
     },
     {
@@ -269,15 +269,15 @@ Style: Concert film aesthetic, Scorsese-Shine a Light energy, 35mm pushed stock 
   ],
   scoringCriteria: [
     "Duration line (e.g. Duration: 8s) anchors clip length",
-    "Sections: Cinematography, Actions, Lighting, Style — each populated",
+    "Sections: Cinematography, Actions, Lighting, Style, each populated",
     "5+ concrete identity hooks per recurring character",
     "4+ beats in Actions with second-level timing",
     "Lighting: direction, quality, palette (named colors)",
     "Cinematography: shot size + lens/move + mood",
     "Style: film stock / era / reference when useful",
-    "No contradictory beats — one clear narrative arc",
+    "No contradictory beats, one clear narrative arc",
     "Actions use verbs with physical consequence (pushes, catches, stumbles)",
-    "Dialogue beats in Actions if speech matters — timed to seconds",
+    "Dialogue beats in Actions if speech matters, timed to seconds",
   ],
   chainOfThoughtExamples: [
     {
@@ -310,7 +310,7 @@ Style: Concert film aesthetic, Scorsese-Shine a Light energy, 35mm pushed stock 
       iteration: 2,
       beforePrompt: "Two people talk in a car. Night.",
       afterPrompt:
-        "Duration: 10s.\n\nCharacters:\nDriver — woman, early 30s, auburn hair in a loose ponytail, silver hoop earrings, black leather jacket with white stitching\nPassenger — man, late 20s, stubble, grey hoodie, nervous thumb rubbing his knee\n\nCinematography:\nCamera shot: 35mm, slow lateral track outside the rain-streaked window\nMood: Intimate unease\n\nActions:\n- First three seconds: she speaks without turning, reflection in windshield\n- At five seconds: he looks down, then up at a passing neon sign\n- At eight seconds: she grips the wheel harder, knuckles pale\n\nLighting: Neon bounce on wet glass; palette: cyan, magenta, skin tones desaturated.",
+        "Duration: 10s.\n\nCharacters:\nDriver, woman, early 30s, auburn hair in a loose ponytail, silver hoop earrings, black leather jacket with white stitching\nPassenger, man, late 20s, stubble, grey hoodie, nervous thumb rubbing his knee\n\nCinematography:\nCamera shot: 35mm, slow lateral track outside the rain-streaked window\nMood: Intimate unease\n\nActions:\n- First three seconds: she speaks without turning, reflection in windshield\n- At five seconds: he looks down, then up at a passing neon sign\n- At eight seconds: she grips the wheel harder, knuckles pale\n\nLighting: Neon bounce on wet glass; palette: cyan, magenta, skin tones desaturated.",
       changes: ["Added identity detail + structured dialogue-free tension beats"],
     },
   ],

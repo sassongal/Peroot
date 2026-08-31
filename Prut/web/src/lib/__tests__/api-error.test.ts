@@ -21,7 +21,7 @@ describe("apiError primitive", () => {
   });
 });
 
-describe("errors — Hebrew message + snake_case code convention", () => {
+describe("errors, Hebrew message + snake_case code convention", () => {
   it("unauthorized → 401 auth_required, Hebrew message", async () => {
     const res = errors.unauthorized();
     expect(res.status).toBe(401);

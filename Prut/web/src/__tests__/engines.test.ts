@@ -215,7 +215,7 @@ describe("Target model hints", () => {
   it("StandardEngine injects ChatGPT hints when targetModel is chatgpt", () => {
     const engine = new StandardEngine();
     const result = engine.generate(makeInput({ targetModel: "chatgpt" }));
-    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: ChatGPT (GPT-5.x)]");
+    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION, יעד: ChatGPT (GPT-5.x)]");
     expect(result.systemPrompt).toContain("עיקרון יישור");
   });
 
@@ -230,7 +230,7 @@ describe("Target model hints", () => {
     const result = engine.generate(
       makeInput({ mode: CapabilityMode.DEEP_RESEARCH, targetModel: "claude" }),
     );
-    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: Claude]");
+    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION, יעד: Claude]");
   });
 
   it("AgentEngine injects Gemini hints", () => {
@@ -238,7 +238,7 @@ describe("Target model hints", () => {
     const result = engine.generate(
       makeInput({ mode: CapabilityMode.AGENT_BUILDER, targetModel: "gemini" }),
     );
-    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: Gemini]");
+    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION, יעד: Gemini]");
   });
 
   it("ImageEngine does not inject text target-model hints", () => {
@@ -257,7 +257,7 @@ describe("Target model hints", () => {
         targetModel: "gemini",
       }),
     );
-    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: Gemini]");
+    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION, יעד: Gemini]");
   });
 
   it("ResearchEngine generateRefinement includes target model hints", () => {
@@ -269,7 +269,7 @@ describe("Target model hints", () => {
         targetModel: "claude",
       }),
     );
-    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: Claude]");
+    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION, יעד: Claude]");
   });
 
   it("AgentEngine generateRefinement includes target model hints", () => {
@@ -281,7 +281,7 @@ describe("Target model hints", () => {
         targetModel: "chatgpt",
       }),
     );
-    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: ChatGPT (GPT-5.x)]");
+    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION, יעד: ChatGPT (GPT-5.x)]");
   });
 });
 

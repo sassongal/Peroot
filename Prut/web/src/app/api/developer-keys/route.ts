@@ -52,7 +52,7 @@ export const POST = withUser(
       ({ name } = CreateSchema.parse(await req.json()));
     } catch {
       return NextResponse.json(
-        { error: "שם המפתח חייב להיות באורך 1–60 תווים", code: "invalid_request" },
+        { error: "שם המפתח חייב להיות באורך 1-60 תווים", code: "invalid_request" },
         { status: 400 },
       );
     }
@@ -69,7 +69,7 @@ export const POST = withUser(
     if ((count ?? 0) >= MAX_ACTIVE_KEYS) {
       return NextResponse.json(
         {
-          error: `הגעת למקסימום ${MAX_ACTIVE_KEYS} מפתחות פעילים — בטל מפתח ישן כדי ליצור חדש`,
+          error: `הגעת למקסימום ${MAX_ACTIVE_KEYS} מפתחות פעילים, בטל מפתח ישן כדי ליצור חדש`,
           code: "too_many_keys",
         },
         { status: 409 },
@@ -104,7 +104,7 @@ export const POST = withUser(
         name: inserted.name,
         key_prefix: inserted.key_prefix,
         created_at: inserted.created_at,
-        warning: "שמור את המפתח עכשיו — הוא לא יוצג שוב",
+        warning: "שמור את המפתח עכשיו, הוא לא יוצג שוב",
       },
       { status: 201 },
     );

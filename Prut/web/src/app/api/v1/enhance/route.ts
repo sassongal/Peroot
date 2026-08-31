@@ -54,8 +54,8 @@ export async function POST(req: Request) {
     return connectError(
       400,
       "invalid_request",
-      "בקשה לא תקינה" + (detail ? ` — ${detail}` : ""),
-      "Invalid request" + (detail ? ` — ${detail}` : ""),
+      "בקשה לא תקינה" + (detail ? `, ${detail}` : ""),
+      "Invalid request" + (detail ? `, ${detail}` : ""),
     );
   }
 
@@ -85,8 +85,8 @@ export async function POST(req: Request) {
               new ConnectOpError(
                 504,
                 "timeout",
-                "השדרוג ארך יותר מדי — הקרדיט הוחזר",
-                "Enhancement timed out — credit refunded",
+                "השדרוג ארך יותר מדי, הקרדיט הוחזר",
+                "Enhancement timed out, credit refunded",
               ),
             ),
           HARD_STOP_MS,

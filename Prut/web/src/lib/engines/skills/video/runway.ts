@@ -77,17 +77,17 @@ Music: "sparse Japanese koto, slow tempo, contemplative."`,
     },
     {
       concept: "סיקוונס רב-סצנה: פריחת עץ",
-      output: `Multi-shot sequence across seasons — all from the same fixed wide angle looking up through the canopy of a cherry tree in a city park.
+      output: `Multi-shot sequence across seasons, all from the same fixed wide angle looking up through the canopy of a cherry tree in a city park.
 
 Scene 1 (0-15s): Bare winter branches against a pale grey sky, occasional snowflakes drifting.
-Scene 2 (15-30s): Early spring — pale pink buds beginning to open on the tips of branches, soft morning light.
-Scene 3 (30-45s): Full bloom — canopy exploded in deep pink blossoms, petals drifting through golden sunlight, pedestrians visible below.
-Scene 4 (45-60s): Late summer — dense green leaves, dappled light, children playing beneath in warm afternoon shade.
+Scene 2 (15-30s): Early spring, pale pink buds beginning to open on the tips of branches, soft morning light.
+Scene 3 (30-45s): Full bloom, canopy exploded in deep pink blossoms, petals drifting through golden sunlight, pedestrians visible below.
+Scene 4 (45-60s): Late summer, dense green leaves, dappled light, children playing beneath in warm afternoon shade.
 
 Audio:
 Dialogue: None.
 SFX: "winter wind through bare branches", "spring birdsong emerging", "summer park ambience, distant laughter."
-Ambient: "seasonal transition — each scene's natural environment layer."
+Ambient: "seasonal transition, each scene's natural environment layer."
 Music: "slow minimalist piano, cycling through four quiet phrases matching each seasonal shift."`,
       category: "nature",
     },
@@ -155,11 +155,11 @@ Music: "slow blues guitar, melancholic, low in the mix."`,
     "Subject motion + camera motion + environment motion each get a phrase",
     "For single-scene clips: one location / moment per generation",
     "For multi-shot sequences: use Scene N (start-end): format with temporal markers",
-    "30–80 words of flowing English prose (not comma keywords) for single-scene; longer for multi-shot",
-    'No negatives: Runway ignores "no blur" style exclusions — describe positives only',
+    "30-80 words of flowing English prose (not comma keywords) for single-scene; longer for multi-shot",
+    'No negatives: Runway ignores "no blur" style exclusions, describe positives only',
     "Lens or film reference when it helps (anamorphic flare, 85mm portrait)",
     "Mood line at end (melancholic, urgent, serene)",
-    "Duration: up to 60s — design motion arc accordingly",
+    "Duration: up to 60s, design motion arc accordingly",
     'Audio block required: Dialogue (exact quote or "None"), SFX (2+ descriptors), Ambient, Music',
     "Lighting vocabulary (neon bounce, golden side light, single practical)",
   ],
@@ -167,7 +167,7 @@ Music: "slow blues guitar, melancholic, low in the mix."`,
     {
       concept: "מרדף לילי בעיר",
       reasoning:
-        "Runway Gen-4.5: establish wide geography, then camera move (tracking), then vehicle motion, then environment (rain, neon). One scene. No negatives. Add Audio block — SFX for tire squeal and rain, ambient city noise, music for urgency.",
+        "Runway Gen-4.5: establish wide geography, then camera move (tracking), then vehicle motion, then environment (rain, neon). One scene. No negatives. Add Audio block, SFX for tire squeal and rain, ambient city noise, music for urgency.",
       output: `Wide shot: A tracking shot races beside a black coupe sliding through a rain-slicked alley, neon kanji reflections streaking across the hood. Steam rises from a grate; the camera whips slightly as the car drifts the corner. Anamorphic lens flares, Michael Mann night palette, urgent energy.
 
 Audio:
@@ -179,7 +179,7 @@ Music: "urgent low synth pulse, driving tempo."`,
     {
       concept: "ריקוד סולו על במה",
       reasoning:
-        "Start medium; specify body motion endpoints; light as theatrical spotlight; camera orbit or slow dolly — not five moves. Audio: no dialogue, SFX for heel strikes, ambient silence, music for flamenco.",
+        "Start medium; specify body motion endpoints; light as theatrical spotlight; camera orbit or slow dolly, not five moves. Audio: no dialogue, SFX for heel strikes, ambient silence, music for flamenco.",
       output: `Medium shot: Slow dolly inward as a flamenco dancer stamps a rapid zapateado, her crimson dress flaring in a single spotlight beam, dust visible in the light. The camera gently orbits her shoulders while the background falls to black. 85mm anamorphic, theatrical intensity.
 
 Audio:

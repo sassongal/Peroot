@@ -24,6 +24,34 @@ const eslintConfig = defineConfig([
     // Separate Chrome extension tree (plain JS, not the Next app)
     "chrome-extension-v2.1/**",
   ]),
+  // Project law (2026-08-31, owner decision): no em/en dashes in any text a
+  // human can see. AI-generated writing leans on them and it reads as
+  // machine-made; human Hebrew uses commas, colons and plain hyphens. The rule
+  // covers string literals, template strings and JSX text (comments are not
+  // user-facing). Number ranges use a plain hyphen: "2-3", not "2\u20133".
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/[\u2013\u2014]/]",
+          message:
+            "Project law: no em/en dashes in user-facing text. Use a comma, colon, or plain hyphen.",
+        },
+        {
+          selector: "TemplateElement[value.raw=/[\u2013\u2014]/]",
+          message:
+            "Project law: no em/en dashes in user-facing text. Use a comma, colon, or plain hyphen.",
+        },
+        {
+          selector: "JSXText[value=/[\u2013\u2014]/]",
+          message:
+            "Project law: no em/en dashes in user-facing text. Use a comma, colon, or plain hyphen.",
+        },
+      ],
+    },
+  },
   // Test files legitimately use `any` for mock builders / partial stubs; the
   // no-explicit-any rule there produced 6 CI-blocking errors of no real value.
   // Relax it (and the noisy unused-vars) for tests only — production code keeps

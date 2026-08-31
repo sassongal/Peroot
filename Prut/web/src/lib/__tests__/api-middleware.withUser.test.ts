@@ -103,7 +103,7 @@ describe("withUser · auth", () => {
     expect(db).toBe(serviceSentinel);
   });
 
-  it("refuses a guest on a forceServiceClient route — never hands service-role to a null user", async () => {
+  it("refuses a guest on a forceServiceClient route, never hands service-role to a null user", async () => {
     const deps = makeDeps({
       resolveAuth: vi.fn(async () => ({ status: "ok", user: null, isBearer: false }) as const),
     });

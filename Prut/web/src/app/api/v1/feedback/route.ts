@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     return connectError(
       400,
       "invalid_request",
-      "בקשה לא תקינה — rating חייב להיות 1 או -1",
+      "בקשה לא תקינה, rating חייב להיות 1 או -1",
       "rating must be 1 or -1",
     );
   }

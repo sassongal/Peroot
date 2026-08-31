@@ -478,7 +478,7 @@ export default function AnalyticsOverviewTab() {
             {product.dau.toLocaleString()}
           </div>
           <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
-            DAU — יום
+            DAU, יום
           </div>
         </div>
         <div className="rounded-2xl border border-white/5 bg-zinc-950 p-5 text-center space-y-1">
@@ -486,7 +486,7 @@ export default function AnalyticsOverviewTab() {
             {product.wau.toLocaleString()}
           </div>
           <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
-            WAU — שבוע
+            WAU, שבוע
           </div>
         </div>
         <div className="rounded-2xl border border-white/5 bg-zinc-950 p-5 text-center space-y-1">
@@ -494,7 +494,7 @@ export default function AnalyticsOverviewTab() {
             {product.mau.toLocaleString()}
           </div>
           <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
-            MAU — חודש
+            MAU, חודש
           </div>
         </div>
       </div>

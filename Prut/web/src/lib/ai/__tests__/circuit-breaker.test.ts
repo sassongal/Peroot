@@ -22,117 +22,117 @@
  * so tests don't leak state across describes.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
-    isProviderAvailable,
-    recordSuccess,
-    recordFailure,
-    __resetCircuitBreakerForTest,
-} from '../circuit-breaker';
+  isProviderAvailable,
+  recordSuccess,
+  recordFailure,
+  __resetCircuitBreakerForTest,
+} from "../circuit-breaker";
 
-const PROVIDER = 'test-provider';
+const PROVIDER = "test-provider";
 
 beforeEach(() => {
-    __resetCircuitBreakerForTest();
-    // Guarantee in-memory path — if CI leaks Upstash creds into env,
-    // these tests would try to hit real Redis and flake.
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    delete process.env.REDIS_URL;
-    delete process.env.REDIS_TOKEN;
+  __resetCircuitBreakerForTest();
+  // Guarantee in-memory path — if CI leaks Upstash creds into env,
+  // these tests would try to hit real Redis and flake.
+  delete process.env.UPSTASH_REDIS_REST_URL;
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  delete process.env.REDIS_URL;
+  delete process.env.REDIS_TOKEN;
 });
 
 afterEach(() => {
-    vi.useRealTimers();
+  vi.useRealTimers();
 });
 
-describe('circuit-breaker — fresh state', () => {
-    it('a never-seen provider is available', async () => {
-        expect(await isProviderAvailable('brand-new')).toBe(true);
-    });
+describe("circuit-breaker, fresh state", () => {
+  it("a never-seen provider is available", async () => {
+    expect(await isProviderAvailable("brand-new")).toBe(true);
+  });
 
-    it('recordSuccess on a fresh provider keeps it available', async () => {
-        recordSuccess(PROVIDER);
-        expect(await isProviderAvailable(PROVIDER)).toBe(true);
-    });
+  it("recordSuccess on a fresh provider keeps it available", async () => {
+    recordSuccess(PROVIDER);
+    expect(await isProviderAvailable(PROVIDER)).toBe(true);
+  });
 });
 
-describe('circuit-breaker — CLOSED -> OPEN transition', () => {
-    it('stays CLOSED under the failure threshold', async () => {
-        await recordFailure(PROVIDER);
-        await recordFailure(PROVIDER);
-        // 2 failures, threshold is 3 — still available.
-        expect(await isProviderAvailable(PROVIDER)).toBe(true);
-    });
+describe("circuit-breaker, CLOSED -> OPEN transition", () => {
+  it("stays CLOSED under the failure threshold", async () => {
+    await recordFailure(PROVIDER);
+    await recordFailure(PROVIDER);
+    // 2 failures, threshold is 3 — still available.
+    expect(await isProviderAvailable(PROVIDER)).toBe(true);
+  });
 
-    it('opens at exactly FAILURE_THRESHOLD (3) failures', async () => {
-        await recordFailure(PROVIDER);
-        await recordFailure(PROVIDER);
-        await recordFailure(PROVIDER);
-        expect(await isProviderAvailable(PROVIDER)).toBe(false);
-    });
+  it("opens at exactly FAILURE_THRESHOLD (3) failures", async () => {
+    await recordFailure(PROVIDER);
+    await recordFailure(PROVIDER);
+    await recordFailure(PROVIDER);
+    expect(await isProviderAvailable(PROVIDER)).toBe(false);
+  });
 
-    it('remains OPEN on additional failures', async () => {
-        for (let i = 0; i < 5; i++) await recordFailure(PROVIDER);
-        expect(await isProviderAvailable(PROVIDER)).toBe(false);
-    });
+  it("remains OPEN on additional failures", async () => {
+    for (let i = 0; i < 5; i++) await recordFailure(PROVIDER);
+    expect(await isProviderAvailable(PROVIDER)).toBe(false);
+  });
 });
 
-describe('circuit-breaker — recovery', () => {
-    it('recordSuccess immediately resets OPEN -> CLOSED', async () => {
-        await recordFailure(PROVIDER);
-        await recordFailure(PROVIDER);
-        await recordFailure(PROVIDER);
-        expect(await isProviderAvailable(PROVIDER)).toBe(false);
+describe("circuit-breaker, recovery", () => {
+  it("recordSuccess immediately resets OPEN -> CLOSED", async () => {
+    await recordFailure(PROVIDER);
+    await recordFailure(PROVIDER);
+    await recordFailure(PROVIDER);
+    expect(await isProviderAvailable(PROVIDER)).toBe(false);
 
-        recordSuccess(PROVIDER);
-        expect(await isProviderAvailable(PROVIDER)).toBe(true);
-    });
+    recordSuccess(PROVIDER);
+    expect(await isProviderAvailable(PROVIDER)).toBe(true);
+  });
 
-    it('after RECOVERY_TIME_MS (30s) the OPEN circuit goes HALF_OPEN and allows a probe', async () => {
-        vi.useFakeTimers();
-        vi.setSystemTime(new Date('2025-01-01T00:00:00Z'));
+  it("after RECOVERY_TIME_MS (30s) the OPEN circuit goes HALF_OPEN and allows a probe", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2025-01-01T00:00:00Z"));
 
-        await recordFailure(PROVIDER);
-        await recordFailure(PROVIDER);
-        await recordFailure(PROVIDER);
-        expect(await isProviderAvailable(PROVIDER)).toBe(false);
+    await recordFailure(PROVIDER);
+    await recordFailure(PROVIDER);
+    await recordFailure(PROVIDER);
+    expect(await isProviderAvailable(PROVIDER)).toBe(false);
 
-        // Advance past the 30-second recovery window.
-        vi.setSystemTime(new Date('2025-01-01T00:00:31Z'));
-        expect(await isProviderAvailable(PROVIDER)).toBe(true);
-    });
+    // Advance past the 30-second recovery window.
+    vi.setSystemTime(new Date("2025-01-01T00:00:31Z"));
+    expect(await isProviderAvailable(PROVIDER)).toBe(true);
+  });
 });
 
-describe('circuit-breaker — HALF_OPEN failure path', () => {
-    it('a failure while HALF_OPEN immediately re-opens the circuit', async () => {
-        vi.useFakeTimers();
-        vi.setSystemTime(new Date('2025-01-01T00:00:00Z'));
+describe("circuit-breaker, HALF_OPEN failure path", () => {
+  it("a failure while HALF_OPEN immediately re-opens the circuit", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2025-01-01T00:00:00Z"));
 
-        // Open the circuit.
-        await recordFailure(PROVIDER);
-        await recordFailure(PROVIDER);
-        await recordFailure(PROVIDER);
+    // Open the circuit.
+    await recordFailure(PROVIDER);
+    await recordFailure(PROVIDER);
+    await recordFailure(PROVIDER);
 
-        // Wait for recovery window.
-        vi.setSystemTime(new Date('2025-01-01T00:00:31Z'));
+    // Wait for recovery window.
+    vi.setSystemTime(new Date("2025-01-01T00:00:31Z"));
 
-        // First call transitions OPEN -> HALF_OPEN and returns true.
-        expect(await isProviderAvailable(PROVIDER)).toBe(true);
+    // First call transitions OPEN -> HALF_OPEN and returns true.
+    expect(await isProviderAvailable(PROVIDER)).toBe(true);
 
-        // The probe request fails — should immediately re-open.
-        await recordFailure(PROVIDER);
-        expect(await isProviderAvailable(PROVIDER)).toBe(false);
-    });
+    // The probe request fails — should immediately re-open.
+    await recordFailure(PROVIDER);
+    expect(await isProviderAvailable(PROVIDER)).toBe(false);
+  });
 });
 
-describe('circuit-breaker — isolation between providers', () => {
-    it('opening one provider does not affect another', async () => {
-        await recordFailure('provider-a');
-        await recordFailure('provider-a');
-        await recordFailure('provider-a');
+describe("circuit-breaker, isolation between providers", () => {
+  it("opening one provider does not affect another", async () => {
+    await recordFailure("provider-a");
+    await recordFailure("provider-a");
+    await recordFailure("provider-a");
 
-        expect(await isProviderAvailable('provider-a')).toBe(false);
-        expect(await isProviderAvailable('provider-b')).toBe(true);
-    });
+    expect(await isProviderAvailable("provider-a")).toBe(false);
+    expect(await isProviderAvailable("provider-b")).toBe(true);
+  });
 });

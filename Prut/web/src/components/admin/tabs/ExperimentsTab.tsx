@@ -570,7 +570,7 @@ export default function ExperimentsTab() {
             </span>
           </div>
           <p className="text-zinc-500 font-medium tracking-tight text-lg">
-            ניסויי A/B, אימוץ פיצ׳רים, השוואת סגמנטים — {data.periodDays} ימים אחרונים
+            ניסויי A/B, אימוץ פיצ׳רים, השוואת סגמנטים, {data.periodDays} ימים אחרונים
           </p>
         </div>
 

@@ -240,7 +240,7 @@ export const POST = withAdminWrite(async (req, _ssrClient, user) => {
       // Silent RLS denial or row vanished — fail loud instead of logging success.
       logger.error("[Admin Moderation] Remove updated 0 rows for prompt", prompt_id);
       return NextResponse.json(
-        { error: "Remove did not apply — prompt not updated" },
+        { error: "Remove did not apply, prompt not updated" },
         { status: 500 },
       );
     }

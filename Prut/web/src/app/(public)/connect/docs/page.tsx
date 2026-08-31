@@ -4,9 +4,9 @@ import { ArrowRight, BookOpen, KeyRound, Terminal } from "lucide-react";
 import { CONNECT_OPENAPI } from "@/lib/connect/openapi";
 
 export const metadata: Metadata = {
-  title: "Peroot Connect — תיעוד API",
+  title: "Peroot Connect, תיעוד API",
   description:
-    "התיעוד המלא של Peroot Connect API: אימות, כל נקודות הקצה, קודי שגיאה, מכסות ודוגמאות — לחיבור כל סוכן AI ל-Peroot.",
+    "התיעוד המלא של Peroot Connect API: אימות, כל נקודות הקצה, קודי שגיאה, מכסות ודוגמאות, לחיבור כל סוכן AI ל-Peroot.",
 };
 
 /** Method badge color per HTTP verb. */
@@ -24,7 +24,7 @@ const ERROR_ROWS: Array<[string, string, string]> = [
   ],
   ["429 rate_limited", "מעל 20/דקה למפתח או 40/דקה למשתמש", "כבד את Retry-After"],
   ["400 invalid_request", "קלט לא תקין (mode לא מוכר, prompt ארוך מדי…)", "בדוק מול הסכמה"],
-  ["504 timeout", "השדרוג עבר 55 שניות", "הקרדיט הוחזר אוטומטית — נסה שוב"],
+  ["504 timeout", "השדרוג עבר 55 שניות", "הקרדיט הוחזר אוטומטית, נסה שוב"],
 ];
 
 /**
@@ -82,7 +82,7 @@ export default function ConnectDocsPage() {
             {"Authorization: Bearer prk_live_XXXX"}
           </pre>
           <p className="text-sm text-slate-400">
-            לחלופין — OAuth 2.1 (PKCE) עבור קונקטורים כמו claude.ai ו-ChatGPT: הלקוח נרשם דינמית,
+            לחלופין, OAuth 2.1 (PKCE) עבור קונקטורים כמו claude.ai ו-ChatGPT: הלקוח נרשם דינמית,
             המשתמש מאשר בחלון Peroot, והבקשות נושאות access token במקום מפתח. גילוי אוטומטי דרך{" "}
             <code className="font-mono text-xs" dir="ltr">
               /.well-known/oauth-authorization-server
@@ -119,7 +119,7 @@ export default function ConnectDocsPage() {
             )}
           </ul>
           <p className="text-xs text-slate-500">
-            סכמות מלאות (שדות, גבולות, enums) — ב-OpenAPI. סוכני MCP מקבלים את אותן יכולות ככלים דרך{" "}
+            סכמות מלאות (שדות, גבולות, enums), ב-OpenAPI. סוכני MCP מקבלים את אותן יכולות ככלים דרך{" "}
             <code dir="ltr" className="font-mono">
               https://www.peroot.space/api/mcp
             </code>
@@ -159,7 +159,7 @@ export default function ConnectDocsPage() {
             <code dir="ltr" className="font-mono">
               {"{ error, error_en, code }"}
             </code>{" "}
-            — עברית + אנגלית, כדי שהסוכן יסביר למשתמש בשפתו.
+            , עברית + אנגלית, כדי שהסוכן יסביר למשתמש בשפתו.
           </p>
         </section>
 
@@ -179,7 +179,7 @@ export default function ConnectDocsPage() {
               <code dir="ltr" className="font-mono">
                 GET /quota
               </code>{" "}
-              חינמי — במסלול החינמי (1/יום) שווה לבדוק לפני ששורפים את הקריאה.
+              חינמי, במסלול החינמי (1/יום) שווה לבדוק לפני ששורפים את הקריאה.
             </li>
             <li>
               <b>השתמשו ב-Idempotency-Key.</b> retry של רשת לא יחייב אתכם פעמיים.

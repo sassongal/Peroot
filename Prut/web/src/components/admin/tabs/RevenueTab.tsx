@@ -418,7 +418,7 @@ export default function RevenueTab() {
               color="emerald"
               loading={loading}
               trend="up"
-              tooltip="Monthly Recurring Revenue — ההכנסה החוזרת החודשית מכלל המנויים הפעילים. מחושב כ: (מנויים פעילים) × מחיר Pro. כולל משתמשי Pro ללא רשומת subscription."
+              tooltip="Monthly Recurring Revenue, ההכנסה החוזרת החודשית מכלל המנויים הפעילים. מחושב כ: (מנויים פעילים) × מחיר Pro. כולל משתמשי Pro ללא רשומת subscription."
             />
             <KpiCard
               label="Active Subscribers"
@@ -437,7 +437,7 @@ export default function RevenueTab() {
               color="rose"
               loading={loading}
               trend={data && data.kpi.churnRate > 5 ? "down" : "neutral"}
-              tooltip="אחוז הנטישה — Churned / (Active + Churned). מתחת ל-5% נחשב טוב לפלטפורמות SaaS. מעל 10% — מסוכן."
+              tooltip="אחוז הנטישה, Churned / (Active + Churned). מתחת ל-5% נחשב טוב לפלטפורמות SaaS. מעל 10%, מסוכן."
             />
             <KpiCard
               label="New This Month"
@@ -447,7 +447,7 @@ export default function RevenueTab() {
               color="purple"
               loading={loading}
               trend="up"
-              tooltip="מנויים חדשים שנוצרו מתחילת החודש הנוכחי. לא כולל שדרוגים ידניים — רק רשומות subscription חדשות."
+              tooltip="מנויים חדשים שנוצרו מתחילת החודש הנוכחי. לא כולל שדרוגים ידניים, רק רשומות subscription חדשות."
             />
           </div>
 
@@ -459,7 +459,7 @@ export default function RevenueTab() {
               value={data ? fmtPct(data.kpi.conversionRate) : "-"}
               icon={CreditCard}
               loading={loading}
-              tooltip="Conversion Rate — Pro Users / כלל המשתמשים הרשומים. מדד ליעילות ה-Funnel. 2-5% נחשב ממוצע לפלטפורמות freemium."
+              tooltip="Conversion Rate, Pro Users / כלל המשתמשים הרשומים. מדד ליעילות ה-Funnel. 2-5% נחשב ממוצע לפלטפורמות freemium."
             />
             <SecondaryCard
               label="ARPU"
@@ -467,7 +467,7 @@ export default function RevenueTab() {
               value={data ? fmtILS(data.kpi.arpu) : "-"}
               icon={BarChart3}
               loading={loading}
-              tooltip="ARPU — Average Revenue Per User. מחושב: MRR / סה״כ משתמשים (כולל חינמיים). מראה כמה שווה כל משתמש בממוצע."
+              tooltip="ARPU, Average Revenue Per User. מחושב: MRR / סה״כ משתמשים (כולל חינמיים). מראה כמה שווה כל משתמש בממוצע."
             />
             <SecondaryCard
               label="Total Users"
@@ -792,11 +792,11 @@ export default function RevenueTab() {
                 />
                 <SecondaryCard
                   label="LTV (Estimated)"
-                  sublabel="Lifetime Value — Pro"
+                  sublabel="Lifetime Value, Pro"
                   value={fmtILS(data.unitEconomics.ltv.ltv)}
                   icon={DollarSign}
                   loading={loading}
-                  tooltip="Lifetime Value — כמה ₪ מביא לקוח Pro לאורך כל חייו. מחושב: ARPU / שיעור נטישה חודשי. אם אין נטישה — מוגבל ל-24 חודשים."
+                  tooltip="Lifetime Value, כמה ₪ מביא לקוח Pro לאורך כל חייו. מחושב: ARPU / שיעור נטישה חודשי. אם אין נטישה, מוגבל ל-24 חודשים."
                 />
                 <SecondaryCard
                   label="Cost / Pro User"
@@ -944,7 +944,7 @@ export default function RevenueTab() {
                                     key={i}
                                     className="py-3 px-2 text-center text-[9px] text-zinc-800 font-bold"
                                   >
-                                    —
+                                    ,{" "}
                                   </td>
                                 );
                               }

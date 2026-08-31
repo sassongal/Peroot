@@ -22,11 +22,10 @@ const item: HistoryItem = {
     enhanced: "AFTER ENHANCED TEXT",
     category: "General",
     createdAt: new Date().toISOString(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any,
 };
 
-describe("HistoryPanel — show-enhanced toggle", () => {
+describe("HistoryPanel, show-enhanced toggle", () => {
   it("hides the enhanced text by default and reveals it on toggle click", () => {
     const noop = vi.fn();
     render(

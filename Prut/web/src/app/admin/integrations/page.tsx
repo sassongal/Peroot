@@ -618,7 +618,7 @@ export default function IntegrationsPage() {
             >
               <span className="inline-flex items-center gap-2 text-xs font-bold text-rose-300">
                 <AlertCircle className="w-4 h-4" />
-                טעינת סטטוס השירותים נכשלה — ייתכן שהנתונים אינם עדכניים.
+                טעינת סטטוס השירותים נכשלה, ייתכן שהנתונים אינם עדכניים.
               </span>
               <button
                 onClick={fetchData}
@@ -1015,14 +1015,16 @@ export default function IntegrationsPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <MetricCard
                     label="From"
-                    value={data.resend.fromEmail !== "not set" ? data.resend.fromEmail || "—" : "—"}
+                    value={
+                      data.resend.fromEmail !== "not set" ? data.resend.fromEmail || ", " : ", "
+                    }
                   />
                   <MetricCard
                     label="מייל אחרון"
                     value={
                       data.resend.lastSentAt
                         ? new Date(data.resend.lastSentAt).toLocaleDateString("he-IL")
-                        : "—"
+                        : ", "
                     }
                   />
                 </div>

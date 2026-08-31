@@ -21,7 +21,7 @@ describe("BaseEngine language override", () => {
     const engine = new StandardEngine(MIN_CONFIG);
     const out = engine.generate({ ...BASE_INPUT, outputLanguage: "hebrew" });
     expect(out.systemPrompt).not.toContain(
-      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+      "[OUTPUT_LANGUAGE_OVERRIDE, HIGHEST PRIORITY, READ THIS LAST]",
     );
   });
 
@@ -29,7 +29,7 @@ describe("BaseEngine language override", () => {
     const engine = new StandardEngine(MIN_CONFIG);
     const out = engine.generate({ ...BASE_INPUT, outputLanguage: "arabic" });
     expect(out.systemPrompt).toContain(
-      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+      "[OUTPUT_LANGUAGE_OVERRIDE, HIGHEST PRIORITY, READ THIS LAST]",
     );
     expect(out.systemPrompt).toContain("Arabic");
   });
@@ -38,7 +38,7 @@ describe("BaseEngine language override", () => {
     const engine = new StandardEngine(MIN_CONFIG);
     const out = engine.generate({ ...BASE_INPUT, outputLanguage: "russian" });
     expect(out.systemPrompt).toContain(
-      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+      "[OUTPUT_LANGUAGE_OVERRIDE, HIGHEST PRIORITY, READ THIS LAST]",
     );
     expect(out.systemPrompt).toContain("Russian");
   });
@@ -51,7 +51,7 @@ describe("BaseEngine language override", () => {
       previousResult: "previous enhanced prompt",
     });
     expect(out.systemPrompt).toContain(
-      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+      "[OUTPUT_LANGUAGE_OVERRIDE, HIGHEST PRIORITY, READ THIS LAST]",
     );
   });
 
@@ -64,7 +64,7 @@ describe("BaseEngine language override", () => {
     });
     expect(out.systemPrompt).toContain("עברית");
     expect(out.systemPrompt).not.toContain(
-      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+      "[OUTPUT_LANGUAGE_OVERRIDE, HIGHEST PRIORITY, READ THIS LAST]",
     );
   });
 
@@ -76,7 +76,7 @@ describe("BaseEngine language override", () => {
     });
     expect(out.systemPrompt).toContain("עברית");
     expect(out.systemPrompt).not.toContain(
-      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+      "[OUTPUT_LANGUAGE_OVERRIDE, HIGHEST PRIORITY, READ THIS LAST]",
     );
   });
 });

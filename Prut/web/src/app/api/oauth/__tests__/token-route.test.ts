@@ -40,7 +40,7 @@ beforeEach(() => {
   mockRateLimit.mockResolvedValue({ success: true, reset: 0 });
 });
 
-describe("POST /api/oauth/token — authorization_code", () => {
+describe("POST /api/oauth/token, authorization_code", () => {
   const goodParams = {
     grant_type: "authorization_code",
     code: "pac_x",
@@ -97,7 +97,7 @@ describe("POST /api/oauth/token — authorization_code", () => {
   });
 });
 
-describe("POST /api/oauth/token — refresh_token", () => {
+describe("POST /api/oauth/token, refresh_token", () => {
   it("rotates a valid refresh token", async () => {
     mockRotate.mockResolvedValue(TOKENS);
     const res = await POST(
@@ -118,7 +118,7 @@ describe("POST /api/oauth/token — refresh_token", () => {
   });
 });
 
-describe("POST /api/oauth/token — protocol errors", () => {
+describe("POST /api/oauth/token, protocol errors", () => {
   it("rejects unsupported grant types", async () => {
     const res = await POST(formReq({ grant_type: "password", client_id: "pcl_1" }));
     expect(res.status).toBe(400);

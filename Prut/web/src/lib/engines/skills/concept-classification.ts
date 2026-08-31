@@ -16,12 +16,12 @@
  * Get the classification instruction block to inject into a system prompt.
  * The LLM will silently classify the concept and use it to select better examples internally.
  */
-export function getConceptClassificationBlock(mode: 'image' | 'video' | 'text'): string {
+export function getConceptClassificationBlock(mode: "image" | "video" | "text"): string {
   const categories = CATEGORIES_BY_MODE[mode];
 
   return `
 <concept_classification hidden="true">
-STEP 0 — Silent Concept Analysis (do NOT output this):
+STEP 0, Silent Concept Analysis (do NOT output this):
 Before generating the prompt, silently analyze the user's concept and identify which 1-3 of these categories it matches:
 
 ${categories}
@@ -38,7 +38,7 @@ This classification is INTERNAL ONLY. Never output it. Just use it to guide your
 </concept_classification>`;
 }
 
-const CATEGORIES_BY_MODE: Record<'image' | 'video' | 'text', string> = {
+const CATEGORIES_BY_MODE: Record<"image" | "video" | "text", string> = {
   image: `Visual image categories:
 - portrait (people, faces, persons, characters)
 - landscape (nature scenes, vistas, outdoors)

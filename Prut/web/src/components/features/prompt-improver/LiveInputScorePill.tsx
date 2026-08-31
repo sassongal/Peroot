@@ -123,7 +123,7 @@ export function LiveInputScorePill({ score, onOpenBreakdown }: LiveInputScorePil
           {tooltipItems.map((item) => (
             <div key={item.key} className="text-xs">
               <span className="font-semibold text-(--text-primary)">{item.title}</span>
-              {item.why && <span className="text-(--text-muted)"> — {item.why.slice(0, 80)}</span>}
+              {item.why && <span className="text-(--text-muted)"> , {item.why.slice(0, 80)}</span>}
             </div>
           ))}
         </div>

@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { scoreInput } from '../input-scorer';
-import { CapabilityMode } from '@/lib/capability-mode';
+import { describe, it, expect } from "vitest";
+import { scoreInput } from "../input-scorer";
+import { CapabilityMode } from "@/lib/capability-mode";
 
 const DEEP_RESEARCH_FIXTURE = `
 אתה אנליסט מחקרי בכיר עם 15 שנות ניסיון בתחום ה-SaaS בישראל.
@@ -30,11 +30,11 @@ const DEEP_RESEARCH_FIXTURE = `
 אורך: 8200 מילים, מובנה לסעיפים ממוספרים.
 `;
 
-describe('InputScorer — empty prompts', () => {
-  it('returns level=empty and total=0 for every mode', () => {
+describe("InputScorer, empty prompts", () => {
+  it("returns level=empty and total=0 for every mode", () => {
     for (const mode of Object.values(CapabilityMode)) {
-      const result = scoreInput('', mode);
-      expect(result.level).toBe('empty');
+      const result = scoreInput("", mode);
+      expect(result.level).toBe("empty");
       expect(result.total).toBe(0);
       expect(result.mode).toBe(mode);
       expect(result.missingTop.length).toBeGreaterThanOrEqual(2);
@@ -42,30 +42,30 @@ describe('InputScorer — empty prompts', () => {
     }
   });
 
-  it('empty prompt missingTop is drawn from the mode profile, not a generic list', () => {
-    const std = scoreInput('', CapabilityMode.STANDARD);
-    const img = scoreInput('', CapabilityMode.IMAGE_GENERATION);
+  it("empty prompt missingTop is drawn from the mode profile, not a generic list", () => {
+    const std = scoreInput("", CapabilityMode.STANDARD);
+    const img = scoreInput("", CapabilityMode.IMAGE_GENERATION);
     const stdKeys = std.missingTop.map((m) => m.key);
     const imgKeys = img.missingTop.map((m) => m.key);
     // STANDARD should surface role/task; IMAGE should surface subject/style
-    expect(stdKeys).toEqual(expect.arrayContaining(['role', 'task']));
-    expect(imgKeys).toEqual(expect.arrayContaining(['subject', 'style']));
-    expect(stdKeys).not.toContain('subject');
-    expect(imgKeys).not.toContain('role');
+    expect(stdKeys).toEqual(expect.arrayContaining(["role", "task"]));
+    expect(imgKeys).toEqual(expect.arrayContaining(["subject", "style"]));
+    expect(stdKeys).not.toContain("subject");
+    expect(imgKeys).not.toContain("role");
   });
 });
 
-describe('InputScorer — STANDARD mode', () => {
-  it('short vague prompt scores low and surfaces role/format/context as missing', () => {
-    const result = scoreInput('כתוב לי משהו על שיווק', CapabilityMode.STANDARD);
+describe("InputScorer, STANDARD mode", () => {
+  it("short vague prompt scores low and surfaces role/format/context as missing", () => {
+    const result = scoreInput("כתוב לי משהו על שיווק", CapabilityMode.STANDARD);
     expect(result.total).toBeLessThan(40);
-    expect(result.level).toBe('low');
+    expect(result.level).toBe("low");
     const missingKeys = result.missingTop.map((m) => m.key);
     // role and format should both appear among the top missing items
-    expect(missingKeys).toEqual(expect.arrayContaining(['role']));
+    expect(missingKeys).toEqual(expect.arrayContaining(["role"]));
   });
 
-  it('full structured STANDARD prompt scores high', () => {
+  it("full structured STANDARD prompt scores high", () => {
     const prompt = `
 אתה מומחה שיווק דיגיטלי עם 10 שנות ניסיון.
 כתוב פוסט לינקדאין לקמפיין השקה של מוצר SaaS B2B חדש.
@@ -74,107 +74,106 @@ describe('InputScorer — STANDARD mode', () => {
 רקע: מוצר CRM חדש שמייעל תהליך מכירה ב-40%.
 פורמט: פוסט מובנה עם hook פותח, 3 bullet points, CTA ברור, עד 250 מילים.
 אל תשתמש ב-buzzwords כמו "פורץ דרך" או "מהפכני".
-דוגמה: "תארו לעצמכם שהצוות שלכם סוגר עסקאות ב-40% פחות זמן — זה לא חלום."
+דוגמה: "תארו לעצמכם שהצוות שלכם סוגר עסקאות ב-40% פחות זמן, זה לא חלום."
 `;
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
     expect(result.total).toBeGreaterThanOrEqual(65);
-    expect(['high', 'elite', 'medium']).toContain(result.level);
+    expect(["high", "elite", "medium"]).toContain(result.level);
     expect(result.strengths.length).toBeGreaterThan(0);
   });
 
-  it('buzzwords without measurable spec get penalized via clarity', () => {
-    const prompt = 'כתוב תוכן איכותי חדשני מעולה ברמה עולמית על מוצר שיווק';
+  it("buzzwords without measurable spec get penalized via clarity", () => {
+    const prompt = "כתוב תוכן איכותי חדשני מעולה ברמה עולמית על מוצר שיווק";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
-    const clarityDim = result.breakdown.find((d) => d.key === 'clarity');
+    const clarityDim = result.breakdown.find((d) => d.key === "clarity");
     expect(clarityDim).toBeDefined();
     expect(clarityDim!.score).toBeLessThan(clarityDim!.max * 0.7);
   });
 
-  it('contradictions (short + 2000 words) get penalized and flagged', () => {
-    const prompt = 'אתה מומחה שיווק. כתוב פוסט קצר מאוד, בדיוק 2000 מילים, על AI.';
+  it("contradictions (short + 2000 words) get penalized and flagged", () => {
+    const prompt = "אתה מומחה שיווק. כתוב פוסט קצר מאוד, בדיוק 2000 מילים, על AI.";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
     const topKeys = result.missingTop.map((m) => m.key);
-    expect(topKeys).toContain('contradiction');
+    expect(topKeys).toContain("contradiction");
   });
 });
 
-describe('InputScorer — DEEP_RESEARCH mode', () => {
-  it('full research fixture scores high and does NOT flag role/task/format as missing', () => {
+describe("InputScorer, DEEP_RESEARCH mode", () => {
+  it("full research fixture scores high and does NOT flag role/task/format as missing", () => {
     const result = scoreInput(DEEP_RESEARCH_FIXTURE, CapabilityMode.DEEP_RESEARCH);
 
     expect(result.total).toBeGreaterThanOrEqual(75);
-    expect(['high', 'elite']).toContain(result.level);
+    expect(["high", "elite"]).toContain(result.level);
 
     const missingKeys = result.missingTop.map((m) => m.key);
-    expect(missingKeys).not.toContain('role');
-    expect(missingKeys).not.toContain('task');
-    expect(missingKeys).not.toContain('format');
-    expect(missingKeys).not.toContain('research_sources');
+    expect(missingKeys).not.toContain("role");
+    expect(missingKeys).not.toContain("task");
+    expect(missingKeys).not.toContain("format");
+    expect(missingKeys).not.toContain("research_sources");
   });
 
-  it('research profile uses research_* dims and omits STANDARD-only dims', () => {
+  it("research profile uses research_* dims and omits STANDARD-only dims", () => {
     const result = scoreInput(DEEP_RESEARCH_FIXTURE, CapabilityMode.DEEP_RESEARCH);
     const dimKeys = result.breakdown.map((d) => d.key);
-    expect(dimKeys).toContain('research_sources');
-    expect(dimKeys).toContain('research_method');
-    expect(dimKeys).toContain('confidence');
-    expect(dimKeys).toContain('falsifiability');
+    expect(dimKeys).toContain("research_sources");
+    expect(dimKeys).toContain("research_method");
+    expect(dimKeys).toContain("confidence");
+    expect(dimKeys).toContain("falsifiability");
     // DEEP_RESEARCH profile does not include 'examples' or 'measurability' or 'constraints' directly
-    expect(dimKeys).not.toContain('examples');
+    expect(dimKeys).not.toContain("examples");
   });
 });
 
-describe('InputScorer — AGENT_BUILDER mode', () => {
-  it('short agent prompt surfaces tools/boundaries/inputs_outputs as missing', () => {
+describe("InputScorer, AGENT_BUILDER mode", () => {
+  it("short agent prompt surfaces tools/boundaries/inputs_outputs as missing", () => {
     const result = scoreInput(
-      'בנה לי סוכן שירות לקוחות לחנות אופנה אונליין',
-      CapabilityMode.AGENT_BUILDER
+      "בנה לי סוכן שירות לקוחות לחנות אופנה אונליין",
+      CapabilityMode.AGENT_BUILDER,
     );
     const missingKeys = result.missingTop.map((m) => m.key);
-    expect(missingKeys).toEqual(expect.arrayContaining(['tools']));
+    expect(missingKeys).toEqual(expect.arrayContaining(["tools"]));
     expect(result.total).toBeLessThan(60);
   });
 });
 
-describe('InputScorer — IMAGE_GENERATION mode', () => {
-  it('prompt missing only aspect_ratio flags it as the top gap', () => {
+describe("InputScorer, IMAGE_GENERATION mode", () => {
+  it("prompt missing only aspect_ratio flags it as the top gap", () => {
     const result = scoreInput(
-      'אישה צעירה ברחוב טוקיו, סגנון צילום קולנועי 35mm, close-up rule of thirds, זווית נמוכה, תאורת רמברנדט golden hour, פלטת צבעים חמה זהב וענבר, 8k photorealistic ultra detailed, ללא watermark ללא טקסט',
-      CapabilityMode.IMAGE_GENERATION
+      "אישה צעירה ברחוב טוקיו, סגנון צילום קולנועי 35mm, close-up rule of thirds, זווית נמוכה, תאורת רמברנדט golden hour, פלטת צבעים חמה זהב וענבר, 8k photorealistic ultra detailed, ללא watermark ללא טקסט",
+      CapabilityMode.IMAGE_GENERATION,
     );
     const missingKeys = result.missingTop.map((m) => m.key);
-    expect(missingKeys).toContain('aspect_ratio');
+    expect(missingKeys).toContain("aspect_ratio");
   });
 
-  it('full image prompt scores high', () => {
+  it("full image prompt scores high", () => {
     const result = scoreInput(
-      'תמונה: אישה צעירה יושבת ליד חלון קפה. סגנון: צילום קולנועי 35mm. קומפוזיציה: close-up, rule of thirds. תאורה: golden hour, soft rim light. פלטת צבעים חמה של זהב וענבר. 4k, photorealistic, ultra detailed. יחס גובה-רוחב 1:1. ללא טקסט.',
-      CapabilityMode.IMAGE_GENERATION
+      "תמונה: אישה צעירה יושבת ליד חלון קפה. סגנון: צילום קולנועי 35mm. קומפוזיציה: close-up, rule of thirds. תאורה: golden hour, soft rim light. פלטת צבעים חמה של זהב וענבר. 4k, photorealistic, ultra detailed. יחס גובה-רוחב 1:1. ללא טקסט.",
+      CapabilityMode.IMAGE_GENERATION,
     );
     expect(result.total).toBeGreaterThanOrEqual(75);
   });
 });
 
-describe('InputScorer — role detection regression', () => {
+describe("InputScorer, role detection regression", () => {
   it('"אתה אנליסט נתונים..." scores full role points', () => {
     const prompt =
-      'אתה אנליסט נתונים עם 10 שנות ניסיון. נתח את מגמות השוק ב-2026 וכתוב דוח מפורט של 500 מילים.';
+      "אתה אנליסט נתונים עם 10 שנות ניסיון. נתח את מגמות השוק ב-2026 וכתוב דוח מפורט של 500 מילים.";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
-    const roleDim = result.breakdown.find((d) => d.key === 'role');
+    const roleDim = result.breakdown.find((d) => d.key === "role");
     expect(roleDim).toBeDefined();
     expect(roleDim!.score).toBe(roleDim!.max);
   });
 
   it('"אתה סופר טכני" also detected as full role', () => {
-    const prompt =
-      'אתה סופר טכני בכיר. כתוב מאמר של 800 מילים על מיקרו-שירותים עם 3 דוגמאות קוד.';
+    const prompt = "אתה סופר טכני בכיר. כתוב מאמר של 800 מילים על מיקרו-שירותים עם 3 דוגמאות קוד.";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
-    const roleDim = result.breakdown.find((d) => d.key === 'role');
+    const roleDim = result.breakdown.find((d) => d.key === "role");
     expect(roleDim!.score).toBe(roleDim!.max);
   });
 });
 
-describe('InputScorer — section-aware parsing', () => {
+describe("InputScorer, section-aware parsing", () => {
   it('markdown "## דוגמאות" heading boosts examples dimension even without quoted block', () => {
     const prompt = `
 אתה מומחה שיווק עם 10 שנות ניסיון.
@@ -187,7 +186,7 @@ describe('InputScorer — section-aware parsing', () => {
 - hook מרתק
 `;
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
-    const examplesDim = result.breakdown.find((d) => d.key === 'examples');
+    const examplesDim = result.breakdown.find((d) => d.key === "examples");
     expect(examplesDim).toBeDefined();
     expect(examplesDim!.score).toBe(examplesDim!.max);
   });
@@ -201,7 +200,7 @@ describe('InputScorer — section-aware parsing', () => {
 שמור על טון מקצועי ושפה נגישה.
 `;
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
-    const constraintsDim = result.breakdown.find((d) => d.key === 'constraints');
+    const constraintsDim = result.breakdown.find((d) => d.key === "constraints");
     expect(constraintsDim!.score).toBe(constraintsDim!.max);
   });
 
@@ -222,9 +221,9 @@ describe('InputScorer — section-aware parsing', () => {
 ציין מה לא ניתן לאמת.
 `;
     const result = scoreInput(prompt, CapabilityMode.DEEP_RESEARCH);
-    const sourcesDim = result.breakdown.find((d) => d.key === 'research_sources');
-    const methodDim = result.breakdown.find((d) => d.key === 'research_method');
-    const gapsDim = result.breakdown.find((d) => d.key === 'info_gaps');
+    const sourcesDim = result.breakdown.find((d) => d.key === "research_sources");
+    const methodDim = result.breakdown.find((d) => d.key === "research_method");
+    const gapsDim = result.breakdown.find((d) => d.key === "info_gaps");
     expect(sourcesDim!.score).toBeGreaterThan(sourcesDim!.max * 0.5);
     expect(methodDim!.score).toBeGreaterThan(methodDim!.max * 0.5);
     expect(gapsDim!.score).toBe(gapsDim!.max);
@@ -242,50 +241,56 @@ search_web, read_order, refund_api.
 אל תבצע פעולות כספיות מעל 500 שח בלי אישור אנושי.
 `;
     const result = scoreInput(prompt, CapabilityMode.AGENT_BUILDER);
-    const toolsDim = result.breakdown.find((d) => d.key === 'tools');
-    const boundariesDim = result.breakdown.find((d) => d.key === 'boundaries');
+    const toolsDim = result.breakdown.find((d) => d.key === "tools");
+    const boundariesDim = result.breakdown.find((d) => d.key === "boundaries");
     expect(toolsDim!.score).toBe(toolsDim!.max);
     expect(boundariesDim!.score).toBe(boundariesDim!.max);
   });
 });
 
-describe('InputScorer — expanded contradiction detection', () => {
+describe("InputScorer, expanded contradiction detection", () => {
   it('"concise but extensive" pair triggers contradiction flag', () => {
-    const prompt = 'אתה עורך. כתוב סיכום concise אבל extensive על AI.';
+    const prompt = "אתה עורך. כתוב סיכום concise אבל extensive על AI.";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
     const topKeys = result.missingTop.map((m) => m.key);
-    expect(topKeys).toContain('contradiction');
+    expect(topKeys).toContain("contradiction");
   });
 
   it('"no table" + "in a table" contradiction is flagged', () => {
-    const prompt =
-      'אתה אנליסט. כתוב דוח ללא טבלה, בטבלה ברורה עם עמודות של נתונים.';
+    const prompt = "אתה אנליסט. כתוב דוח ללא טבלה, בטבלה ברורה עם עמודות של נתונים.";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
     const topKeys = result.missingTop.map((m) => m.key);
-    expect(topKeys).toContain('contradiction');
+    expect(topKeys).toContain("contradiction");
   });
 });
 
-describe('InputScorer — English parity', () => {
+describe("InputScorer, English parity", () => {
   it('"You are a senior data analyst" with credentials scores full role', () => {
     const prompt =
-      'You are a senior data analyst with 10 years of experience. Analyze market trends in 2026 and write a detailed 500-word report.';
+      "You are a senior data analyst with 10 years of experience. Analyze market trends in 2026 and write a detailed 500-word report.";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
-    const roleDim = result.breakdown.find((d) => d.key === 'role');
+    const roleDim = result.breakdown.find((d) => d.key === "role");
     expect(roleDim).toBeDefined();
     expect(roleDim!.score).toBe(roleDim!.max);
   });
 
   it('English task verbs like "explain", "refactor", "implement" all detected', () => {
-    for (const verb of ['explain', 'refactor', 'implement', 'describe', 'evaluate', 'investigate']) {
+    for (const verb of [
+      "explain",
+      "refactor",
+      "implement",
+      "describe",
+      "evaluate",
+      "investigate",
+    ]) {
       const prompt = `You are an expert. ${verb.charAt(0).toUpperCase() + verb.slice(1)} the authentication flow in detail.`;
       const result = scoreInput(prompt, CapabilityMode.STANDARD);
-      const taskDim = result.breakdown.find((d) => d.key === 'task');
+      const taskDim = result.breakdown.find((d) => d.key === "task");
       expect(taskDim!.score).toBeGreaterThan(0);
     }
   });
 
-  it('full structured English STANDARD prompt scores high', () => {
+  it("full structured English STANDARD prompt scores high", () => {
     const prompt = `
 You are a senior marketing strategist with 10 years of experience.
 Write a LinkedIn post for a B2B SaaS product launch.
@@ -294,37 +299,37 @@ Goal: generate 50 qualified leads in 7 days.
 Background: new CRM product that cuts sales cycle by 40%.
 Format: structured post with strong hook, 3 bullet points, clear CTA, under 250 words.
 Avoid buzzwords like "revolutionary" or "game-changing".
-Example: "Imagine your team closing deals 40% faster — it's not a dream."
+Example: "Imagine your team closing deals 40% faster, it's not a dream."
 `;
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
     expect(result.total).toBeGreaterThanOrEqual(65);
-    expect(['high', 'elite', 'medium']).toContain(result.level);
+    expect(["high", "elite", "medium"]).toContain(result.level);
     expect(result.strengths.length).toBeGreaterThan(0);
   });
 
-  it('English buzzword inflation without measurable spec penalizes clarity', () => {
+  it("English buzzword inflation without measurable spec penalizes clarity", () => {
     const prompt =
-      'Write world-class cutting-edge revolutionary content about our innovative disruptive product.';
+      "Write world-class cutting-edge revolutionary content about our innovative disruptive product.";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
-    const clarityDim = result.breakdown.find((d) => d.key === 'clarity');
+    const clarityDim = result.breakdown.find((d) => d.key === "clarity");
     expect(clarityDim).toBeDefined();
     expect(clarityDim!.score).toBeLessThan(clarityDim!.max * 0.7);
   });
 
   it('English "short ... 2000 words" contradiction gets flagged', () => {
     const prompt =
-      'You are a marketing expert. Write a very short post, exactly 2000 words, about AI.';
+      "You are a marketing expert. Write a very short post, exactly 2000 words, about AI.";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
     const topKeys = result.missingTop.map((m) => m.key);
-    expect(topKeys).toContain('contradiction');
+    expect(topKeys).toContain("contradiction");
   });
 
   it('English "concise" + "comprehensive" contradiction is flagged', () => {
     const prompt =
-      'You are an analyst. Write a concise but comprehensive report about market trends.';
+      "You are an analyst. Write a concise but comprehensive report about market trends.";
     const result = scoreInput(prompt, CapabilityMode.STANDARD);
     const topKeys = result.missingTop.map((m) => m.key);
-    expect(topKeys).toContain('contradiction');
+    expect(topKeys).toContain("contradiction");
   });
 
   it('English research prompt with "## Sources" + "## Methodology" headings flags dims', () => {
@@ -352,10 +357,10 @@ Output format: table with claim | evidence | source URL | confidence (high/mediu
     const result = scoreInput(prompt, CapabilityMode.DEEP_RESEARCH);
     expect(result.total).toBeGreaterThanOrEqual(70);
     const missingKeys = result.missingTop.map((m) => m.key);
-    expect(missingKeys).not.toContain('research_sources');
-    expect(missingKeys).not.toContain('research_method');
-    expect(missingKeys).not.toContain('info_gaps');
-    expect(missingKeys).not.toContain('falsifiability');
+    expect(missingKeys).not.toContain("research_sources");
+    expect(missingKeys).not.toContain("research_method");
+    expect(missingKeys).not.toContain("info_gaps");
+    expect(missingKeys).not.toContain("falsifiability");
   });
 
   it('English agent prompt with "## Tools" and "## Boundaries" credits those dims', () => {
@@ -379,11 +384,11 @@ Never expose personal data. Always verify identity first.
 On tool failure, retry twice then return a descriptive error.
 `;
     const result = scoreInput(prompt, CapabilityMode.AGENT_BUILDER);
-    const toolsDim = result.breakdown.find((d) => d.key === 'tools');
-    const boundariesDim = result.breakdown.find((d) => d.key === 'boundaries');
-    const ioDim = result.breakdown.find((d) => d.key === 'inputs_outputs');
-    const policiesDim = result.breakdown.find((d) => d.key === 'policies');
-    const failureDim = result.breakdown.find((d) => d.key === 'failure_modes');
+    const toolsDim = result.breakdown.find((d) => d.key === "tools");
+    const boundariesDim = result.breakdown.find((d) => d.key === "boundaries");
+    const ioDim = result.breakdown.find((d) => d.key === "inputs_outputs");
+    const policiesDim = result.breakdown.find((d) => d.key === "policies");
+    const failureDim = result.breakdown.find((d) => d.key === "failure_modes");
     expect(toolsDim!.score).toBe(toolsDim!.max);
     expect(boundariesDim!.score).toBe(boundariesDim!.max);
     expect(ioDim!.score).toBe(ioDim!.max);
@@ -392,18 +397,18 @@ On tool failure, retry twice then return a descriptive error.
     expect(result.total).toBeGreaterThanOrEqual(70);
   });
 
-  it('full English image prompt scores high', () => {
+  it("full English image prompt scores high", () => {
     const prompt =
-      'A young woman sitting by a cafe window. Style: cinematic 35mm photography. Composition: close-up, rule of thirds, low angle. Lighting: golden hour, soft rim light. Color palette: warm golds and amber with cool blue contrast. 8k, photorealistic, ultra detailed, sharp focus. Aspect ratio 1:1. No text, no watermark.';
+      "A young woman sitting by a cafe window. Style: cinematic 35mm photography. Composition: close-up, rule of thirds, low angle. Lighting: golden hour, soft rim light. Color palette: warm golds and amber with cool blue contrast. 8k, photorealistic, ultra detailed, sharp focus. Aspect ratio 1:1. No text, no watermark.";
     const result = scoreInput(prompt, CapabilityMode.IMAGE_GENERATION);
     expect(result.total).toBeGreaterThanOrEqual(75);
   });
 });
 
-describe('InputScorer — backward compat smoke', () => {
-  it('returns a valid shape for every mode', () => {
+describe("InputScorer, backward compat smoke", () => {
+  it("returns a valid shape for every mode", () => {
     for (const mode of Object.values(CapabilityMode)) {
-      const result = scoreInput('בדיקה עם קצת טקסט ומספר 42', mode);
+      const result = scoreInput("בדיקה עם קצת טקסט ומספר 42", mode);
       expect(result).toMatchObject({
         total: expect.any(Number),
         level: expect.any(String),

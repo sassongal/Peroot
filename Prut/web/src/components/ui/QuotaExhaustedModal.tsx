@@ -38,7 +38,7 @@ export function QuotaExhaustedModal({
   const isGuest = variant === "guest";
   const title = isGuest ? "כדי ליצור צריך חשבון" : "המכסה היומית הסתיימה";
   const body = isGuest
-    ? "ההרשמה חינמית ופותחת את כל המנועים — מחקר, תמונה, וידאו ובניית סוכנים — ואת כל ספריות הפרומפטים."
+    ? "ההרשמה חינמית ופותחת את כל המנועים, מחקר, תמונה, וידאו ובניית סוכנים, ואת כל ספריות הפרומפטים."
     : "ניצלת את המכסה היומית שלך. שדרג ל-Pro ל-150 פרומפטים בחודש, ללא הגבלת מנועים.";
   const primaryHref = isGuest ? "/login" : "/pricing";
   const primaryLabel = isGuest ? "הירשם בחינם" : "שדרג ל-Pro";

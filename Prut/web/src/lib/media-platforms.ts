@@ -44,7 +44,7 @@ export const IMAGE_PLATFORMS: ImagePlatformConfig[] = [
     id: "dalle",
     name: "GPT Image 2",
     nameHe: "GPT Image 2",
-    description: "טקסט ב-99% דיוק, ריבוי פאנלים, אינפוגרפיקות, היקסט 3:1–1:3",
+    description: "טקסט ב-99% דיוק, ריבוי פאנלים, אינפוגרפיקות, היקסט 3:1-1:3",
     supportsNegativePrompt: false,
     supportsJson: false,
     promptStyle: "natural",

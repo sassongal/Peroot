@@ -31,7 +31,7 @@ export function passwordResetEmail(params: { name?: string; resetUrl: string }):
     <div style="background:#f1f5f9;border-radius:10px;padding:14px 16px;margin:20px 0;">
       <p style="font-size:12px;color:#64748b;margin:0;line-height:1.6;">
         <strong style="color:#475569;">שים/י לב:</strong> הקישור תקף למשך <strong>שעה אחת</strong>.
-        אם לא ביצעת את הבקשה הזו, ניתן להתעלם מהמייל הזה — הסיסמה לא תשתנה.
+        אם לא ביצעת את הבקשה הזו, ניתן להתעלם מהמייל הזה, הסיסמה לא תשתנה.
       </p>
     </div>
 

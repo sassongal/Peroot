@@ -174,7 +174,7 @@ function HomeViewChromeInner({
         {/* The page's single H1 — always visible (SEO: the homepage must carry a
             real heading in the mobile-first render, never a hidden one). */}
         <h1 className="text-center text-sm md:text-base font-medium text-(--text-secondary) -mt-2 md:-mt-1 px-4 leading-snug">
-          מחולל ומשדרג פרומפטים בעברית — ל-ChatGPT, Claude ו-Gemini
+          מחולל ומשדרג פרומפטים בעברית, בהתאמה מדויקת לכל מנוע AI: שיחה, תמונה, וידאו, מחקר וסוכנים
         </h1>
 
         <button

@@ -15,9 +15,9 @@ import { toast } from "sonner";
  */
 
 export function buildSetupPrompt(apiKey?: string): string {
-  const key = apiKey || "<API_KEY — צור בהגדרות Peroot ← Connect והדבק כאן>";
+  const key = apiKey || "<API_KEY, צור בהגדרות Peroot ← Connect והדבק כאן>";
   return [
-    "אני רוצה לחבר אותך ל-Peroot Connect — מנוע שדרוג הפרומפטים שלי (peroot.space).",
+    "אני רוצה לחבר אותך ל-Peroot Connect, מנוע שדרוג הפרומפטים שלי (peroot.space).",
     "",
     "מה זה נותן לך: כלי enhance_prompt שהופך כל פרומפט לפרומפט מושלם ומורחב",
     "(טקסט / תמונה / וידאו / מחקר עמוק / בניית סוכן), חיפוש ושמירה בספרייה האישית",
@@ -27,12 +27,12 @@ export function buildSetupPrompt(apiKey?: string): string {
     "1. אם אתה תומך ב-MCP (Claude Desktop, Cursor, claude.ai ועוד):",
     "   שרת MCP בכתובת https://www.peroot.space/api/mcp",
     `   עם הכותרת:  Authorization: Bearer ${key}`,
-    "   (ב-claude.ai וב-ChatGPT אפשר להוסיף קונקטור עם הכתובת בלבד — האישור נעשה ב-OAuth)",
-    "2. אם אין לך MCP — השתמש ב-REST API עם אותה כותרת:",
+    "   (ב-claude.ai וב-ChatGPT אפשר להוסיף קונקטור עם הכתובת בלבד, האישור נעשה ב-OAuth)",
+    "2. אם אין לך MCP, השתמש ב-REST API עם אותה כותרת:",
     "   POST https://www.peroot.space/api/v1/enhance",
     "   תיעוד מלא (OpenAPI): https://www.peroot.space/api/v1/openapi",
     "",
-    "אחרי החיבור: קרא ל-get_quota כדי לאמת שהחיבור עובד, ומעכשיו — לפני כל משימת",
+    "אחרי החיבור: קרא ל-get_quota כדי לאמת שהחיבור עובד, ומעכשיו, לפני כל משימת",
     "יצירה, שדרג את הפרומפט דרך enhance_prompt במוד המתאים (STANDARD / IMAGE_GENERATION /",
     "VIDEO_GENERATION / DEEP_RESEARCH / AGENT_BUILDER), והעבר תמצית של הקשר השיחה",
     "בפרמטר context כדי שהשדרוג יתבסס על מה שאני באמת עובד עליו.",
@@ -53,9 +53,9 @@ export function CopySetupPrompt({
       await navigator.clipboard.writeText(buildSetupPrompt(apiKey));
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
-      toast.success("פרומפט החיבור הועתק — הדבק אותו אצל הסוכן שלך");
+      toast.success("פרומפט החיבור הועתק, הדבק אותו אצל הסוכן שלך");
     } catch {
-      toast.error("ההעתקה נחסמה על ידי הדפדפן — סמן והעתק ידנית");
+      toast.error("ההעתקה נחסמה על ידי הדפדפן, סמן והעתק ידנית");
     }
   };
 

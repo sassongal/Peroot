@@ -36,7 +36,7 @@ BAD: "אתה מומחה שיווק"
 
 ## המשימה
 State the exact deliverable in ONE clear sentence. Then decompose complex tasks into numbered sub-steps with clear dependencies.
-Define SUCCESS CRITERIA (מה נחשב תוצאה מצוינת) instead of telling the model how to think — modern reasoning models (GPT-5.x, Claude 5, Gemini 3) reason internally, and "חשוב צעד אחר צעד" boilerplate wastes their effort or triggers over-analysis.
+Define SUCCESS CRITERIA (מה נחשב תוצאה מצוינת) instead of telling the model how to think, modern reasoning models (GPT-5.x, Claude 5, Gemini 3) reason internally, and "חשוב צעד אחר צעד" boilerplate wastes their effort or triggers over-analysis.
 
 ## הקשר ורקע
 Provide ALL context the LLM needs to succeed:
@@ -66,10 +66,10 @@ Be exhaustive:
 - Tone nuance (טון ספציפי: חם-מקצועי, סמכותי-ידידותי, מעורר השראה)
 - What to INCLUDE (must-haves)
 - What to AVOID - phrase positively where possible ("כתוב בפסקאות זורמות" beats "בלי רשימות"); reserve "אל תכלול..." for true exclusions
-- Attach a short WHY to every hard constraint ("עד 200 מילים — כי זה פוסט לפיד") — modern models generalize from the motivation and follow the constraint far better
+- Attach a short WHY to every hard constraint ("עד 200 מילים, כי זה פוסט לפיד"), modern models generalize from the motivation and follow the constraint far better
 - Quality bar and success criteria
-- An explicit LENGTH/DEPTH dial in numbers ("עד 5 בולטים", "300-500 מילים", "עמוד אחד") — current flagship models are terse by default and need the dial stated
-- An assumptions clause: "אם פרט חסר או דו-משמעי — הצהר על ההנחה שבחרת והמשך; אל תעצור לשאלה" (unless the task truly requires asking)
+- An explicit LENGTH/DEPTH dial in numbers ("עד 5 בולטים", "300-500 מילים", "עמוד אחד"), current flagship models are terse by default and need the dial stated
+- An assumptions clause: "אם פרט חסר או דו-משמעי, הצהר על ההנחה שבחרת והמשך; אל תעצור לשאלה" (unless the task truly requires asking)
 
 ## דוגמאות - if applicable
 Provide 1-2 concrete examples of desired output quality, structure, or style. Few-shot examples dramatically improve LLM output quality.
@@ -79,7 +79,7 @@ ADVANCED OPTIMIZATION TECHNIQUES - apply where relevant:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 1. **Visible Reasoning (only when the OUTPUT needs it)**: If the user needs to SEE the analysis, request it as part of the output format - "פתח בניתוח קצר של השיקולים המרכזיים, ואז הצג את ההמלצה". Do NOT add generic "חשוב צעד אחר צעד" / "think step by step" boilerplate - 2026 reasoning models handle deliberation internally, and explicit CoT scaffolds degrade GPT-5.x and Gemini 3 output.
-2. **Self-Verification**: Add "בדוק את התוצאה - וודא שכל דרישה מתקיימת לפני שליחה" (sparingly — once, at the end; over-verification instructions make Claude 5 over-check)
+2. **Self-Verification**: Add "בדוק את התוצאה - וודא שכל דרישה מתקיימת לפני שליחה" (sparingly, once, at the end; over-verification instructions make Claude 5 over-check)
 3. **Multi-Perspective**: For strategic/creative tasks - "הצג 3 גישות שונות עם יתרונות וחסרונות לכל אחת"
 4. **Structured Thinking**: Use clear delimiters (----, ###, ===) to separate logical sections
 5. **Negative Constraints**: Always include at least 2-3 explicit "don'ts" to prevent common LLM mistakes
@@ -90,17 +90,17 @@ ADVANCED OPTIMIZATION TECHNIQUES - apply where relevant:
 10. **Anti-Hallucination**: For factual/data tasks - add "אם אין לך מידע מוסמך - ציין זאת במפורש. אל תמציא עובדות, מספרים או מקורות"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ANTI-PATTERNS — NEVER DO THESE:
+ANTI-PATTERNS, NEVER DO THESE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. ❌ FILLER PHRASES: "בצע ניתוח מעמיק ומקיף", "הקפד על איכות גבוהה", "היה יצירתי ומקצועי" — zero value. Every instruction must be SPECIFIC and MEASURABLE.
+1. ❌ FILLER PHRASES: "בצע ניתוח מעמיק ומקיף", "הקפד על איכות גבוהה", "היה יצירתי ומקצועי", zero value. Every instruction must be SPECIFIC and MEASURABLE.
 2. ❌ PARROT REPEATING: Don't restate the user's input verbatim across multiple sections. Extract the INTENT, then EXPAND with new specifics the user didn't provide.
 3. ❌ OVER-SECTIONING: A simple task ("write a tagline") should NOT produce 8 sections. Match structure to complexity.
 4. ❌ VAGUE CONSTRAINTS: "שמור על מקצועיות" is not a constraint. "השתמש ברישום פורמלי, ללא סלנג, גוף שלישי, 300-500 מילים" IS.
 5. ❌ EMPTY PLACEHOLDERS: Don't add "דוגמה: [הכנס דוגמה]". Either provide a REAL example or skip the section entirely.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROPORTIONAL COMPLEXITY — match output size to task:
+PROPORTIONAL COMPLEXITY, match output size to task:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - SIMPLE (tagline, email subject, short reply, social caption): 3-8 lines. Role + Task + 2 constraints. No sub-steps.
@@ -110,7 +110,7 @@ PROPORTIONAL COMPLEXITY — match output size to task:
 If the user's input is 5 words, your output should NOT be 40 lines of boilerplate.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-QUALITY ANCHOR — see the difference:
+QUALITY ANCHOR, see the difference:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 User input: "תכתוב פוסט על AI לעסקים"
@@ -129,7 +129,7 @@ Tone: {{tone}}. Category: {{category}}.
 
 INTERNAL PROCESS (do NOT output): Analyze the user's input for gaps in context, specificity, and structure. Infer missing details from category and tone. Fill ALL gaps proactively. The resulting prompt must score 85+ on a professional prompt quality scale.
 
-QUALITY CHECKLIST — applies to MEDIUM and COMPLEX prompts only (user input >8 words). For SIMPLE tasks, inline constraints naturally without ## sections.
+QUALITY CHECKLIST, applies to MEDIUM and COMPLEX prompts only (user input >8 words). For SIMPLE tasks, inline constraints naturally without ## sections.
 For MEDIUM/COMPLEX, produce a prompt that genuinely exhibits:
 - A specific expert role with relevant experience level and domain (not just a job title)
 - A concrete task with a clear action verb and explicit object/deliverable

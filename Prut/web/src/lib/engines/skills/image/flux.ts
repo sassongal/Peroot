@@ -92,7 +92,7 @@ export const skill: PlatformSkill = {
     {
       bad: "luxury watch on dark background, no reflections, no dust, no scratches",
       good: "A luxury mechanical wristwatch with a #0D1B2A midnight blue dial displayed on raw black obsidian, single directional studio light from upper left, shot on Phase One IQ4, 120mm macro lens, f/5.6, product photography",
-      why: 'FLUX does not support negative prompts. There is no "no X" or negative prompt syntax. Describe only what you want to see — the model cannot process exclusions.',
+      why: 'FLUX does not support negative prompts. There is no "no X" or negative prompt syntax. Describe only what you want to see, the model cannot process exclusions.',
     },
     {
       bad: "Close-up of a leaf with water drops. Green. Macro.",
@@ -106,15 +106,15 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    "Subject-first ordering — most important element leads the prompt",
-    "30–80 words of dense, specific description (FLUX rewards precision)",
+    "Subject-first ordering, most important element leads the prompt",
+    "30-80 words of dense, specific description (FLUX rewards precision)",
     "Camera + lens + aperture when photoreal (e.g., 85mm f/1.8, full-frame)",
     "Hex codes for critical colors bound to objects (#F4E8D1 skin tone, #1B263B shadow)",
     "Quoted in-image text if lettering must appear",
-    'No negative-prompt syntax — FLUX ignores "no X" lists',
+    'No negative-prompt syntax, FLUX ignores "no X" lists',
     'Avoid SD-style "masterpiece/best quality" spam; use real gear and light instead',
     "Motion or material physics when relevant (wet skin, brushed metal)",
-    "Single coherent scene — not a list of unrelated keywords",
+    "Single coherent scene, not a list of unrelated keywords",
     "Optional model variant hint (Pro/Ultra/Dev) only if product flow requires it",
     'JSON format for precise multi-axis control: {"subject", "camera", "lighting", "style", "color"}',
     "HEX color matching: attach #RRGGBB hex codes to specific objects for exact brand colors",
@@ -131,7 +131,7 @@ export const skill: PlatformSkill = {
     {
       concept: "דיוקן סטודיו מינימליסטי",
       reasoning:
-        "Portrait: subject pose + wardrobe fabric + background color as hex. Key vs fill ratio in words. 50–85mm language for compression.",
+        "Portrait: subject pose + wardrobe fabric + background color as hex. Key vs fill ratio in words. 50-85mm language for compression.",
       output:
         "A woman with slicked-back hair in a charcoal #2C2C2C wool blazer, shoulders squared to camera, soft butterfly lighting with subtle shadow under cheekbones, seamless #E8E4E1 backdrop, shot on Canon R5, 85mm f/2, crisp commercial portrait",
     },

@@ -180,7 +180,7 @@ export async function GET(req: Request) {
             to: adminEmail,
             subject: `[Peroot Cron] Churn: ${(authData.user?.email || userId).slice(0, 100)}`,
             html: adminCronChurnAlertEmail({
-              customerEmail: authData.user?.email || "—",
+              customerEmail: authData.user?.email || ", ",
               userId,
             }),
             emailType: "admin_churn_alert",
@@ -384,7 +384,7 @@ export async function GET(req: Request) {
         logger.error("[sync-subscriptions] LS cross-check error:", lsErr);
       }
     } else {
-      logger.warn("[sync-subscriptions] LEMONSQUEEZY_API_KEY not set — skipping LS cross-check");
+      logger.warn("[sync-subscriptions] LEMONSQUEEZY_API_KEY not set, skipping LS cross-check");
     }
 
     await recordCronSuccess("sync-subscriptions");

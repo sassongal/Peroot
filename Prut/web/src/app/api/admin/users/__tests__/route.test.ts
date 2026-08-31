@@ -103,7 +103,7 @@ function makeGetRequest(params: Record<string, string> = {}) {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
-describe("GET /api/admin/users — enriched credit fields", () => {
+describe("GET /api/admin/users, enriched credit fields", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 

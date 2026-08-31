@@ -16,9 +16,7 @@ export async function GET(request: NextRequest) {
   if (authFailure) return authFailure;
 
   if (!isReengagementEmailAutomationEnabled()) {
-    logger.info(
-      "[Cron/Reengagement] Skipped — set REENGAGEMENT_EMAILS_ENABLED=true to enable drip",
-    );
+    logger.info("[Cron/Reengagement] Skipped, set REENGAGEMENT_EMAILS_ENABLED=true to enable drip");
     return NextResponse.json({ skipped: true, reason: "Reengagement emails disabled" });
   }
 
@@ -89,7 +87,7 @@ export async function GET(request: NextRequest) {
     if (sentError) {
       await releaseCronLock("cron:reengagement");
       logger.error(
-        "[Reengagement] Cannot read email_logs — aborting rather than risk re-sending:",
+        "[Reengagement] Cannot read email_logs, aborting rather than risk re-sending:",
         sentError,
       );
       return NextResponse.json({ error: "email_logs unavailable" }, { status: 500 });

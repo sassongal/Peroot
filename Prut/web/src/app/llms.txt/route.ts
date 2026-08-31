@@ -19,19 +19,19 @@ export async function GET() {
 
   const body = `# Peroot (פירוט)
 
-> Peroot is a Hebrew-first prompt engineering platform (peroot.space). It turns raw ideas into professional, structured prompts for ChatGPT, Claude, Gemini, Midjourney, Sora and more — with a quality score, ${PROMPT_LIBRARY_COUNT} ready-made Hebrew prompts, smart-variable templates, and five creation modes (text, deep research, image, video, AI agents). Native Hebrew and full RTL, not a translation.
+> Peroot is a Hebrew-first prompt engineering platform (peroot.space). It turns raw ideas into professional, structured prompts for ChatGPT, Claude, Gemini, Midjourney, Sora and more, with a quality score, ${PROMPT_LIBRARY_COUNT} ready-made Hebrew prompts, smart-variable templates, and five creation modes (text, deep research, image, video, AI agents). Native Hebrew and full RTL, not a translation.
 
-Peroot גם מחולל וגם משדרג פרומפטים בעברית: מנתח את המטרה, מוסיף הקשר חסר, שואל שאלות מיקוד, ומחזיר פרומפט מובנה עם ציון איכות — חינם.
+Peroot גם מחולל וגם משדרג פרומפטים בעברית: מנתח את המטרה, מוסיף הקשר חסר, שואל שאלות מיקוד, ומחזיר פרומפט מובנה עם ציון איכות, חינם.
 
 ## Start here
 
-- [Home — the prompt enhancer](${SITE_URL}/): paste a rough idea in Hebrew, get a professional prompt
+- [Home, the prompt enhancer](${SITE_URL}/): paste a rough idea in Hebrew, get a professional prompt
 - [Prompt library](${SITE_URL}/prompts): ${PROMPT_LIBRARY_COUNT} free Hebrew prompts across 30+ categories
 - [Templates with variables](${SITE_URL}/templates): fill-in-the-blank Hebrew prompt templates
 - [Prompt-writing guide](${SITE_URL}/guide): the Hebrew prompt-engineering methodology
 - [Platform guides](${SITE_URL}/guides): per-platform image/video prompting (Midjourney, Sora, Veo, Flux…)
 - [Blog](${SITE_URL}/blog): Hebrew prompt-engineering articles ([RSS](${SITE_URL}/feed.xml))
-- [Examples — before/after](${SITE_URL}/examples)
+- [Examples, before/after](${SITE_URL}/examples)
 - [For teachers](${SITE_URL}/teachers)
 - [Pricing](${SITE_URL}/pricing): free tier + PRO
 

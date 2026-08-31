@@ -33,11 +33,11 @@ export function HomeSEOContent() {
       <section className="home-seo-hero" dir="rtl" aria-label="על פירוט">
         <div className="max-w-4xl mx-auto px-4 py-12 md:py-20 text-center">
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
-            Peroot (פירוט) — מחולל ומשדרג פרומפטים בעברית
+            Peroot (פירוט), מחולל ומשדרג פרומפטים בעברית
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 leading-relaxed">
             פלטפורמת הנדסת הפרומפטים (prompt engineering) המובילה בישראל. כתיבת פרומפטים מקצועיים
-            לכל מודל שפה — ChatGPT, Claude, Gemini ו-Midjourney — בעברית, בחינם, תוך שניות.
+            לכל מודל שפה, ChatGPT, Claude, Gemini ו-Midjourney, בעברית, בחינם, תוך שניות.
           </p>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
             Peroot מנתח, משפר ומייעל כל פרומפט עם מבנה מקצועי, שאלות מיקוד ודירוג איכות בזמן אמת.
@@ -95,7 +95,7 @@ export function HomeSEOContent() {
             <div className="p-5 rounded-xl border border-border bg-card">
               <h3 className="font-bold text-foreground mb-2">עברית מהיסוד</h3>
               <p className="text-sm text-muted-foreground">
-                לא תרגום — יצירה מקורית בעברית עם תמיכה מלאה ב-RTL ושאלות הבהרה חכמות.
+                לא תרגום, יצירה מקורית בעברית עם תמיכה מלאה ב-RTL ושאלות הבהרה חכמות.
               </p>
             </div>
           </div>
@@ -125,14 +125,14 @@ export function HomeSEOContent() {
             </div>
           </dl>
           <p className="text-xs text-muted-foreground text-center mt-3">
-            טקסט · מחקר מעמיק · תמונות · וידאו · סוכני AI — הכול בעברית נטיבית, RTL מלא.
+            טקסט · מחקר מעמיק · תמונות · וידאו · סוכני AI, הכול בעברית נטיבית, RTL מלא.
           </p>
         </div>
 
         {/* Head-term targeted section — boosts ranking for "הנדסת פרומפטים" / "כתיבת פרומפטים" */}
         <div className="max-w-3xl mx-auto px-4 mb-16 text-right">
           <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-6">
-            הנדסת פרומפטים בעברית — מה זה?
+            הנדסת פרומפטים בעברית, מה זה?
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-4">
             הנדסת פרומפטים (prompt engineering) היא האומנות של ניסוח הוראות מדויקות למודלי בינה
@@ -167,23 +167,23 @@ export function HomeSEOContent() {
           </h2>
           <ol className="space-y-4 text-right list-decimal list-inside">
             <li className="text-muted-foreground">
-              <strong className="text-foreground">הזנת פרומפט</strong> — כתבו פרומפט או רעיון בעברית
+              <strong className="text-foreground">הזנת פרומפט</strong> , כתבו פרומפט או רעיון בעברית
               בתיבת הקלט.
             </li>
             <li className="text-muted-foreground">
-              <strong className="text-foreground">בחירת מצב</strong> — בחרו קטגוריה ומצב עבודה
+              <strong className="text-foreground">בחירת מצב</strong> , בחרו קטגוריה ומצב עבודה
               (טקסט, מחקר, תמונות או סוכנים).
             </li>
             <li className="text-muted-foreground">
-              <strong className="text-foreground">שדרוג אוטומטי</strong> — לחצו על &quot;שדרג&quot;
+              <strong className="text-foreground">שדרוג אוטומטי</strong> , לחצו על &quot;שדרג&quot;
               והמערכת תייצר פרומפט מקצועי ומובנה.
             </li>
             <li className="text-muted-foreground">
-              <strong className="text-foreground">דיוק</strong> — ענו על שאלות הבהרה (אם יש) כדי
+              <strong className="text-foreground">דיוק</strong> , ענו על שאלות הבהרה (אם יש) כדי
               לדייק את התוצאה.
             </li>
             <li className="text-muted-foreground">
-              <strong className="text-foreground">שמירה</strong> — העתיקו, שמרו לספריה האישית, או
+              <strong className="text-foreground">שמירה</strong> , העתיקו, שמרו לספריה האישית, או
               המשיכו לשפר.
             </li>
           </ol>

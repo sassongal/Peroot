@@ -234,7 +234,7 @@ export const DIMENSION_LABEL_HE: Record<string, string> = {
  * Used by getTextQualityGateLines / skills.
  */
 const TEXT_QUALITY_GATE_LINES_HE: string[] = [
-  "אורך: מספיק פרטים — לא משפט בודד",
+  "אורך: מספיק פרטים, לא משפט בודד",
   'תפקיד: משפט "אתה …" / You are … עם התמחות או ניסיון',
   "משימה: פועל פעולה + אובייקט ברור",
   "הקשר: קהל יעד, מטרה, רקע",
@@ -276,7 +276,7 @@ const TIPS: Record<string, string> = {
   research_method: "הגדר מתודולוגיה (MECE, שאלות מובילות, שלבי מחקר)",
   confidence: "בקש דירוג ביטחון לכל טענה (גבוה/בינוני/נמוך)",
   falsifiability: 'ציין "מה היה מפריך את הטענה"',
-  info_gaps: 'דרוש סעיף "פערי מידע" — מה לא ניתן לאמת',
+  info_gaps: 'דרוש סעיף "פערי מידע", מה לא ניתן לאמת',
   // Agent tips
   audio: "הוסף בלוק Audio עם Dialogue, SFX, Ambient ו-Music",
   tools: "פרט כלים/APIs שהסוכן רשאי לקרוא",
@@ -664,7 +664,7 @@ function scoreClarity(
     if (buzzwordHits >= 3 && !hasConcreteSpec) {
       pts -= 5;
       missing.push(
-        `buzzword inflation (${buzzwordHits}) — no measurable spec / ניפוח באזז בלי מפרט מדיד`,
+        `buzzword inflation (${buzzwordHits}), no measurable spec / ניפוח באזז בלי מפרט מדיד`,
       );
     }
   }
@@ -1428,8 +1428,8 @@ function scoreRatioForEnhancedTextKey(key: string, t: string, wc: number): numbe
 /** One-line weakness for summary (avoids repeating the same tip as dimension rows) */
 export function weaknessSummaryLineHe(chunk: DimensionScoreChunk): string {
   const lab = DIMENSION_LABEL_HE[chunk.key] ?? chunk.key;
-  if (chunk.missing[0]) return `${lab} — ${chunk.missing[0]}`;
-  return `${lab} — פער נקודות`;
+  if (chunk.missing[0]) return `${lab}, ${chunk.missing[0]}`;
+  return `${lab}, פער נקודות`;
 }
 
 /** One-line strength in Hebrew */

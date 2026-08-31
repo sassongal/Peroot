@@ -132,12 +132,12 @@ export async function checkAndDecrementCredits(
   if (isNotFound) {
     if (process.env.ALLOW_LEGACY_CREDIT_FALLBACK === "1") {
       logger.error(
-        "[CreditService] Atomic RPC missing — using legacy non-atomic fallback (double-spend risk)",
+        "[CreditService] Atomic RPC missing, using legacy non-atomic fallback (double-spend risk)",
       );
       return legacyCheckAndDecrement(userId, tier, queryClient, amount);
     }
     logger.error(
-      "[CreditService] Atomic RPC refresh_and_decrement_credits not found in DB — failing closed",
+      "[CreditService] Atomic RPC refresh_and_decrement_credits not found in DB, failing closed",
     );
     return {
       allowed: false,

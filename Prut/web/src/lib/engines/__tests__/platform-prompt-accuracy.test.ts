@@ -37,13 +37,13 @@ describe("platform prompt accuracy (source guardrails)", () => {
     expect(f).not.toMatch(/Resolution:\s*Native 4K output/i);
   });
 
-  it("video-engine.ts: Veo duration references Gemini API seconds (4/6/8), not 5–15", () => {
+  it("video-engine.ts: Veo duration references Gemini API seconds (4/6/8), not 5-15", () => {
     const f = src("lib", "engines", "video-engine.ts");
     expect(f).toMatch(/durationSeconds|"4", "6", or "8"/);
     expect(f).not.toMatch(/\(5-15 seconds supported\)/);
   });
 
-  it("image-engine.ts: Midjourney targets V8 — --q/--quality listed as deprecated, --oref/--exp/--hd present", () => {
+  it("image-engine.ts: Midjourney targets V8, --q/--quality listed as deprecated, --oref/--exp/--hd present", () => {
     // V8.2 became the Midjourney default (July 2026): --quality/--q, --cref/--cw,
     // --style raw and --tile are deprecated; --oref/--ow, --exp and --hd are current.
     const f = src("lib", "engines", "image-engine.ts");

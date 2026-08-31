@@ -23,7 +23,7 @@
 import { describe, it, expect } from "vitest";
 import { pickDefaults, buildProviderOptions, filterModelsForEstimatedInput } from "../gateway";
 
-describe("gateway pickDefaults — hard clamp", () => {
+describe("gateway pickDefaults, hard clamp", () => {
   it("clamps an egregious userMax override to 16384", () => {
     const result = pickDefaults("image", 999_999);
     expect(result.maxOutputTokens).toBe(16384);
@@ -59,7 +59,7 @@ describe("gateway pickDefaults — hard clamp", () => {
   });
 });
 
-describe("gateway pickDefaults — presets", () => {
+describe("gateway pickDefaults, presets", () => {
   it("image task defaults to 16384 tokens and 0.5 temp", () => {
     expect(pickDefaults("image")).toEqual({ maxOutputTokens: 16384, temperature: 0.5 });
   });
@@ -112,7 +112,7 @@ describe("gateway pickDefaults — presets", () => {
   });
 });
 
-describe("gateway pickDefaults — caller temperature override", () => {
+describe("gateway pickDefaults, caller temperature override", () => {
   it("honors caller-provided temperature", () => {
     const result = pickDefaults("image", undefined, 0.1);
     expect(result.temperature).toBe(0.1);
@@ -124,7 +124,7 @@ describe("gateway pickDefaults — caller temperature override", () => {
   });
 });
 
-describe("gateway buildProviderOptions — disables Gemini thinking", () => {
+describe("gateway buildProviderOptions, disables Gemini thinking", () => {
   // Root cause of the JSON truncation incident: Gemini 2.5 Flash's
   // reasoning tokens count against maxOutputTokens. For image/video JSON
   // tasks thinking consumed 700-1000+ tokens out of an 8K budget, leaving

@@ -54,17 +54,29 @@ const BlogPostSchema = z.object({
     .describe("2-3 פרומפטים רלוונטיים מהספרייה"),
 });
 
+// Project law: no em/en dashes in anything a reader sees. Models lean on
+// them and it reads machine-made; scrub deterministically so the law holds
+// even when the model ignores the style instructions.
+function stripAiDashes(text: string): string {
+  return text
+    .replace(/\s*\u2014\s*/g, ", ")
+    .replace(/(\d)\s*\u2013\s*(\d)/g, "$1-$2")
+    .replace(/\s*\u2013\s*/g, ", ")
+    .replace(/, ,/g, ",");
+}
+
 /** Clamp soft limits the schema deliberately does not enforce. */
 function clampBlogPost(post: GeneratedBlogPost): GeneratedBlogPost {
   return {
     ...post,
-    title: post.title.slice(0, 200),
+    content: stripAiDashes(post.content),
+    title: stripAiDashes(post.title).slice(0, 200),
     englishTitle: post.englishTitle.slice(0, 200),
-    excerpt: post.excerpt.slice(0, 600),
-    metaTitle: post.metaTitle.slice(0, 90),
-    metaDescription: post.metaDescription.slice(0, 255),
+    excerpt: stripAiDashes(post.excerpt).slice(0, 600),
+    metaTitle: stripAiDashes(post.metaTitle).slice(0, 90),
+    metaDescription: stripAiDashes(post.metaDescription).slice(0, 255),
     category: post.category.slice(0, 60),
-    tags: post.tags.slice(0, 6).map((t) => t.slice(0, 40)),
+    tags: post.tags.slice(0, 6).map((t) => stripAiDashes(t).slice(0, 40)),
     internalLinks: post.internalLinks.slice(0, 5),
   };
 }
@@ -86,7 +98,7 @@ interface BlogGenerationParams {
 
 // Same clamp-don't-reject policy as the blog schema (see note above).
 const GeneratedPromptSchema = z.object({
-  title: z.string().min(5).describe("שם הפרומפט בעברית — ברור ותיאורי"),
+  title: z.string().min(5).describe("שם הפרומפט בעברית, ברור ותיאורי"),
   prompt: z
     .string()
     .min(80)
@@ -108,8 +120,9 @@ const GeneratedPromptSchema = z.object({
 function clampPrompt(p: GeneratedPrompt): GeneratedPrompt {
   return {
     ...p,
-    title: p.title.slice(0, 150),
-    use_case: p.use_case.slice(0, 500),
+    title: stripAiDashes(p.title).slice(0, 150),
+    prompt: stripAiDashes(p.prompt),
+    use_case: stripAiDashes(p.use_case).slice(0, 500),
     variables: p.variables.slice(0, 10).map((v) => v.slice(0, 60)),
     output_format: p.output_format.slice(0, 500),
     quality_checks: p.quality_checks.slice(0, 5).map((c) => c.slice(0, 200)),
@@ -148,12 +161,18 @@ export async function generateBlogPost(params: BlogGenerationParams): Promise<Ge
     faq: "שאלות ותשובות מקצועיות, כל תשובה מפורטת עם דוגמאות. 1000-1500 מילים.",
   };
 
-  const system = `אתה כותב תוכן מקצועי בעברית עבור אתר peroot.space — מחולל פרומפטים מקצועי בעברית.
+  const system = `אתה כותב תוכן מקצועי בעברית עבור אתר peroot.space, מחולל פרומפטים מקצועי בעברית.
 התוכן שלך חייב להיות ברמה הגבוהה ביותר: מנוסח בעברית טבעית (לא תרגום), מקצועי אך נגיש, עם ערך אמיתי לקורא.
+
+## כללי כתיבה אנושית (חוק פרויקט, לא המלצה)
+- אסור להשתמש בקו מפריד ארוך או בינוני בשום מקום. במקומם: פסיק, נקודתיים, או נקודה. טווחי מספרים עם מקף רגיל (2-3).
+- כתוב כמו כותב תוכן ישראלי מנוסה, לא כמו מודל: בלי פתיחות גנריות ("בעולם של היום", "בעידן הדיגיטלי"), בלי "חשוב לציין", "יתרה מזאת", "לסיכומו של דבר".
+- גוון אורכי משפטים ופסקאות. לא כל פסקה חייבת שלושה משפטים ולא כל רשימה חייבת חמישה פריטים.
+- כתוב בגוף שני ישיר וטבעי, עם דוגמאות קונקרטיות במקום הכללות.
 
 ## כללי ייחודיות (קריטי!)
 - לפני שאתה כותב, בדוק את רשימת הכותרות הקיימות שתקבל. אסור בהחלט ליצור תוכן על נושא שכבר קיים.
-- אם הנושא המבוקש כבר מכוסה ברשימה הקיימת — בחר זווית שונה לחלוטין או נושא משלים.
+- אם הנושא המבוקש כבר מכוסה ברשימה הקיימת, בחר זווית שונה לחלוטין או נושא משלים.
 - אל תשתמש בכותרות דומות. תוודא שהכותרת שלך שונה באופן מהותי מכל הכותרות הקיימות.
 
 ## אסטרטגיית SEO/GEO לשוק הישראלי
@@ -161,7 +180,7 @@ export async function generateBlogPost(params: BlogGenerationParams): Promise<Ge
 - **Long-tail keywords**: כלול ביטויי חיפוש ארוכים בכותרות H2 ובתוכן (למשל: "איך לכתוב פרומפט ל-ChatGPT בעברית", לא רק "פרומפטים").
 - **Competitor awareness**: כתוב תוכן שמכסה את הנושא לעומק רב יותר ממה שקיים באינטרנט בעברית. הוסף ערך ייחודי שמתחרים לא מספקים.
 - **Featured Snippets**: מבנה כל H2 כשאלה או הוראה ברורה, כדי שגוגל יוכל להציג אותה כ-featured snippet.
-- **ציטוטים ונתונים (GEO)**: כלול נתונים מספריים קונקרטיים ועובדות ניתנות-לציטוט — מנועי תשובה (ChatGPT, Perplexity) מצטטים תוכן עם מספרים ומבנה שאלה-תשובה.
+- **ציטוטים ונתונים (GEO)**: כלול נתונים מספריים קונקרטיים ועובדות ניתנות-לציטוט, מנועי תשובה (ChatGPT, Perplexity) מצטטים תוכן עם מספרים ומבנה שאלה-תשובה.
 - **הקשר ישראלי**: דוגמאות מקומיות, התייחסות לכלים פופולריים בישראל, שמות מותגים ישראליים.
 
 ## מבנה HTML
@@ -174,13 +193,13 @@ export async function generateBlogPost(params: BlogGenerationParams): Promise<Ge
 
 ## קישורים פנימיים (חשוב ל-SEO!)
 כלול 2-3 קישורים לפרומפטים קיימים מהספרייה שרלוונטיים לתוכן. השתמש אך ורק
-בכתובות ה-URL המדויקות מהרשימה שתקבל (עמודה url) — אסור להמציא כתובת. פורמט:
+בכתובות ה-URL המדויקות מהרשימה שתקבל (עמודה url), אסור להמציא כתובת. פורמט:
 <a href="[url מהרשימה]">[שם הפרומפט]</a>
-בחר פרומפטים שמשלימים את הנושא — לא רנדומליים.`;
+בחר פרומפטים שמשלימים את הנושא, לא רנדומליים.`;
 
   const topicInstruction = topic
     ? `כתוב מאמר על הנושא: "${topic}"`
-    : `בחר נושא חדש ורלוונטי שעדיין לא קיים באתר. הנושא צריך להיות בתחום פרומפטים, AI, או כלי בינה מלאכותית — ממוקד בשוק הישראלי.`;
+    : `בחר נושא חדש ורלוונטי שעדיין לא קיים באתר. הנושא צריך להיות בתחום פרומפטים, AI, או כלי בינה מלאכותית, ממוקד בשוק הישראלי.`;
 
   const userPrompt = `${topicInstruction}
 
@@ -191,14 +210,14 @@ export async function generateBlogPost(params: BlogGenerationParams): Promise<Ge
 כותרות מאמרים קיימים (אל תחזור עליהם):
 ${existingTitles.slice(0, 50).join("\n")}
 
-פרומפטים קיימים בספרייה (לקישורים פנימיים — השתמש ב-url המדויק בלבד):
+פרומפטים קיימים בספרייה (לקישורים פנימיים, השתמש ב-url המדויק בלבד):
 ${(existingPromptLinks ?? existingPromptTitles.map((t) => ({ title: t, url: "/prompts" })))
   .slice(0, 30)
   .map((l) => `- ${l.title} → ${l.url}`)
   .join("\n")}
 
 ## דרישות קריטיות:
-1. וודא שהנושא שבחרת לא מכוסה כבר ברשימת הכותרות למעלה — גם לא בניסוח אחר.
+1. וודא שהנושא שבחרת לא מכוסה כבר ברשימת הכותרות למעלה, גם לא בניסוח אחר.
 2. התוכן חייב להוסיף ערך ייחודי שלא קיים במאמרים הקיימים.
 3. השתמש ב-long-tail keywords שישראלים מחפשים בגוגל.
 4. הקישורים הפנימיים חייבים להיות לפרומפטים שרלוונטיים באמת לנושא.`;
@@ -233,12 +252,18 @@ export async function generatePromptBatch(params: PromptGenerationParams): Promi
 
   const categoryList = existingCategories.map((c) => `${c.id}: ${c.name_he}`).join("\n");
 
-  const system = `אתה מומחה ליצירת פרומפטים מקצועיים בעברית עבור peroot.space — מחולל פרומפטים מקצועי בעברית.
+  const system = `אתה מומחה ליצירת פרומפטים מקצועיים בעברית עבור peroot.space, מחולל פרומפטים מקצועי בעברית.
 
 ## כללי ייחודיות (קריטי!)
 - לפני שאתה יוצר, בדוק את רשימת הכותרות הקיימות שתקבל. אסור בהחלט ליצור פרומפט על נושא שכבר קיים.
-- אם הנושא כבר מכוסה — בחר זווית שונה, נישה ספציפית יותר, או שימוש מקצועי שונה.
+- אם הנושא כבר מכוסה, בחר זווית שונה, נישה ספציפית יותר, או שימוש מקצועי שונה.
 - הכותרת חייבת להיות שונה באופן מהותי מכל הכותרות הקיימות.
+
+## כללי כתיבה אנושית (חוק פרויקט, לא המלצה)
+- אסור להשתמש בקו מפריד ארוך או בינוני בשום מקום. במקומם: פסיק, נקודתיים, או נקודה. טווחי מספרים עם מקף רגיל (2-3).
+- כתוב כמו כותב תוכן ישראלי מנוסה, לא כמו מודל: בלי פתיחות גנריות ("בעולם של היום", "בעידן הדיגיטלי"), בלי "חשוב לציין", "יתרה מזאת", "לסיכומו של דבר".
+- גוון אורכי משפטים ופסקאות. לא כל פסקה חייבת שלושה משפטים ולא כל רשימה חייבת חמישה פריטים.
+- כתוב בגוף שני ישיר וטבעי, עם דוגמאות קונקרטיות במקום הכללות.
 
 ## איכות הפרומפט
 הפרומפטים שלך חייבים להיות:
@@ -252,7 +277,7 @@ export async function generatePromptBatch(params: PromptGenerationParams): Promi
 ## אסטרטגיית תוכן
 - צור פרומפטים שפותרים בעיות אמיתיות שאנשים בישראל מתמודדים איתם
 - חשוב על use cases מעשיים: עסקים קטנים, פרילנסרים, מנהלי שיווק, יזמים, סטודנטים
-- כל פרומפט חייב להיות כזה שמשתמש ישתמש בו שוב ושוב — לא חד-פעמי
+- כל פרומפט חייב להיות כזה שמשתמש ישתמש בו שוב ושוב, לא חד-פעמי
 - הוסף ערך ייחודי שלא קיים בכלים אחרים`;
 
   const topicInstruction = topic
@@ -274,10 +299,10 @@ ${categoryList}
 ${existingTitles.slice(0, 100).join("\n")}
 
 ## דרישות קריטיות:
-1. וודא שכל פרומפט שונה באופן מהותי מהכותרות הקיימות למעלה — גם בנושא וגם בזווית.
+1. וודא שכל פרומפט שונה באופן מהותי מהכותרות הקיימות למעלה, גם בנושא וגם בזווית.
 2. כל פרומפט חייב לפתור בעיה אמיתית שאנשים בישראל מתמודדים איתה.
 3. category_id חייב להיות בדיוק מהרשימה למעלה (הID באנגלית, לא השם בעברית).
-4. אל תייצר פרומפטים גנריים כמו "כתוב טקסט" — כל אחד חייב להיות ספציפי ומקצועי.`;
+4. אל תייצר פרומפטים גנריים כמו "כתוב טקסט", כל אחד חייב להיות ספציפי ומקצועי.`;
 
   const startTime = Date.now();
 

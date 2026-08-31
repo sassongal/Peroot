@@ -129,7 +129,7 @@ describe("validateCsrfOrigin", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.peroot.space");
   });
 
-  it("returns null (allow) for GET requests — no state change", () => {
+  it("returns null (allow) for GET requests, no state change", () => {
     const req = makeRequest({ pathname: "/api/enhance", method: "GET" });
     expect(validateCsrfOrigin(req)).toBeNull();
   });

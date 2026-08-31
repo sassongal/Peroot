@@ -914,7 +914,7 @@ export function PromptInput({
         isOpen={guestGateFeature !== null}
         onClose={() => setGuestGateFeature(null)}
         title="נדרשת התחברות"
-        message="כדי לצרף קבצים, תמונות וקישורים לקונטקסט — יש להתחבר לחשבון."
+        message="כדי לצרף קבצים, תמונות וקישורים לקונטקסט, יש להתחבר לחשבון."
         feature={guestGateFeature ?? undefined}
       />
     </div>

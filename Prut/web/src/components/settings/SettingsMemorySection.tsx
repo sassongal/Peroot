@@ -65,7 +65,7 @@ export function SettingsMemorySection() {
           זיכרון AI
         </h2>
         <p className="text-sm text-slate-400 mt-1 leading-relaxed">
-          עובדות שה-AI יודע עליך — מוחלות אוטומטית על כל שיפור פרומפט החל מהפרומפט הראשון.
+          עובדות שה-AI יודע עליך, מוחלות אוטומטית על כל שיפור פרומפט החל מהפרומפט הראשון.
         </p>
       </div>
 

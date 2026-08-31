@@ -19,13 +19,13 @@ export const skill: PlatformSkill = {
     {
       concept: "שדה לבנדר בפרובנס בשקיעה",
       output:
-        "Endless rows of lavender stretch toward a horizon of rolling Provencal hills, the plants in full bloom creating parallel lines of deep violet and silver-green that converge at a lone stone farmhouse with faded blue shutters in the middle distance. The sky blazes with sunset colors — bands of apricot, rose, and deepening indigo above. A single cypress tree stands like a dark exclamation mark against the sky. The warm golden light rakes across the field at a low angle, making the lavender tips glow almost incandescent. A dirt path winds between the rows, and a rustic wooden bench sits at the edge of the frame. The air seems to shimmer with heat. Fine art landscape photography, rich saturated color, sweeping panoramic composition. [aspectRatio: 16:9] [exclude: people, cars, watermark, modern buildings]",
+        "Endless rows of lavender stretch toward a horizon of rolling Provencal hills, the plants in full bloom creating parallel lines of deep violet and silver-green that converge at a lone stone farmhouse with faded blue shutters in the middle distance. The sky blazes with sunset colors, bands of apricot, rose, and deepening indigo above. A single cypress tree stands like a dark exclamation mark against the sky. The warm golden light rakes across the field at a low angle, making the lavender tips glow almost incandescent. A dirt path winds between the rows, and a rustic wooden bench sits at the edge of the frame. The air seems to shimmer with heat. Fine art landscape photography, rich saturated color, sweeping panoramic composition. [aspectRatio: 16:9] [exclude: people, cars, watermark, modern buildings]",
       category: "landscape",
     },
     {
       concept: "ילד מחופש לאסטרונאוט",
       output:
-        'A boy around age 6 with a wide grin and missing front tooth wearing a homemade astronaut costume — a cardboard box helmet painted white with a cut-out visor covered in plastic wrap, aluminum foil gloves, and a silver-painted backpack with plastic tubes as oxygen hoses. He stands in a suburban backyard at dusk, one foot planted on a wooden crate marked "MOON ROCK" in crayon, pointing triumphantly at the actual moon visible in the pale blue-pink sky above. A cardboard rocket ship built from appliance boxes stands behind him, decorated with hand-drawn mission patches and a small American flag. Fireflies dot the darkening yard. Warm nostalgic tones, childhood wonder and imagination, candid lifestyle photography with soft natural twilight light. [aspectRatio: 4:3] [exclude: watermark, deformed, blurry]',
+        'A boy around age 6 with a wide grin and missing front tooth wearing a homemade astronaut costume, a cardboard box helmet painted white with a cut-out visor covered in plastic wrap, aluminum foil gloves, and a silver-painted backpack with plastic tubes as oxygen hoses. He stands in a suburban backyard at dusk, one foot planted on a wooden crate marked "MOON ROCK" in crayon, pointing triumphantly at the actual moon visible in the pale blue-pink sky above. A cardboard rocket ship built from appliance boxes stands behind him, decorated with hand-drawn mission patches and a small American flag. Fireflies dot the darkening yard. Warm nostalgic tones, childhood wonder and imagination, candid lifestyle photography with soft natural twilight light. [aspectRatio: 4:3] [exclude: watermark, deformed, blurry]',
       category: "emotion",
     },
     {
@@ -49,7 +49,7 @@ export const skill: PlatformSkill = {
     {
       concept: "מעבדה מדעית עתידנית",
       output:
-        "A gleaming futuristic research laboratory with clean white surfaces and cool blue accent lighting. A young female scientist in a crisp white lab coat examines a holographic molecular model floating above her workstation, the transparent 3D structure rotating slowly and casting colorful light patterns on her face. Banks of high-tech equipment line the walls — gene sequencers with blinking indicator lights, robotic arm sample handlers, and wall-mounted displays showing real-time data streams. Through a large observation window, a verdant biodome is visible. The space is orderly, spotless, and filled with the sense of cutting-edge discovery. Science fiction editorial photography grounded in near-future realism. [aspectRatio: 16:9] [exclude: watermark, blurry, deformed, cluttered]",
+        "A gleaming futuristic research laboratory with clean white surfaces and cool blue accent lighting. A young female scientist in a crisp white lab coat examines a holographic molecular model floating above her workstation, the transparent 3D structure rotating slowly and casting colorful light patterns on her face. Banks of high-tech equipment line the walls, gene sequencers with blinking indicator lights, robotic arm sample handlers, and wall-mounted displays showing real-time data streams. Through a large observation window, a verdant biodome is visible. The space is orderly, spotless, and filled with the sense of cutting-edge discovery. Science fiction editorial photography grounded in near-future realism. [aspectRatio: 16:9] [exclude: watermark, blurry, deformed, cluttered]",
       category: "sci-fi",
     },
     {
@@ -73,7 +73,7 @@ export const skill: PlatformSkill = {
     {
       concept: "גשר עתיק בערפל",
       output:
-        "An ancient stone bridge with three graceful arches spanning a misty river valley at dawn. The bridge is covered in moss and wildflowers growing from cracks between the weathered stones, with a single iron lantern still standing at its center. Dense fog obscures the far bank, giving the scene a mysterious, timeless quality. Below, the calm river reflects the bridge and the pale sky above. Ancient oak trees with gnarled branches frame both sides. The light is soft, diffused, and ethereal — no direct sun, just a luminous pearl-gray sky brightening toward the horizon. Fine art landscape photography with a romantic, painterly quality reminiscent of Caspar David Friedrich. [aspectRatio: 16:9] [exclude: watermark, people, modern elements, blurry]",
+        "An ancient stone bridge with three graceful arches spanning a misty river valley at dawn. The bridge is covered in moss and wildflowers growing from cracks between the weathered stones, with a single iron lantern still standing at its center. Dense fog obscures the far bank, giving the scene a mysterious, timeless quality. Below, the calm river reflects the bridge and the pale sky above. Ancient oak trees with gnarled branches frame both sides. The light is soft, diffused, and ethereal, no direct sun, just a luminous pearl-gray sky brightening toward the horizon. Fine art landscape photography with a romantic, painterly quality reminiscent of Caspar David Friedrich. [aspectRatio: 16:9] [exclude: watermark, people, modern elements, blurry]",
       category: "architecture",
     },
   ],
@@ -81,7 +81,7 @@ export const skill: PlatformSkill = {
     {
       bad: "lavender field, sunset, beautiful, Provence, stunning, vibrant colors [aspectRatio: 16:9]",
       good: "Endless rows of lavender stretch toward rolling Provencal hills, plants in full bloom creating parallel lines of deep violet and silver-green converging at a lone stone farmhouse with faded blue shutters. The sky blazes with bands of apricot, rose, and deepening indigo. Fine art landscape photography, rich saturated color. [aspectRatio: 16:9] [exclude: people, cars, watermark]",
-      why: 'Imagen responds to narrative paragraphs, not keyword lists. Write as if describing a scene in a novel — with spatial relationships, specific details, and atmosphere. Keywords like "beautiful" and "stunning" are wasted tokens.',
+      why: 'Imagen responds to narrative paragraphs, not keyword lists. Write as if describing a scene in a novel, with spatial relationships, specific details, and atmosphere. Keywords like "beautiful" and "stunning" are wasted tokens.',
     },
     {
       bad: "A family having a picnic in a forest.",
@@ -96,23 +96,23 @@ export const skill: PlatformSkill = {
     {
       bad: "A woman in an office, wearing a suit, looking professional [aspectRatio: 16:9]",
       good: "A confident woman in her early 40s wearing a tailored charcoal suit and crisp white blouse, standing at the head of a long glass conference table gesturing toward a presentation screen. The room has floor-to-ceiling windows revealing a cityscape. Six colleagues sit with laptops, leaning in attentively. Editorial business photography, sharp focus, neutral corporate palette. [aspectRatio: 16:9] [exclude: watermark, text overlay, blurry]",
-      why: "Missing [exclude:] tag and lacking scene context. Imagen benefits from specific details about the environment, other people, lighting, and color palette — not just the main subject in isolation.",
+      why: "Missing [exclude:] tag and lacking scene context. Imagen benefits from specific details about the environment, other people, lighting, and color palette, not just the main subject in isolation.",
     },
   ],
   scoringCriteria: [
-    "60–150 words of flowing narrative — Imagen follows prose, not SD tags",
+    "60-150 words of flowing narrative, Imagen follows prose, not SD tags",
     "[aspectRatio:] matches delivery (social vs print vs slide)",
     "[exclude:] lists artifact classes: watermark, blurry, deformed, text overlay when needed",
     "People: age range, wardrobe, pose, expression, relationship to others in frame",
     "Environment: materials, era, weather, time-of-day light color",
     "Camera feel in words (editorial, telephoto compression) without fake --params",
     "Multi-subject: who looks where and spatial relationships",
-    "Brand-safe: no real celebrity or trademark names — describe look-alike traits",
-    "Story beat in one paragraph — beginning/middle/end of a single moment",
+    "Brand-safe: no real celebrity or trademark names, describe look-alike traits",
+    "Story beat in one paragraph, beginning/middle/end of a single moment",
     'Palette named (warm amber, cool teal) not just "nice colors"',
     "Model tier: Ultra for portraits and hero shots; Fast for iteration",
-    "Supported aspect ratios: 1:1, 3:4, 4:3, 9:16, 16:9 — specify via [aspectRatio:]",
-    '2K resolution available — mention "high resolution" or "2K" for detail-critical shots',
+    "Supported aspect ratios: 1:1, 3:4, 4:3, 9:16, 16:9, specify via [aspectRatio:]",
+    '2K resolution available, mention "high resolution" or "2K" for detail-critical shots',
   ],
   chainOfThoughtExamples: [
     {

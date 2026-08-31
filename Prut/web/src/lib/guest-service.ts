@@ -65,7 +65,7 @@ function hashIp(ip: string): string {
   if (!salt) {
     if (!warnedMissingSalt && process.env.NODE_ENV === "production") {
       logger.warn(
-        "[guest-service] GUEST_IP_SALT is not set — IP hashes are trivially reversible. Set a random 32+ char value in env.",
+        "[guest-service] GUEST_IP_SALT is not set, IP hashes are trivially reversible. Set a random 32+ char value in env.",
       );
       warnedMissingSalt = true;
     }

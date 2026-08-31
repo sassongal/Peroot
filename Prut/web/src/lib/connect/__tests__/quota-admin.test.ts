@@ -14,7 +14,7 @@ vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn() } }));
 
 import { connectQuota } from "@/lib/connect/ops";
 
-describe("connectQuota — admin", () => {
+describe("connectQuota, admin", () => {
   it("reports unlimited (null) for admin tier regardless of balance", async () => {
     mockSingle.mockResolvedValue({ data: { plan_tier: "admin", credits_balance: 6 }, error: null });
     const q = await connectQuota("admin-user");

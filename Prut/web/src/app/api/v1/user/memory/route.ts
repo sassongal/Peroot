@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   try {
     input = Schema.parse(await req.json());
   } catch {
-    return connectError(400, "invalid_request", "עובדה חייבת להיות 3–300 תווים", "Invalid fact");
+    return connectError(400, "invalid_request", "עובדה חייבת להיות 3-300 תווים", "Invalid fact");
   }
   try {
     const fact = await connectRememberFact(auth.userId, input.fact, input.category);

@@ -158,7 +158,7 @@ export function ChainsSection({
         <div className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-2.5 space-y-1 mt-2">
           <p className="text-[11px] font-semibold text-amber-400">דוגמה:</p>
           <p className="text-[11px] leading-relaxed">
-            &quot;מחקר שוק &lt;br&gt;→ סיכום ל-5 נקודות &lt;br&gt;→ פוסט לינקדאין&quot; — הפלט של
+            &quot;מחקר שוק &lt;br&gt;→ סיכום ל-5 נקודות &lt;br&gt;→ פוסט לינקדאין&quot;, הפלט של
             השלב הראשון נזרק אוטומטית לשני, ואז לשלישי.
           </p>
         </div>

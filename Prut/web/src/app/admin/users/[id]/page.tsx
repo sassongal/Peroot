@@ -545,7 +545,7 @@ export default function UserDetailPage() {
           <QuickStat label="Generations" value={historyCount ?? 0} icon={Sparkles} color="blue" />
           <QuickStat
             label="Last Active"
-            value={lastActive ? timeAgo(lastActive) : "—"}
+            value={lastActive ? timeAgo(lastActive) : ", "}
             icon={Activity}
             color="emerald"
           />
@@ -1274,7 +1274,7 @@ export default function UserDetailPage() {
                     <button
                       onClick={() => doAction("change_tier", tierValue)}
                       disabled={actionLoading === "change_tier" || isNoop}
-                      title={isNoop ? "Same as current tier — pick a different tier" : undefined}
+                      title={isNoop ? "Same as current tier, pick a different tier" : undefined}
                       className="w-full py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {actionLoading === "change_tier" ? (
@@ -1523,7 +1523,7 @@ const TYPE_LABELS: Record<string, string> = {
   subscription_resumed: "חידוש מנוי",
   subscription_payment_failed: "תשלום נכשל",
   churn_notification: "הודעת ביטול מנוי",
-  admin_churn_alert: "התראת מנהל — churn",
+  admin_churn_alert: "התראת מנהל, churn",
   transactional: "הודעה",
 };
 

@@ -20,7 +20,7 @@ const ALL_TYPES: DocumentType[] = [
 ];
 
 describe("DOCUMENT_CAPABILITY", () => {
-  it("has an entry for every DocumentType (exhaustive — no silent drift)", () => {
+  it("has an entry for every DocumentType (exhaustive, no silent drift)", () => {
     expect(Object.keys(DOCUMENT_CAPABILITY).sort()).toEqual([...ALL_TYPES].sort());
   });
 

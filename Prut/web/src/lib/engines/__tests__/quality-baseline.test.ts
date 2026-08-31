@@ -18,10 +18,10 @@
  *     npm run update-baseline
  */
 
-import { describe, it, expect } from 'vitest';
-import baseline from './quality-baseline.json';
-import { CapabilityMode } from '@/lib/capability-mode';
-import { EnhancedScorer } from '@/lib/engines/scoring/enhanced-scorer';
+import { describe, it, expect } from "vitest";
+import baseline from "./quality-baseline.json";
+import { CapabilityMode } from "@/lib/capability-mode";
+import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
 import {
   badTextFixtures,
   weakTextFixtures,
@@ -31,7 +31,7 @@ import {
   badVisualFixtures,
   strongVisualFixtures,
   strongVideoFixtures,
-} from './quality-fixtures';
+} from "./quality-fixtures";
 
 const PER_FIXTURE_TOLERANCE = 3;
 const GLOBAL_AVERAGE_TOLERANCE = 2;
@@ -54,22 +54,22 @@ interface Baseline {
 const typedBaseline = baseline as Baseline;
 
 const GROUPS = [
-  { label: 'badText', mode: CapabilityMode.STANDARD, fixtures: badTextFixtures },
-  { label: 'weakText', mode: CapabilityMode.STANDARD, fixtures: weakTextFixtures },
-  { label: 'mediumText', mode: CapabilityMode.STANDARD, fixtures: mediumTextFixtures },
-  { label: 'strongText', mode: CapabilityMode.STANDARD, fixtures: strongTextFixtures },
-  { label: 'eliteText', mode: CapabilityMode.STANDARD, fixtures: eliteTextFixtures },
-  { label: 'badVisual', mode: CapabilityMode.IMAGE_GENERATION, fixtures: badVisualFixtures },
-  { label: 'strongVisual', mode: CapabilityMode.IMAGE_GENERATION, fixtures: strongVisualFixtures },
-  { label: 'strongVideo', mode: CapabilityMode.VIDEO_GENERATION, fixtures: strongVideoFixtures },
+  { label: "badText", mode: CapabilityMode.STANDARD, fixtures: badTextFixtures },
+  { label: "weakText", mode: CapabilityMode.STANDARD, fixtures: weakTextFixtures },
+  { label: "mediumText", mode: CapabilityMode.STANDARD, fixtures: mediumTextFixtures },
+  { label: "strongText", mode: CapabilityMode.STANDARD, fixtures: strongTextFixtures },
+  { label: "eliteText", mode: CapabilityMode.STANDARD, fixtures: eliteTextFixtures },
+  { label: "badVisual", mode: CapabilityMode.IMAGE_GENERATION, fixtures: badVisualFixtures },
+  { label: "strongVisual", mode: CapabilityMode.IMAGE_GENERATION, fixtures: strongVisualFixtures },
+  { label: "strongVideo", mode: CapabilityMode.VIDEO_GENERATION, fixtures: strongVideoFixtures },
 ] as const;
 
 function lookup(group: string, name: string): BaselineEntry | undefined {
   return typedBaseline.entries.find((e) => e.group === group && e.name === name);
 }
 
-describe('Quality baseline — committed snapshot', () => {
-  describe('every fixture stays within ±3 points of baseline', () => {
+describe("Quality baseline, committed snapshot", () => {
+  describe("every fixture stays within ±3 points of baseline", () => {
     for (const group of GROUPS) {
       for (const fx of group.fixtures) {
         it(`${group.label}/"${fx.name}"`, () => {
@@ -77,18 +77,18 @@ describe('Quality baseline — committed snapshot', () => {
           if (!expected) {
             throw new Error(
               `No baseline entry for ${group.label}/${fx.name}. ` +
-                `Run \`npm run update-baseline\` to add it.`
+                `Run \`npm run update-baseline\` to add it.`,
             );
           }
           const actual = EnhancedScorer.score(fx.prompt, group.mode).total;
           const delta = actual - expected.score;
           if (Math.abs(delta) > PER_FIXTURE_TOLERANCE) {
-            const direction = delta > 0 ? 'IMPROVEMENT' : 'REGRESSION';
+            const direction = delta > 0 ? "IMPROVEMENT" : "REGRESSION";
             throw new Error(
               `${direction}: ${group.label}/${fx.name} scored ${actual}, ` +
-                `baseline is ${expected.score} (delta ${delta > 0 ? '+' : ''}${delta}). ` +
+                `baseline is ${expected.score} (delta ${delta > 0 ? "+" : ""}${delta}). ` +
                 `If this is an intentional improvement, run \`npm run update-baseline\` ` +
-                `and commit the new quality-baseline.json.`
+                `and commit the new quality-baseline.json.`,
             );
           }
           expect(Math.abs(delta)).toBeLessThanOrEqual(PER_FIXTURE_TOLERANCE);
@@ -97,7 +97,7 @@ describe('Quality baseline — committed snapshot', () => {
     }
   });
 
-  it('global average stays within ±2 points of baseline', () => {
+  it("global average stays within ±2 points of baseline", () => {
     let total = 0;
     let count = 0;
     for (const group of GROUPS) {
@@ -111,7 +111,7 @@ describe('Quality baseline — committed snapshot', () => {
     expect(Math.abs(delta)).toBeLessThanOrEqual(GLOBAL_AVERAGE_TOLERANCE);
   });
 
-  it('baseline contains an entry for every live fixture', () => {
+  it("baseline contains an entry for every live fixture", () => {
     const liveKeys = new Set<string>();
     for (const group of GROUPS) {
       for (const fx of group.fixtures) {
@@ -123,9 +123,9 @@ describe('Quality baseline — committed snapshot', () => {
     const orphaned = [...baselineKeys].filter((k) => !liveKeys.has(k));
     if (missing.length > 0 || orphaned.length > 0) {
       throw new Error(
-        `Baseline drift detected. Missing from baseline: ${missing.join(', ') || 'none'}. ` +
-          `Orphaned in baseline: ${orphaned.join(', ') || 'none'}. ` +
-          `Run \`npm run update-baseline\` to sync.`
+        `Baseline drift detected. Missing from baseline: ${missing.join(", ") || "none"}. ` +
+          `Orphaned in baseline: ${orphaned.join(", ") || "none"}. ` +
+          `Run \`npm run update-baseline\` to sync.`,
       );
     }
     expect(missing).toHaveLength(0);

@@ -111,11 +111,11 @@ async function readSseStreamWithTimeout(
   try {
     await readSseStream(response, onStage, onBlock, onError, abort.signal);
     if (abort.signal.aborted) {
-      onError("העיבוד ארך יותר מדי — נסה שנית");
+      onError("העיבוד ארך יותר מדי, נסה שנית");
     }
   } catch {
     if (abort.signal.aborted) {
-      onError("העיבוד ארך יותר מדי — נסה שנית");
+      onError("העיבוד ארך יותר מדי, נסה שנית");
     } else {
       onError("שגיאה לא צפויה בקריאת הנתונים");
     }

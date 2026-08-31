@@ -79,7 +79,7 @@ export function PromptCard({
   const favStarLabel = guestFavoriteHints
     ? isFavorite
       ? "הסר ממועדפים מקומיים"
-      : "הוסף למועדפים במכשיר זה — התחבר לסנכרון בענן"
+      : "הוסף למועדפים במכשיר זה, התחבר לסנכרון בענן"
     : isFavorite
       ? "הסר ממועדפים"
       : "הוסף למועדפים";

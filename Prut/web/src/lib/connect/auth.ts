@@ -74,8 +74,8 @@ export async function authenticateConnect(req: Request): Promise<ConnectAuth | N
     return connectError(
       401,
       "missing_key",
-      "חסר מפתח API — הוסף כותרת Authorization: Bearer prk_live_…",
-      "Missing API key — send Authorization: Bearer prk_live_…",
+      "חסר מפתח API, הוסף כותרת Authorization: Bearer prk_live_…",
+      "Missing API key, send Authorization: Bearer prk_live_…",
     );
   }
 
@@ -91,8 +91,8 @@ export async function authenticateConnect(req: Request): Promise<ConnectAuth | N
       return connectError(
         401,
         "invalid_key",
-        "טוקן OAuth לא תקין או שפג — התחבר מחדש ל-Peroot",
-        "Invalid or expired OAuth token — reconnect to Peroot",
+        "טוקן OAuth לא תקין או שפג, התחבר מחדש ל-Peroot",
+        "Invalid or expired OAuth token, reconnect to Peroot",
       );
     }
     userId = oauth.userId;
@@ -106,8 +106,8 @@ export async function authenticateConnect(req: Request): Promise<ConnectAuth | N
       return connectError(
         401,
         "invalid_key",
-        "מפתח API לא תקין או שבוטל — צור מפתח חדש ב-Peroot Connect",
-        "Invalid or revoked API key — create a new key in Peroot Connect",
+        "מפתח API לא תקין או שבוטל, צור מפתח חדש ב-Peroot Connect",
+        "Invalid or revoked API key, create a new key in Peroot Connect",
       );
     }
     userId = result.userId;
@@ -126,8 +126,8 @@ export async function authenticateConnect(req: Request): Promise<ConnectAuth | N
     const res = connectError(
       429,
       "rate_limited",
-      "יותר מדי בקשות — נסה שוב בעוד רגע",
-      "Too many requests — try again shortly",
+      "יותר מדי בקשות, נסה שוב בעוד רגע",
+      "Too many requests, try again shortly",
       { retry_after_seconds: retryAfter },
     );
     res.headers.set("Retry-After", String(retryAfter));

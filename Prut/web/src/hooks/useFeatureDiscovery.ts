@@ -42,7 +42,7 @@ const ALL_TIPS: DiscoveryTip[] = [
   },
   {
     id: "tip_variables",
-    text: "אפשר להוסיף {משתנים} לפרומפט ולמלא אותם בכל שימוש — כמו תבנית חכמה",
+    text: "אפשר להוסיף {משתנים} לפרומפט ולמלא אותם בכל שימוש, כמו תבנית חכמה",
     emoji: "✨",
     feature: "משתנים",
     usedKey: "peroot_used_variables",
@@ -50,7 +50,7 @@ const ALL_TIPS: DiscoveryTip[] = [
   },
   {
     id: "tip_share",
-    text: "אפשר לשתף פרומפט עם קישור — עמיתים יוכלו להעתיק ולהשתמש",
+    text: "אפשר לשתף פרומפט עם קישור, עמיתים יוכלו להעתיק ולהשתמש",
     emoji: "🔗",
     feature: "שיתוף",
     usedKey: "peroot_used_share",
@@ -70,7 +70,7 @@ const ALL_TIPS: DiscoveryTip[] = [
   },
   {
     id: "tip_image",
-    text: "פירוט יודע ליצור פרומפטים לתמונות — Midjourney, DALL-E ועוד",
+    text: "פירוט יודע ליצור פרומפטים לתמונות, Midjourney, DALL-E ועוד",
     emoji: "🎨",
     feature: "יצירת תמונות",
     usedKey: "peroot_used_image",
@@ -80,7 +80,7 @@ const ALL_TIPS: DiscoveryTip[] = [
   },
   {
     id: "tip_chains",
-    text: "אפשר לבנות שרשרת פרומפטים — שלב אחד מוביל לבא, כמו pipeline חכם",
+    text: "אפשר לבנות שרשרת פרומפטים, שלב אחד מוביל לבא, כמו pipeline חכם",
     emoji: "🔗",
     feature: "שרשראות",
     usedKey: "peroot_used_chains",

@@ -129,7 +129,7 @@ export function MemoryPalaceSidebar({
       dir="rtl"
       className="hidden md:flex flex-col border-s border-(--glass-border) bg-black/20 transition-all duration-200"
       style={{ width: isCollapsed ? 32 : 320 }}
-      aria-label="Memory Palace — שכנים של הפרומפט הנבחר"
+      aria-label="Memory Palace, שכנים של הפרומפט הנבחר"
     >
       <button
         type="button"

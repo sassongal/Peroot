@@ -25,7 +25,7 @@ export const skill: PlatformSkill = {
     {
       concept: "סושי מושלם על צלחת שחורה",
       output:
-        "An exquisite omakase sushi plate: eight pieces of nigiri arranged in a gentle arc on a handmade black ceramic plate with an uneven, organic rim. Each piece is a tiny sculpture — translucent salmon belly glistening with a brushstroke of nikiri glaze, ruby-red tuna, pearlescent hirame, and a torch-kissed otoro with caramelized fat. A small mound of freshly grated wasabi and pickled ginger sit at one end. The plate rests on a warm hinoki cypress counter, a single pair of ebony chopsticks beside it. Dramatic top-down studio lighting with deep shadows and a single overhead spot highlighting the fish. Color palette: obsidian, coral, pearl, warm cedar. In a natural style, editorial food photography with extreme sharpness and rich textures. [size: 1024x1024] [quality: high]",
+        "An exquisite omakase sushi plate: eight pieces of nigiri arranged in a gentle arc on a handmade black ceramic plate with an uneven, organic rim. Each piece is a tiny sculpture, translucent salmon belly glistening with a brushstroke of nikiri glaze, ruby-red tuna, pearlescent hirame, and a torch-kissed otoro with caramelized fat. A small mound of freshly grated wasabi and pickled ginger sit at one end. The plate rests on a warm hinoki cypress counter, a single pair of ebony chopsticks beside it. Dramatic top-down studio lighting with deep shadows and a single overhead spot highlighting the fish. Color palette: obsidian, coral, pearl, warm cedar. In a natural style, editorial food photography with extreme sharpness and rich textures. [size: 1024x1024] [quality: high]",
       category: "food",
     },
     {
@@ -37,7 +37,7 @@ export const skill: PlatformSkill = {
     {
       concept: "קומיקס 4 פאנלים: חתול שונא ימי שני",
       output:
-        'A 4-panel comic strip arranged in a 2x2 grid with clean black panel borders. Panel 1: A chubby orange tabby cat asleep on a couch, alarm clock shows 6AM Monday, speech bubble reads "NO.". Panel 2: Same cat dragging itself off the couch, eyes barely open, a tiny dark storm cloud over its head. Panel 3: Cat staring at a full food bowl with existential dread, tail drooping. Panel 4: Cat back on the couch wrapped in a blanket at 6:05AM, speech bubble reads "Nope.". Consistent character — same orange tabby with white chest patch and sleepy green eyes across all panels. Friendly cartoon illustration style, warm Sunday-paper palette of cream, orange, and ink black. [size: 1024x1024] [quality: high]',
+        'A 4-panel comic strip arranged in a 2x2 grid with clean black panel borders. Panel 1: A chubby orange tabby cat asleep on a couch, alarm clock shows 6AM Monday, speech bubble reads "NO.". Panel 2: Same cat dragging itself off the couch, eyes barely open, a tiny dark storm cloud over its head. Panel 3: Cat staring at a full food bowl with existential dread, tail drooping. Panel 4: Cat back on the couch wrapped in a blanket at 6:05AM, speech bubble reads "Nope.". Consistent character, same orange tabby with white chest patch and sleepy green eyes across all panels. Friendly cartoon illustration style, warm Sunday-paper palette of cream, orange, and ink black. [size: 1024x1024] [quality: high]',
       category: "fantasy",
     },
     {
@@ -55,13 +55,13 @@ export const skill: PlatformSkill = {
     {
       concept: "תפריט מסעדה יפנית",
       output:
-        'A beautifully designed Japanese restaurant menu page, photographed flat-lay on a dark slate surface. Page header reads "OMAKASE MENU" in hand-brushed calligraphy above the Japanese "おまかせ" in smaller text. Three sections with clean dividers: Starters — "Edamame ¥800", "Miso Soup ¥600"; Mains — "Tuna Tataki ¥2,400", "Wagyu Shabu ¥4,800"; Desserts — "Mochi Ice Cream ¥900". All text fully legible, no spelling errors. Prices in clean tabular alignment. Paper texture is handmade washi with faint fibrous grain. Ink is deep sumi black. Sparse bamboo sprig watermark in bottom corner. [size: 1024x1792] [quality: high]',
+        'A beautifully designed Japanese restaurant menu page, photographed flat-lay on a dark slate surface. Page header reads "OMAKASE MENU" in hand-brushed calligraphy above the Japanese "おまかせ" in smaller text. Three sections with clean dividers: Starters, "Edamame ¥800", "Miso Soup ¥600"; Mains, "Tuna Tataki ¥2,400", "Wagyu Shabu ¥4,800"; Desserts, "Mochi Ice Cream ¥900". All text fully legible, no spelling errors. Prices in clean tabular alignment. Paper texture is handmade washi with faint fibrous grain. Ink is deep sumi black. Sparse bamboo sprig watermark in bottom corner. [size: 1024x1792] [quality: high]',
       category: "commercial",
     },
     {
       concept: "נוף הרים עם אגם בשקיעה",
       output:
-        "A panoramic mountain landscape at the golden hour: jagged snow-dusted peaks reflected perfectly in a mirror-still alpine lake, the water surface broken only by a single canoe with a tiny silhouetted figure paddling. The sky transitions from deep coral at the horizon through peach and lavender to a deepening indigo above. Wildflowers — lupines in purple and Indian paintbrush in scarlet — carpet the foreground shore. A thin veil of mist hovers just above the water. The scene has an almost spiritual stillness to it. In a natural style, fine art landscape photography with extreme depth of field and rich dynamic range. [size: 1792x1024] [quality: high]",
+        "A panoramic mountain landscape at the golden hour: jagged snow-dusted peaks reflected perfectly in a mirror-still alpine lake, the water surface broken only by a single canoe with a tiny silhouetted figure paddling. The sky transitions from deep coral at the horizon through peach and lavender to a deepening indigo above. Wildflowers, lupines in purple and Indian paintbrush in scarlet, carpet the foreground shore. A thin veil of mist hovers just above the water. The scene has an almost spiritual stillness to it. In a natural style, fine art landscape photography with extreme depth of field and rich dynamic range. [size: 1792x1024] [quality: high]",
       category: "landscape",
     },
     {
@@ -73,7 +73,7 @@ export const skill: PlatformSkill = {
     {
       concept: "בקבוק בושם על רקע שקוף",
       output:
-        "An elegant crystal perfume bottle with a rose-gold cap, containing pale champagne liquid, photographed against a transparent background. The bottle casts a clean shadow to the lower right. Faceted glass surfaces refract a subtle spectrum of light. Product shot with studio lighting — a single soft box from the upper left, minimal fill. The image is suitable for e-commerce or packaging placement. Background: transparent PNG. [size: 1024x1024] [quality: high]",
+        "An elegant crystal perfume bottle with a rose-gold cap, containing pale champagne liquid, photographed against a transparent background. The bottle casts a clean shadow to the lower right. Faceted glass surfaces refract a subtle spectrum of light. Product shot with studio lighting, a single soft box from the upper left, minimal fill. The image is suitable for e-commerce or packaging placement. Background: transparent PNG. [size: 1024x1024] [quality: high]",
       category: "product",
     },
   ],
@@ -85,8 +85,8 @@ export const skill: PlatformSkill = {
     },
     {
       bad: 'A poster that says "SALE 50% OFF" with product images.',
-      good: 'A clean retail promotional poster. Large centered headline text reading "SALE — 50% OFF" in bold white sans-serif on a deep red background. Below it, three product silhouettes arranged in a row. Fine print line at the bottom: "Valid through Sunday. In-store only." Vivid and eye-catching. [size: 1024x1024] [quality: high]',
-      why: "gpt-image-2 renders multi-line text with 99% accuracy — no need for Canva post-processing. Describe the exact text, font character, color, and placement; the model renders it verbatim, including fine print.",
+      good: 'A clean retail promotional poster. Large centered headline text reading "SALE, 50% OFF" in bold white sans-serif on a deep red background. Below it, three product silhouettes arranged in a row. Fine print line at the bottom: "Valid through Sunday. In-store only." Vivid and eye-catching. [size: 1024x1024] [quality: high]',
+      why: "gpt-image-2 renders multi-line text with 99% accuracy, no need for Canva post-processing. Describe the exact text, font character, color, and placement; the model renders it verbatim, including fine print.",
     },
     {
       bad: "A beautiful mountain landscape [quality: high]",
@@ -100,31 +100,31 @@ export const skill: PlatformSkill = {
     },
     {
       bad: "An infographic about global warming with statistics and charts.",
-      good: 'A clean infographic titled "Global Temperature Rise 2000–2024" in bold dark-red sans-serif. A line chart shows a rising curve from +0.4°C to +1.2°C with labeled years at 2000, 2010, 2020, 2024. Three stat callouts: "+1.2°C above pre-industrial average", "2023: hottest year on record", "Arctic warming 4× faster". Color palette: cream background, dark red data line, sky-blue axis labels. Clean editorial style, all text fully legible. [size: 1792x1024] [quality: high]',
-      why: "gpt-image-2 excels at data visualizations and infographics — but you must specify exact text, numbers, and layout. Vague content descriptions produce hallucinated statistics; spell out every data point.",
+      good: 'A clean infographic titled "Global Temperature Rise 2000-2024" in bold dark-red sans-serif. A line chart shows a rising curve from +0.4°C to +1.2°C with labeled years at 2000, 2010, 2020, 2024. Three stat callouts: "+1.2°C above pre-industrial average", "2023: hottest year on record", "Arctic warming 4× faster". Color palette: cream background, dark red data line, sky-blue axis labels. Clean editorial style, all text fully legible. [size: 1792x1024] [quality: high]',
+      why: "gpt-image-2 excels at data visualizations and infographics, but you must specify exact text, numbers, and layout. Vague content descriptions produce hallucinated statistics; spell out every data point.",
     },
   ],
   scoringCriteria: [
-    "50–120 words of rich prose — scene, lighting, composition, palette, mood",
-    "[size: WxH] matches intent — square (1024x1024), landscape (1792x1024), portrait (1024x1792), or flexible 3:1–1:3 for wide/tall formats",
+    "50-120 words of rich prose, scene, lighting, composition, palette, mood",
+    "[size: WxH] matches intent, square (1024x1024), landscape (1792x1024), portrait (1024x1792), or flexible 3:1-1:3 for wide/tall formats",
     "[quality: high] for dense text, infographics, portraits; [quality: medium] for social assets; [quality: low] for drafts",
     'Style phrase: "In a vivid style" (dramatic, hyper-real) vs "In a natural style" (organic, photographic)',
-    "If text appears in-image: put literal copy in QUOTES or ALL CAPS, specify font character, size, color, and placement — spell unusual words letter-by-letter",
+    "If text appears in-image: put literal copy in QUOTES or ALL CAPS, specify font character, size, color, and placement, spell unusual words letter-by-letter",
     "No Midjourney-style --flags; gpt-image-2 uses natural language + [size]/[quality] params",
     "Spatial relationships and camera feel (wide shot, close-up, depth of field) described in prose",
-    "No copyrighted names — describe appearance, style, and visual essence instead",
+    "No copyrighted names, describe appearance, style, and visual essence instead",
     'For edits: state "change only X" + "preserve [face/pose/background/layout]" explicitly to prevent drift',
     "Ending ties the narrative: one cinematic moment, not a bullet list",
     'Transparent PNG: state "transparent background" or "transparent PNG" explicitly when needed',
-    'For raw/imperfect look — state explicitly: "add film grain", "rough brush strokes", "hand-drawn feel"',
+    'For raw/imperfect look, state explicitly: "add film grain", "rough brush strokes", "hand-drawn feel"',
     "Multi-panel sequences: describe each panel individually with consistent character anchors (same color/features across panels)",
-    "Infographics: spell out all numbers, labels, and chart data — never leave data content implicit",
+    "Infographics: spell out all numbers, labels, and chart data, never leave data content implicit",
   ],
   chainOfThoughtExamples: [
     {
       concept: "פוסטר אירוע עם טקסט בעברית ואנגלית",
       reasoning:
-        "gpt-image-2 renders Hebrew with 90%+ accuracy — specify the exact Hebrew copy, hierarchy (ראשי vs משני), and contrast. Choose portrait [size: 1024x1792] for poster. Describe materials (paper, foil). Both scripts need explicit font character guidance.",
+        "gpt-image-2 renders Hebrew with 90%+ accuracy, specify the exact Hebrew copy, hierarchy (ראשי vs משני), and contrast. Choose portrait [size: 1024x1792] for poster. Describe materials (paper, foil). Both scripts need explicit font character guidance.",
       output:
         'A printed event poster held at a slight angle against a dark walnut table. Bold geometric Hebrew headline "השקה רשמית" in 48pt white across the upper third. English subtitle "Official Launch Event" in 24pt italic below. Date "15.5.2026 | 18:00" in amber. Abstract gold foil shapes frame the text on deep navy background. Small venue URL in 10pt white at the bottom. Typography crisp and fully legible in both scripts. In a vivid style, print texture with soft studio light. [size: 1024x1792] [quality: high]',
     },
@@ -138,9 +138,9 @@ export const skill: PlatformSkill = {
     {
       concept: "קומיקס 4 פאנלים עם דמות עקבית",
       reasoning:
-        "Multi-panel needs strong character anchors — repeat specific visual descriptors across all panel descriptions so gpt-image-2 maintains identity. Describe each panel explicitly. 2x2 grid layout in the prompt.",
+        "Multi-panel needs strong character anchors, repeat specific visual descriptors across all panel descriptions so gpt-image-2 maintains identity. Describe each panel explicitly. 2x2 grid layout in the prompt.",
       output:
-        'A 4-panel comic strip in a 2x2 grid with clean black borders. Panel 1: a chubby orange tabby with white chest patch, sleeping, speech bubble "MONDAY? NO.". Panel 2: same orange tabby dragging himself off a couch, tiny storm cloud over his head. Panel 3: same tabby staring at a full food bowl, tail drooping. Panel 4: same tabby back under blanket, speech bubble "Nope.". Consistent character — orange fur, white chest, sleepy green eyes in every panel. Warm Sunday-paper cartoon palette. [size: 1024x1024] [quality: high]',
+        'A 4-panel comic strip in a 2x2 grid with clean black borders. Panel 1: a chubby orange tabby with white chest patch, sleeping, speech bubble "MONDAY? NO.". Panel 2: same orange tabby dragging himself off a couch, tiny storm cloud over his head. Panel 3: same tabby staring at a full food bowl, tail drooping. Panel 4: same tabby back under blanket, speech bubble "Nope.". Consistent character, orange fur, white chest, sleepy green eyes in every panel. Warm Sunday-paper cartoon palette. [size: 1024x1024] [quality: high]',
     },
   ],
   refinementExamples: [
@@ -159,9 +159,9 @@ export const skill: PlatformSkill = {
       iteration: 2,
       beforePrompt: "Infographic about social media growth [size: 1792x1024]",
       afterPrompt:
-        'A clean infographic titled "Social Media Users 2020–2024" in bold navy sans-serif. Bar chart shows five platforms: Instagram (1.4B → 2.1B), TikTok (0.7B → 1.9B), LinkedIn (0.7B → 1.0B), X (0.3B → 0.6B), Threads (0 → 0.3B). Each bar in a distinct color with exact labels. Three callout stats: "TikTok grew 171%", "Total: 5.9B users", "Mobile-first platforms dominate". White background, thin grid lines, fully legible text, editorial data design. [size: 1792x1024] [quality: high]',
+        'A clean infographic titled "Social Media Users 2020-2024" in bold navy sans-serif. Bar chart shows five platforms: Instagram (1.4B → 2.1B), TikTok (0.7B → 1.9B), LinkedIn (0.7B → 1.0B), X (0.3B → 0.6B), Threads (0 → 0.3B). Each bar in a distinct color with exact labels. Three callout stats: "TikTok grew 171%", "Total: 5.9B users", "Mobile-first platforms dominate". White background, thin grid lines, fully legible text, editorial data design. [size: 1792x1024] [quality: high]',
       changes: [
-        "Spelled out all data points — never leave chart data implicit with gpt-image-2",
+        "Spelled out all data points, never leave chart data implicit with gpt-image-2",
         "Named each bar color distinctly to prevent the model from choosing arbitrary hues",
         "Added specific callout statistics with exact numbers",
       ],

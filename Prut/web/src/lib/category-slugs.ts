@@ -186,7 +186,7 @@ export const CATEGORY_SLUG_MAP: Record<
   teachers: {
     id: "Teachers",
     labelHe: "פרומפטים למורים",
-    descriptionHe: "פרומפטים למורים — מבחנים, שיעורים, דפי עבודה, משוב והערכה",
+    descriptionHe: "פרומפטים למורים, מבחנים, שיעורים, דפי עבודה, משוב והערכה",
     emoji: "🎓",
   },
 };

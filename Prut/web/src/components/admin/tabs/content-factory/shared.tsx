@@ -279,7 +279,7 @@ export function PreviewModal({
                 הפרומפט
               </p>
               <div className="text-sm text-zinc-200 whitespace-pre-wrap leading-relaxed font-mono bg-black/30 rounded-lg p-4 border border-white/5 max-h-[40vh] overflow-y-auto">
-                {fullData.prompt || "—"}
+                {fullData.prompt || ", "}
               </div>
             </div>
             {(fullData.variables?.length ?? 0) > 0 && (

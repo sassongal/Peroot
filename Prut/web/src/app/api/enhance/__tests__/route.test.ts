@@ -788,7 +788,7 @@ describe("POST /api/enhance", () => {
       expect(mockGenerateStream).toHaveBeenCalledWith(expect.objectContaining({ userTier: "pro" }));
     });
 
-    it("does not generate for a guest — returns 401 login_required", async () => {
+    it("does not generate for a guest, returns 401 login_required", async () => {
       setupGuestUser();
       setupMockStream();
 

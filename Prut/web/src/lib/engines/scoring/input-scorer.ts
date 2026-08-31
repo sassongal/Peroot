@@ -301,7 +301,7 @@ const DIMS: Record<string, DimensionDef> = {
   clarity: {
     key: "clarity",
     label: "בהירות",
-    tip: "הסר hedges ומילות באזז — היה ישיר ומדיד",
+    tip: "הסר hedges ומילות באזז, היה ישיר ומדיד",
     test: (p) => {
       let pts = 1;
       const matched: string[] = ["clear language"];
@@ -756,9 +756,9 @@ const MODE_EXAMPLES: Partial<Record<CapabilityMode, Record<string, string>>> = {
     format: 'הוסף: "הצג כרשימה ממוספרת, עד 200 מילים"',
     constraints: 'הוסף: "אל תשתמש ב‑buzzwords, ללא טרמינולוגיה טכנית"',
     specificity: 'הוסף מספרים מדידים: "3 דוגמאות", "עד 250 מילים"',
-    examples: 'הוסף: "דוגמה: פתיח שעובד — …"',
+    examples: 'הוסף: "דוגמה: פתיח שעובד, …"',
     measurability: 'הוסף קריטריון: "בדיוק 5 נקודות בין 30‑50 מילים כל אחת"',
-    enforceability: 'החלף "בדיוק 500 מילים" ב‑"עד 500 מילים" — מגבלה שהמודל יכול לכבד',
+    enforceability: 'החלף "בדיוק 500 מילים" ב‑"עד 500 מילים", מגבלה שהמודל יכול לכבד',
   },
   [CapabilityMode.DEEP_RESEARCH]: {
     research_sources: 'ציין: "השתמש רק במקורות ראשוניים מ‑2023 ואילך, צטט URL מלא לכל טענה"',
@@ -775,7 +775,7 @@ const MODE_EXAMPLES: Partial<Record<CapabilityMode, Record<string, string>>> = {
     boundaries: 'הוסף: "אל תענה מחוץ ל‑<תחום>; העבר לאנושי כש‑<תנאי>"',
     inputs_outputs: 'הוסף schema: "Input: {userId, query}; Output: JSON {…}"',
     policies: 'הוסף: "לעולם אל תחשוף נתונים אישיים; אל תבצע פעולות כספיות"',
-    failure_modes: 'הוסף: "אם כלי נכשל — נסה פעמיים ואז החזר שגיאה מסבירה"',
+    failure_modes: 'הוסף: "אם כלי נכשל, נסה פעמיים ואז החזר שגיאה מסבירה"',
     enforceability: 'הוסף מגבלות אכיפות: "אל תחזיר יותר מ‑3 תוצאות", "JSON בלבד"',
   },
   [CapabilityMode.IMAGE_GENERATION]: {
@@ -818,7 +818,7 @@ const MODE_INSERTS: Partial<Record<CapabilityMode, Record<string, string>>> = {
     boundaries: "\nגבולות: אל תענה מחוץ ל‑",
     inputs_outputs: "\nInput: { }; Output: JSON { }",
     policies: "\nמדיניות: ",
-    failure_modes: "\nטיפול בשגיאות: אם כלי נכשל — ",
+    failure_modes: "\nטיפול בשגיאות: אם כלי נכשל, ",
     enforceability: "\nמגבלה: JSON בלבד, עד 3 תוצאות",
   },
   [CapabilityMode.IMAGE_GENERATION]: {
@@ -1036,7 +1036,7 @@ export function scoreInput(text: string, mode: CapabilityMode, platform?: string
       key: "contradiction",
       title: "סתירה פנימית",
       why: 'הפרומפט מכיל דרישות סותרות (למשל "קצר" + מאות מילים)',
-      example: 'בחר כיוון אחד: "עד 100 מילים" או "500+ מילים" — לא שניהם',
+      example: 'בחר כיוון אחד: "עד 100 מילים" או "500+ מילים", לא שניהם',
     });
     missingTop.length = Math.min(missingTop.length, 3);
   }
@@ -1046,7 +1046,7 @@ export function scoreInput(text: string, mode: CapabilityMode, platform?: string
     missingTop.unshift({
       key: "buzzword_inflation",
       title: "ניפוח מילות באזז",
-      why: `נמצאו ${buzzCount} מילות באזז ("איכותי", "מעולה"…) בלי מפרט קונקרטי — המודל מתייחס אליהן כרעש`,
+      why: `נמצאו ${buzzCount} מילות באזז ("איכותי", "מעולה"…) בלי מפרט קונקרטי, המודל מתייחס אליהן כרעש`,
       example: 'החלף "תוכן איכותי חדשני מקצועי" ב‑"3 פסקאות, טון רשמי, עם 2 דוגמאות מספריות"',
     });
     missingTop.length = Math.min(missingTop.length, 3);

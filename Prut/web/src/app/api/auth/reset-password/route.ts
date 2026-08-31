@@ -31,7 +31,10 @@ export async function POST(req: NextRequest) {
       email = body.email.toLowerCase().trim();
     }
   } catch {
-    return NextResponse.json({ error: "גוף הבקשה אינו JSON תקין", code: "invalid_json" }, { status: 400 });
+    return NextResponse.json(
+      { error: "גוף הבקשה אינו JSON תקין", code: "invalid_json" },
+      { status: 400 },
+    );
   }
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -41,7 +44,7 @@ export async function POST(req: NextRequest) {
   // Rate limit: 3 requests per hour per email address
   const rl = await checkRateLimit(email, "passwordReset");
   if (!rl.success) {
-    return NextResponse.json({ error: "יותר מדי בקשות — נסה/י שוב בעוד שעה" }, { status: 429 });
+    return NextResponse.json({ error: "יותר מדי בקשות, נסה/י שוב בעוד שעה" }, { status: 429 });
   }
 
   try {
@@ -75,7 +78,7 @@ export async function POST(req: NextRequest) {
       "";
 
     if (!resend) {
-      logger.error("[Reset Password] Resend not configured — cannot send email");
+      logger.error("[Reset Password] Resend not configured, cannot send email");
       return NextResponse.json({ error: "שירות האימייל אינו מוגדר" }, { status: 500 });
     }
 
@@ -84,13 +87,13 @@ export async function POST(req: NextRequest) {
     const { error: sendError } = await resend.emails.send({
       from: FROM,
       to: email,
-      subject: "איפוס סיסמה — Peroot",
+      subject: "איפוס סיסמה, Peroot",
       html,
     });
 
     if (sendError) {
       logger.error("[Reset Password] Resend send error:", sendError);
-      return NextResponse.json({ error: "שגיאה בשליחת האימייל — נסה/י שוב" }, { status: 500 });
+      return NextResponse.json({ error: "שגיאה בשליחת האימייל, נסה/י שוב" }, { status: 500 });
     }
 
     // Log to email_logs for admin tracking
@@ -100,7 +103,7 @@ export async function POST(req: NextRequest) {
         email_to: email,
         source: "resend",
         email_type: "password_reset",
-        subject: "איפוס סיסמה — Peroot",
+        subject: "איפוס סיסמה, Peroot",
         status: "sent",
         metadata: {},
       });

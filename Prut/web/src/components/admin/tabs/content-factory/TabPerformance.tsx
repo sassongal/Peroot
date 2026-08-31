@@ -111,7 +111,7 @@ export function TabPerformance({ stats }: { stats: ContentFactoryStats | null })
                           {p.category}
                         </span>
                       ) : (
-                        <span className="text-zinc-700 text-[10px] font-bold">—</span>
+                        <span className="text-zinc-700 text-[10px] font-bold">, </span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-[11px] font-bold text-zinc-500">

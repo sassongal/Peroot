@@ -264,7 +264,7 @@ function Scene1({ onNext }: { onNext: () => void }) {
           ברוכים הבאים לפירוט
         </h1>
         <p className="text-[0.97rem] text-white/58 max-w-[19rem] mx-auto leading-relaxed">
-          מרעיון גולמי לפרומפט מקצועי — תוך שניות
+          מרעיון גולמי לפרומפט מקצועי, תוך שניות
         </p>
       </motion.div>
 
@@ -435,7 +435,7 @@ function Scene2({
           מוכן להתחיל!
         </h2>
         <p className="text-white/56 max-w-[17rem] mx-auto text-[0.97rem] leading-relaxed">
-          קיבלת את תג ה-Pioneer — אחד הראשונים לפלטפורמה
+          קיבלת את תג ה-Pioneer, אחד הראשונים לפלטפורמה
         </p>
       </motion.div>
 

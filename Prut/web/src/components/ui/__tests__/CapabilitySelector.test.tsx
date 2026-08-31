@@ -11,7 +11,7 @@ vi.mock("sonner", () => ({ toast: vi.fn() }));
 afterEach(() => cleanup());
 
 describe("CapabilitySelector", () => {
-  it("renders 10 buttons — 5 pill + 5 card", () => {
+  it("renders 10 buttons, 5 pill + 5 card", () => {
     render(<CapabilitySelector value={CapabilityMode.STANDARD} onChange={vi.fn()} />);
     expect(screen.getAllByRole("button")).toHaveLength(10);
   });

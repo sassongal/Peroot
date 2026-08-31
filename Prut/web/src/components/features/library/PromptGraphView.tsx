@@ -703,7 +703,7 @@ export function PromptGraphView({
           .filter((t) => aTags.has(t.toLowerCase()))
           .slice(0, 4)
           .join(", ");
-        return `תגיות משותפות: ${shared || "—"}`;
+        return `תגיות משותפות: ${shared || ", "}`;
       }
       if (link.type === "template") {
         const aVars = new Set(a.template_variables ?? []);
@@ -712,7 +712,7 @@ export function PromptGraphView({
           .slice(0, 4)
           .map((v) => `{{${v}}}`)
           .join(", ");
-        return `משתנים משותפים: ${shared || "—"}`;
+        return `משתנים משותפים: ${shared || ", "}`;
       }
       if (link.type === "similarity") {
         return `דמיון תוכן · ${link.strength ?? 0} מילים משותפות`;
@@ -733,7 +733,7 @@ export function PromptGraphView({
           <BarChart2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
           <p className="flex-1 text-[12px] leading-relaxed text-slate-700 dark:text-slate-300">
             <span className="font-semibold text-slate-800 dark:text-slate-200">
-              גרף קשרי הפרומפטים —{" "}
+              גרף קשרי הפרומפטים,{" "}
             </span>
             כל פרומפט מיוצג כצומת צבעוני לפי סוג. קשרים מראים תגיות משותפות, משתנים, קטגוריה, וקרבה
             בזמן. לחץ על צומת לפתיחת פרטים · גרור לסידור מחדש · צבוט להגדלה.

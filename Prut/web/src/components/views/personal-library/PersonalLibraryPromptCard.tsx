@@ -132,7 +132,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
       : "הוסף למועדפים"
     : isFavorite
       ? "הסר ממועדפים מקומיים"
-      : "הוסף למועדפים במכשיר זה — התחבר לסנכרון בענן";
+      : "הוסף למועדפים במכשיר זה, התחבר לסנכרון בענן";
   const isStyling = editingStylePromptId === prompt.id;
   const styledMarkup = getStyledPromptMarkup(prompt);
   const isSelected = selectedIds.has(prompt.id);
@@ -613,7 +613,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     <button
                       onClick={() => {
                         onCopyText(prompt.prompt);
-                        toast.success("הפרומפט הועתק — אפשר להדביק ולשתף");
+                        toast.success("הפרומפט הועתק, אפשר להדביק ולשתף");
                         setOpenMenuId(null);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"

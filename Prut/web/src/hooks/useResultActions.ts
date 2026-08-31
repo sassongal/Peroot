@@ -193,7 +193,7 @@ export function useResultActions({
     const variables = [...new Set(varMatches.map((v) => v.replace(/[{}]/g, "")))];
 
     if (variables.length === 0) {
-      toast.error("הפרומפט לא מכיל משתנים {variable} — הוסיפו משתנים כדי ליצור תבנית");
+      toast.error("הפרומפט לא מכיל משתנים {variable}, הוסיפו משתנים כדי ליצור תבנית");
       return;
     }
 

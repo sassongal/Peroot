@@ -3,7 +3,7 @@ import { acquireSlot, releaseSlot } from "../concurrency";
 
 const MAX_CONCURRENT = 10;
 
-describe("concurrency limiter — leak regression (C1)", () => {
+describe("concurrency limiter, leak regression (C1)", () => {
   it("double-release does not inflate effective capacity", async () => {
     // Simulate the C1 scenario: stream timeout fires safeRelease, then finally
     // block fires safeRelease again. The slotReleased guard plus the Math.max

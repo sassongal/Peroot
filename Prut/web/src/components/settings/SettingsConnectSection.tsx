@@ -103,7 +103,7 @@ export function SettingsConnectSection() {
       setTimeout(() => setCopied(null), 2000);
       toast.success("הועתק ללוח");
     } catch {
-      toast.error("ההעתקה נחסמה על ידי הדפדפן — סמן והעתק ידנית");
+      toast.error("ההעתקה נחסמה על ידי הדפדפן, סמן והעתק ידנית");
     }
   };
 
@@ -120,7 +120,7 @@ export function SettingsConnectSection() {
       if (res.ok) {
         setFreshKey(data.key);
         setNewName("");
-        toast.success("המפתח נוצר — שמור אותו עכשיו, הוא לא יוצג שוב");
+        toast.success("המפתח נוצר, שמור אותו עכשיו, הוא לא יוצג שוב");
         void loadKeys();
       } else {
         toast.error(data.error || "יצירת המפתח נכשלה");
@@ -169,7 +169,7 @@ export function SettingsConnectSection() {
           Peroot Connect
         </h2>
         <p className="text-sm text-slate-400">
-          חבר את Peroot לסוכן ה-AI שלך — Claude, Cursor או כל כלי אחר — ושדרג פרומפטים מכל מקום.
+          חבר את Peroot לסוכן ה-AI שלך, Claude, Cursor או כל כלי אחר, ושדרג פרומפטים מכל מקום.
           השדרוגים נספרים מהמכסה הרגילה שלך.
         </p>
       </header>
@@ -179,7 +179,7 @@ export function SettingsConnectSection() {
         <div className="p-5 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
           <h3 className="font-semibold text-amber-300 flex items-center gap-2">
             <KeyRound className="w-4 h-4" />
-            המפתח החדש שלך — מוצג פעם אחת בלבד
+            המפתח החדש שלך, מוצג פעם אחת בלבד
           </h3>
           <div className="flex items-center gap-3">
             <code
@@ -198,12 +198,12 @@ export function SettingsConnectSection() {
             </button>
           </div>
           <p className="text-xs text-amber-200/70">
-            שמור את המפתח במקום בטוח. אם יאבד — בטל אותו וצור חדש.
+            שמור את המפתח במקום בטוח. אם יאבד, בטל אותו וצור חדש.
           </p>
           <div className="pt-1">
             <CopySetupPrompt apiKey={freshKey} />
             <p className="text-xs text-amber-200/60 mt-2">
-              הדרך המהירה: העתק את פרומפט החיבור (כולל המפתח) והדבק אצל הסוכן — הוא כבר יידע להתחבר
+              הדרך המהירה: העתק את פרומפט החיבור (כולל המפתח) והדבק אצל הסוכן, הוא כבר יידע להתחבר
               לבד.
             </p>
           </div>
@@ -232,7 +232,7 @@ export function SettingsConnectSection() {
           </button>
         </div>
         <p className="text-xs text-slate-500">
-          מומלץ מפתח נפרד לכל כלי — כך אפשר לבטל אחד בלי לשבור את השאר.
+          מומלץ מפתח נפרד לכל כלי, כך אפשר לבטל אחד בלי לשבור את השאר.
         </p>
       </div>
 

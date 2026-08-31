@@ -41,7 +41,7 @@ export const CONNECT_OPENAPI = {
       apiKey: {
         type: "http",
         scheme: "bearer",
-        description: "מפתח Peroot Connect (prk_live_…) — נוצר ב-Settings → Peroot Connect",
+        description: "מפתח Peroot Connect (prk_live_…), נוצר ב-Settings → Peroot Connect",
       },
     },
     schemas: {
@@ -76,7 +76,7 @@ export const CONNECT_OPENAPI = {
           target_model: {
             type: "string",
             enum: ["chatgpt", "claude", "gemini", "general"],
-            description: "לאיזה מודל יעד לבנות את הפרומפט — כמו הבורר בפלטפורמה",
+            description: "לאיזה מודל יעד לבנות את הפרומפט, כמו הבורר בפלטפורמה",
           },
           model_profile_slug: {
             type: "string",
@@ -96,7 +96,7 @@ export const CONNECT_OPENAPI = {
             type: "string",
             maxLength: 4000,
             description:
-              "תמצית קצרה של הקשר השיחה/הפרויקט (מוצר, קהל, מטרה) — מקרקעת את השדרוג במה שהמשתמש באמת עובד עליו. תמצות, לא טרנסקריפט; מדלג על cache",
+              "תמצית קצרה של הקשר השיחה/הפרויקט (מוצר, קהל, מטרה), מקרקעת את השדרוג במה שהמשתמש באמת עובד עליו. תמצות, לא טרנסקריפט; מדלג על cache",
           },
         },
       },
@@ -157,7 +157,7 @@ export const CONNECT_OPENAPI = {
             in: "header",
             required: false,
             schema: { type: "string", maxLength: 128 },
-            description: "מפתח ייחודי ל-retry בטוח — אותה תשובה, בלי חיוב כפול (TTL 15 דק׳)",
+            description: "מפתח ייחודי ל-retry בטוח, אותה תשובה, בלי חיוב כפול (TTL 15 דק׳)",
           },
         ],
         requestBody: {
@@ -177,7 +177,7 @@ export const CONNECT_OPENAPI = {
           "401": errorResponse("מפתח API לא תקין", "invalid_key"),
           "402": errorResponse("המכסה נגמרה", "no_credits"),
           "429": errorResponse("יותר מדי בקשות", "rate_limited"),
-          "504": errorResponse("השדרוג ארך יותר מדי — הקרדיט הוחזר", "timeout"),
+          "504": errorResponse("השדרוג ארך יותר מדי, הקרדיט הוחזר", "timeout"),
         },
       },
     },
@@ -305,7 +305,7 @@ export const CONNECT_OPENAPI = {
     },
     "/prompts/{id}/related": {
       get: {
-        summary: "שכנים ב-Memory Palace — פרומפטים קרובים בגרף (חינמי)",
+        summary: "שכנים ב-Memory Palace, פרומפטים קרובים בגרף (חינמי)",
         description:
           "אותו מנוע כמו גרף ה-Memory Palace בפלטפורמה: דמיון מילות מפתח (Jaccard) + שימוש משותף ב-24 שעות.",
         parameters: [
@@ -373,7 +373,7 @@ export const CONNECT_OPENAPI = {
     },
     "/chains/{id}": {
       get: {
-        summary: "שרשרת מלאה עם שלביה — להרצה על ידי הסוכן (חינמי)",
+        summary: "שרשרת מלאה עם שלביה, להרצה על ידי הסוכן (חינמי)",
         description:
           "ההרצה היא באחריות הסוכן: מלא את משתני כל שלב, הרץ כל prompt_text דרך POST /enhance לפי order, והזן פלטים קדימה לפי input_from_step. כל שלב צורך קרדיט אחד.",
         parameters: [
@@ -427,7 +427,7 @@ export const CONNECT_OPENAPI = {
     },
     "/library/search": {
       get: {
-        summary: "חיפוש בספרייה הציבורית — תבניות מוכחות (חינמי)",
+        summary: "חיפוש בספרייה הציבורית, תבניות מוכחות (חינמי)",
         parameters: [
           { name: "q", in: "query", required: true, schema: { type: "string", maxLength: 200 } },
           { name: "limit", in: "query", schema: { type: "integer", default: 10, maximum: 25 } },
@@ -465,7 +465,7 @@ export const CONNECT_OPENAPI = {
     },
     "/templates/fill": {
       post: {
-        summary: "מילוי תבנית — {משתנים} + דיווח חסרים (חינמי)",
+        summary: "מילוי תבנית, {משתנים} + דיווח חסרים (חינמי)",
         requestBody: {
           required: true,
           content: {
@@ -494,7 +494,7 @@ export const CONNECT_OPENAPI = {
                     missing: {
                       type: "array",
                       items: { type: "string" },
-                      description: "משתנים שהוצהרו ולא סופקו — שאל את המשתמש",
+                      description: "משתנים שהוצהרו ולא סופקו, שאל את המשתמש",
                     },
                   },
                 },

@@ -54,10 +54,10 @@ export async function POST(req: NextRequest) {
 
   const result = await streamText({
     model: google("gemini-2.5-flash-lite"),
-    system: `אתה עוזר תמיכה של Peroot — פלטפורמת שיפור פרומפטים בעברית.
+    system: `אתה עוזר תמיכה של Peroot, פלטפורמת שיפור פרומפטים בעברית.
 ענה בעברית בלבד, בסגנון ידידותי וקצר (2-4 משפטים מקסימום).
 השתמש אך ורק במידע שסופק ב-Context הבא.
-אם התשובה לא נמצאת ב-Context — אמור זאת בכנות והפנה לדף יצירת קשר: peroot.space/contact
+אם התשובה לא נמצאת ב-Context, אמור זאת בכנות והפנה לדף יצירת קשר: peroot.space/contact
 אל תמציא מידע ואל תוסיף נתונים שלא מופיעים ב-Context.
 
 Context:

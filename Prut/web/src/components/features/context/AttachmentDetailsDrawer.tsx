@@ -72,7 +72,7 @@ export function AttachmentDetailsDrawer({ block, onClose, onRefreshEnrich, onRem
             {block.stage === "warning" && (
               <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/25 px-3 py-2.5 text-xs text-amber-700 dark:text-amber-300">
                 <span>⚠</span>
-                <span>הניתוח האוטומטי לא הושלם — הקובץ עדיין ישמש כהקשר ויזואלי בשליחה.</span>
+                <span>הניתוח האוטומטי לא הושלם, הקובץ עדיין ישמש כהקשר ויזואלי בשליחה.</span>
               </div>
             )}
 

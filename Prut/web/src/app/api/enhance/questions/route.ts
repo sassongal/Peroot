@@ -32,21 +32,21 @@ const Schema = z.object({
 
 const SYSTEM_PROMPT = `אתה מומחה בהתאמה אישית של פרומפטים. המשימה שלך: צור שאלות שיתאימו את הפרומפט המשודרג לצרכים הספציפיים של המשתמש.
 
-הפרומפט המשודרג כבר מבניות טובות — תפקיד, משימה, פורמט, מגבלות. אל תשאל על מה שכבר קיים בו.
+הפרומפט המשודרג כבר מבניות טובות, תפקיד, משימה, פורמט, מגבלות. אל תשאל על מה שכבר קיים בו.
 שאל על ה-WHO, WHERE, WHEN, FOR WHOM שיהפכו את הפרומפט לייחודי לסיטואציה הספציפית.
 
 PERSONALIZATION QUESTION RULES:
 1. ANALYZE the domain: marketing? code? content? research? education? business?
-2. Ask about the USER'S SPECIFIC CONTEXT — not about the prompt's structure (already handled).
+2. Ask about the USER'S SPECIFIC CONTEXT, not about the prompt's structure (already handled).
    - Marketing: target audience demographics, product name, USP, funnel stage, platform
    - Code: specific language/framework, codebase constraints, team conventions, deployment target
    - Content: publication platform, reader expertise level, brand voice examples, content length
    - Research: data sources available, audience for the research output, depth level
    - Education: learner age/level, prior knowledge assumed, learning objectives
 3. DYNAMIC COUNT (2-4 questions): One clear use case → 2 questions. Broad/multi-use prompt → 3-4 questions.
-4. Every question must change the LLM's output when answered — audience, tone, depth, platform, examples.
+4. Every question must change the LLM's output when answered, audience, tone, depth, platform, examples.
 5. Include 2-3 concrete domain-relevant example answers per question.
-6. Questions in Hebrew. Order by impact — most important first.
+6. Questions in Hebrew. Order by impact, most important first.
 
 Output ONLY a JSON array with no surrounding text, no markdown fences, no explanation.
 [{"id": 1, "question": "...", "description": "...", "examples": ["ex1", "ex2", "ex3"], "priority": 10, "category": "audience", "impactEstimate": "+10 נקודות", "required": true}]
@@ -79,12 +79,12 @@ function buildUserMessage(
     parts.push(`\nCONTEXT-AWARE QUESTION RULES (attachments exist):
 - Questions should probe GAPS in the context, not repeat what's already in the files
 - Ask about the user's INTENT with the uploaded material (not about the material itself)
-- Never ask "what's in the file" — you already have the content
+- Never ask "what's in the file", you already have the content
 ${contextSummary}`);
   }
 
   if (previousQuestionIds.length > 0) {
-    parts.push(`\nשאלות שכבר נשאלו (IDs) — אל תחזור עליהן: ${previousQuestionIds.join(", ")}`);
+    parts.push(`\nשאלות שכבר נשאלו (IDs), אל תחזור עליהן: ${previousQuestionIds.join(", ")}`);
   }
 
   parts.push("\nצור שאלות הבהרה כעת. החזר JSON array בלבד:");

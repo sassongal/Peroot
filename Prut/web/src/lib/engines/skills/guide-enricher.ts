@@ -56,7 +56,7 @@ function skillExamplesToGuideExamples(examples: SkillExample[]): Array<{
     concept: ex.concept,
     prompt: ex.output,
     explanation: ex.category
-      ? `דוגמה מקטגוריית ${ex.category} — הפרומפט מדגים את הסינטקס והמבנה האופטימלי לפלטפורמה.`
+      ? `דוגמה מקטגוריית ${ex.category}, הפרומפט מדגים את הסינטקס והמבנה האופטימלי לפלטפורמה.`
       : "דוגמה שמדגימה את הסינטקס והמבנה האופטימלי לפלטפורמה.",
   }));
 }

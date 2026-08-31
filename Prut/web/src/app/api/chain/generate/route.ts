@@ -31,7 +31,7 @@ const CHAIN_BUILDER_SYSTEM_PROMPT = `בנה שרשרת פרומפטים (Prompt 
 - כל prompt חייב לכלול: תפקיד, משימה, מבנה פלט, מגבלות (לא רק כותרת).
 - variables רק בשלב 1 (שאר השלבים מקבלים מהפלט).
 - כשיש input_from_step, פתח ב: "בהתבסס על הפלט הקודם:"
-- פשטות — אם מספיק 3 שלבים, אל תייצר 6.
+- פשטות, אם מספיק 3 שלבים, אל תייצר 6.
 
 החזר JSON בלבד (ללא markdown):
 {"title":"שם","description":"תיאור","steps":[{"step_number":1,"title":"שם","mode":"text|research|image|video|agent","prompt":"פרומפט מלא","variables":[{"name":"x","label":"תווית","default":"ברירת מחדל"}],"input_from_step":null,"output_description":"פלט צפוי"}]}`;

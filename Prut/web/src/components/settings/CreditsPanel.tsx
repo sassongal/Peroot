@@ -133,7 +133,7 @@ export function CreditsPanel() {
       </div>
 
       {tier === "admin" && (
-        <p className="text-xs text-(--text-secondary)">חשבון מנהל — ללא הגבלת שימוש.</p>
+        <p className="text-xs text-(--text-secondary)">חשבון מנהל, ללא הגבלת שימוש.</p>
       )}
 
       {tier === "free" && quota.refresh_at && (

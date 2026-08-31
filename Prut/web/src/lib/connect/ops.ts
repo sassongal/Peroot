@@ -153,7 +153,7 @@ export async function connectEnhance(
     // Map quota exhaustion to the Connect error model.
     if (res.status === 403 && /quota|credit|insufficient/i.test(code)) {
       code = "no_credits";
-      en = "Allowance exhausted — resets at quota_resets_at";
+      en = "Allowance exhausted, resets at quota_resets_at";
     }
     const status = res.status === 403 && code === "no_credits" ? 402 : res.status;
     throw new ConnectOpError(status, code, he, en);
@@ -503,7 +503,7 @@ export async function connectRememberFact(
 ): Promise<ConnectFact> {
   const trimmed = fact.trim();
   if (trimmed.length < 3 || trimmed.length > 300) {
-    throw new ConnectOpError(400, "invalid_request", "עובדה חייבת להיות 3–300 תווים");
+    throw new ConnectOpError(400, "invalid_request", "עובדה חייבת להיות 3-300 תווים");
   }
   const cat = (FACT_CATEGORIES as readonly string[]).includes(category ?? "")
     ? (category as string)

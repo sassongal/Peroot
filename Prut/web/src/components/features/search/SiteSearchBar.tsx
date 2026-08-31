@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, startTransition, Fragment } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  startTransition,
+  Fragment,
+} from "react";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { Loader2, Search, Sparkles, X } from "lucide-react";
@@ -31,7 +39,7 @@ function HighlightMatch({ text, needle }: { text: string; needle: string }) {
           </mark>
         ) : (
           <Fragment key={i}>{part}</Fragment>
-        )
+        ),
       )}
     </>
   );
@@ -52,13 +60,8 @@ interface SiteSearchBarProps {
 }
 
 export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
-  const {
-    setViewMode,
-    setLibraryQuery,
-    setPersonalQuery,
-    libraryPrompts,
-    personalLibrary,
-  } = useLibraryContext();
+  const { setViewMode, setLibraryQuery, setPersonalQuery, libraryPrompts, personalLibrary } =
+    useLibraryContext();
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -172,12 +175,12 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
 
   const resolveLibraryPrompt = useCallback(
     (id: string) => libraryPrompts.find((p) => p.id === id),
-    [libraryPrompts]
+    [libraryPrompts],
   );
 
   const resolvePersonalPrompt = useCallback(
     (id: string) => personalLibrary.find((p) => p.id === id),
-    [personalLibrary]
+    [personalLibrary],
   );
 
   const handleUseHit = useCallback(
@@ -206,7 +209,15 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
         close();
       }
     },
-    [close, onUsePrompt, resolveLibraryPrompt, resolvePersonalPrompt, setLibraryQuery, setPersonalQuery, setViewMode]
+    [
+      close,
+      onUsePrompt,
+      resolveLibraryPrompt,
+      resolvePersonalPrompt,
+      setLibraryQuery,
+      setPersonalQuery,
+      setViewMode,
+    ],
   );
 
   const loginHref = useMemo(() => {
@@ -228,7 +239,10 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
         <div className="flex justify-end px-4 sm:px-6 max-w-[1920px] mx-auto pb-2 pt-1.5">
           <div className="relative w-full max-w-[min(100%,20rem)]">
             {/* Icon on physical left (end of RTL line) so it does not cover the first letters */}
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none z-10" aria-hidden />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none z-10"
+              aria-hidden
+            />
             <input
               ref={inputRef}
               type="search"
@@ -236,7 +250,7 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
               aria-expanded={open}
               aria-controls="site-search-results"
               aria-label="חיפוש באתר"
-              placeholder="חיפוש — בלוג, פרומפטים, מדריך…"
+              placeholder="חיפוש, בלוג, פרומפטים, מדריך…"
               title="חיפוש גלובלי. קיצור: ⌘K או Ctrl+K"
               value={query}
               onChange={(e) => {
@@ -251,7 +265,7 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
                 "py-2 text-sm text-slate-800 dark:text-slate-200",
                 // RTL: pe = room for icon on left; ps = room for clear on right when typing
                 query ? "ps-10 pe-10" : "ps-3 pe-10",
-                "placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 min-h-[44px]"
+                "placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 min-h-[44px]",
               )}
             />
             {query && (
@@ -293,7 +307,10 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
             </button>
           </div>
 
-          <div id="site-search-results" className="flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div
+            id="site-search-results"
+            className="flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+          >
             {showLoading && (
               <div className="flex items-center gap-2 text-sm text-slate-500 py-8 justify-center">
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -303,28 +320,35 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
             {displayError && !showLoading && (
               <p className="text-sm text-red-400 py-6 text-center">{displayError}</p>
             )}
-            {!showLoading && !displayError && displayData?.guestRestricted && displayData.loginCta && (
-              <div className="mb-4 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-sm text-amber-100">
-                <p className="mb-3">{displayData.loginCta}</p>
-                <div className="flex flex-wrap gap-2">
-                  <Link
-                    href={loginHref}
-                    className="inline-flex items-center justify-center rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-black hover:bg-amber-400 cursor-pointer min-h-[44px]"
-                  >
-                    התחברות
-                  </Link>
-                  <Link
-                    href={loginHref}
-                    className="inline-flex items-center justify-center rounded-lg border border-white/20 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 cursor-pointer min-h-[44px]"
-                  >
-                    הרשמה
-                  </Link>
+            {!showLoading &&
+              !displayError &&
+              displayData?.guestRestricted &&
+              displayData.loginCta && (
+                <div className="mb-4 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-sm text-amber-100">
+                  <p className="mb-3">{displayData.loginCta}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={loginHref}
+                      className="inline-flex items-center justify-center rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-black hover:bg-amber-400 cursor-pointer min-h-[44px]"
+                    >
+                      התחברות
+                    </Link>
+                    <Link
+                      href={loginHref}
+                      className="inline-flex items-center justify-center rounded-lg border border-white/20 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 cursor-pointer min-h-[44px]"
+                    >
+                      הרשמה
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            )}
-            {!showLoading && !displayError && displayData && displayData.results.length === 0 && debounced.length >= 2 && (
-              <p className="text-sm text-slate-500 py-8 text-center">לא נמצאו תוצאות</p>
-            )}
+              )}
+            {!showLoading &&
+              !displayError &&
+              displayData &&
+              displayData.results.length === 0 &&
+              debounced.length >= 2 && (
+                <p className="text-sm text-slate-500 py-8 text-center">לא נמצאו תוצאות</p>
+              )}
             <ul className="space-y-2">
               {displayData?.results.map((hit) => (
                 <li

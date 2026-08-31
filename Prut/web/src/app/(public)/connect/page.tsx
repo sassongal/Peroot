@@ -19,9 +19,9 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Peroot Connect — חבר את Peroot לסוכן ה-AI שלך",
+  title: "Peroot Connect, חבר את Peroot לסוכן ה-AI שלך",
   description:
-    "חיבור Peroot ל-Claude, Cursor וכל סוכן AI: פקודות /peroot להפיכת כל בקשה לפרומפט מושלם — טקסט, תמונה, וידאו, מחקר וסוכנים — עם שמירה ותיוג לספרייה האישית.",
+    "חיבור Peroot ל-Claude, Cursor וכל סוכן AI: פקודות /peroot להפיכת כל בקשה לפרומפט מושלם, טקסט, תמונה, וידאו, מחקר וסוכנים, עם שמירה ותיוג לספרייה האישית.",
 };
 
 // Icons per command — the command LIST itself comes from the shared source
@@ -119,9 +119,9 @@ export default function ConnectPage() {
             בתוך הסוכן שלך
           </h1>
           <p className="text-slate-400 max-w-2xl mx-auto text-lg">
-            חבר את Claude, Cursor או כל סוכן AI ל-Peroot — וכל בקשה הופכת לפרומפט מושלם ומורחב:
-            טקסט, תמונה, וידאו, מחקר וסוכנים. עם הזיכרון האישי שלך, הסקילים לכל פלטפורמה, והספרייה
-            שלך — מכל מקום.
+            חבר את Claude, Cursor או כל סוכן AI ל-Peroot, וכל בקשה הופכת לפרומפט מושלם ומורחב: טקסט,
+            תמונה, וידאו, מחקר וסוכנים. עם הזיכרון האישי שלך, הסקילים לכל פלטפורמה, והספרייה שלך,
+            מכל מקום.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <Link
@@ -140,7 +140,7 @@ export default function ConnectPage() {
             </Link>
           </div>
           <p className="text-xs text-slate-500">
-            זמין לכל משתמש רשום — השדרוגים נספרים מהמכסה הרגילה: חינמי 1 ליום · PRO 150 לחודש
+            זמין לכל משתמש רשום, השדרוגים נספרים מהמכסה הרגילה: חינמי 1 ליום · PRO 150 לחודש
           </p>
         </header>
 
@@ -150,7 +150,7 @@ export default function ConnectPage() {
             {
               icon: BrainCircuit,
               title: "מוח אחד, בכל מקום",
-              desc: "העובדות האישיות, הסגנון והספרייה שלך מלווים כל שדרוג — גם דרך הסוכן",
+              desc: "העובדות האישיות, הסגנון והספרייה שלך מלווים כל שדרוג, גם דרך הסוכן",
             },
             {
               icon: Sparkles,
@@ -194,16 +194,16 @@ export default function ConnectPage() {
             ))}
           </div>
           <p className="text-xs text-slate-500 text-center">
-            אפשר גם בשפה חופשית — ״שדרג לי את זה דרך Peroot לוידאו, מותאם לקלוד״ — והסוכן כבר ידע
+            אפשר גם בשפה חופשית, ״שדרג לי את זה דרך Peroot לוידאו, מותאם לקלוד״, והסוכן כבר ידע
             לבחור את המוד ואת מודל היעד.
           </p>
         </section>
 
         {/* Full capability surface — beyond the commands */}
         <section className="space-y-5">
-          <h2 className="text-2xl font-bold text-center">ומעבר לפקודות — כל מה שהסוכן מקבל</h2>
+          <h2 className="text-2xl font-bold text-center">ומעבר לפקודות, כל מה שהסוכן מקבל</h2>
           <p className="text-sm text-slate-400 text-center">
-            14 כלים עומדים לרשות הסוכן המחובר. השדרוג צורך קרדיט מהמכסה — כל השאר חינם:
+            14 כלים עומדים לרשות הסוכן המחובר. השדרוג צורך קרדיט מהמכסה, כל השאר חינם:
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {CONNECT_CAPABILITIES.map(({ title, desc }) => (
@@ -224,13 +224,13 @@ export default function ConnectPage() {
           <div className="p-5 bg-amber-500/10 border border-amber-500/25 rounded-xl flex flex-col sm:flex-row items-center gap-4 justify-between">
             <p className="text-sm text-slate-300 text-center sm:text-right">
               <span className="font-semibold text-amber-300">הדרך המהירה:</span> העתק פרומפט חיבור
-              מוכן, הדבק אצל הסוכן שלך — והוא כבר יידע להתחבר ל-Peroot לבד.
+              מוכן, הדבק אצל הסוכן שלך, והוא כבר יידע להתחבר ל-Peroot לבד.
             </p>
             <CopySetupPrompt className="shrink-0" />
           </div>
           <ol className="grid sm:grid-cols-3 gap-4 text-sm">
             {[
-              ["צור מפתח", "בהגדרות → Peroot Connect. המפתח מוצג פעם אחת — שמור אותו"],
+              ["צור מפתח", "בהגדרות → Peroot Connect. המפתח מוצג פעם אחת, שמור אותו"],
               ["הדבק את ההגדרות", "בחר את הכלי שלך למטה והדבק את קטע ההגדרה עם המפתח"],
               ["דבר עם הסוכן", "הקלד /peroot:enhance או פשוט בקש ממנו לשדרג דרך Peroot"],
             ].map(([title, desc], i) => (
@@ -261,8 +261,7 @@ export default function ConnectPage() {
           </div>
           <p className="text-xs text-slate-500 text-center">
             מתחברים מ-claude.ai או ChatGPT? הוסיפו קונקטור עם הכתובת
-            https://www.peroot.space/api/mcp — האישור נעשה בחלון התחברות של Peroot (OAuth, ללא
-            מפתח).{" "}
+            https://www.peroot.space/api/mcp, האישור נעשה בחלון התחברות של Peroot (OAuth, ללא מפתח).{" "}
             <Link href="/connect/docs" className="text-amber-400/80 hover:text-amber-300">
               לתיעוד ה-API המלא ←
             </Link>
@@ -273,7 +272,7 @@ export default function ConnectPage() {
         <section className="text-center p-8 bg-white/5 rounded-2xl border border-white/10 space-y-4">
           <h2 className="text-xl font-bold">מוכן לחבר?</h2>
           <p className="text-sm text-slate-400">
-            דקה אחת של הגדרה — וכל סוכן שלך כותב פרומפטים ברמה של Peroot.
+            דקה אחת של הגדרה, וכל סוכן שלך כותב פרומפטים ברמה של Peroot.
           </p>
           <Link
             href="/settings?tab=connect"

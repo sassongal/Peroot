@@ -317,9 +317,9 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
                 <span className="font-bold text-cyan-200">
                   סטייה מברירת המחדל בקוד (גרסה ששוחררה):{" "}
                 </span>
-                {baselineDrift.system && <span>System — שונה מה-Repo. </span>}
-                {baselineDrift.user && <span>User — שונה מה-Repo. </span>}
-                זה תקין אם עדכנת בכוונה; אם לא — השקלו לסנכרן עם{" "}
+                {baselineDrift.system && <span>System, שונה מה-Repo. </span>}
+                {baselineDrift.user && <span>User, שונה מה-Repo. </span>}
+                זה תקין אם עדכנת בכוונה; אם לא, השקלו לסנכרן עם{" "}
                 <code className="text-cyan-300/90">src/lib/engines/*-engine.ts</code>.
               </div>
             )}
@@ -334,11 +334,11 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
             </p>
             <ul className="list-disc list-inside text-zinc-400 text-xs space-y-1">
               <li>
-                תמונה: <code className="text-zinc-500">src/lib/engines/image-engine.ts</code> —{" "}
+                תמונה: <code className="text-zinc-500">src/lib/engines/image-engine.ts</code> ,{" "}
                 <code>PLATFORM_PROMPTS</code>
               </li>
               <li>
-                וידאו: <code className="text-zinc-500">src/lib/engines/video-engine.ts</code> —{" "}
+                וידאו: <code className="text-zinc-500">src/lib/engines/video-engine.ts</code> ,{" "}
                 <code>PLATFORM_OVERRIDES</code>, <code>VIDEO_USER_PROMPTS</code>
               </li>
             </ul>
@@ -445,7 +445,7 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
                   מפתחות הם שם פלטפורמה (למשל <code className="text-zinc-400">midjourney</code>,{" "}
                   <code className="text-zinc-400">runway</code>). לכל מפתח אפשר{" "}
                   <code className="text-zinc-400">system_template</code> ו/או{" "}
-                  <code className="text-zinc-400">user_template</code> — דורסים את ברירת המחדל מהקוד
+                  <code className="text-zinc-400">user_template</code> , דורסים את ברירת המחדל מהקוד
                   לפלטפורמה זו בלבד.
                 </p>
                 {platformOverridesError && (
