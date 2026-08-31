@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 import { createServiceClient } from "@/lib/supabase/service";
-import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
+import { CATEGORY_SLUG_MAP, promptPagePath } from "@/lib/category-slugs";
 import { IMAGE_GUIDES } from "./(public)/guides/_data/image-guides";
 import { VIDEO_GUIDES } from "./(public)/guides/_data/video-guides";
 
@@ -100,17 +100,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    // Build a reverse map: category_id (lowercase) → slug
-    const categoryIdToSlug = Object.fromEntries(
-      Object.entries(CATEGORY_SLUG_MAP).map(([slug, data]) => [data.id.toLowerCase(), slug]),
-    );
-
     const promptEntries: MetadataRoute.Sitemap = libraryPrompts
-      .filter((p) => p.category_id && categoryIdToSlug[p.category_id.toLowerCase()])
-      .map((p) => {
-        const lastMod = p.updated_at || p.created_at;
+      .map((p) => ({ path: promptPagePath(p.category_id, p.id), row: p }))
+      .filter((e): e is { path: string; row: (typeof libraryPrompts)[number] } => e.path !== null)
+      .map(({ path, row }) => {
+        const lastMod = row.updated_at || row.created_at;
         return {
-          url: `${baseUrl}/prompts/${categoryIdToSlug[p.category_id!.toLowerCase()]}/${p.id}`,
+          url: `${baseUrl}${path}`,
           ...(lastMod ? { lastModified: new Date(lastMod) } : {}),
           changeFrequency: "monthly" as const,
           priority: 0.7,

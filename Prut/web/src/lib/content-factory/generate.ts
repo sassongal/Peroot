@@ -16,7 +16,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
-import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
+import { promptPagePath } from "@/lib/category-slugs";
 
 // ---------------------------------------------------------------------------
 // Provider
@@ -335,20 +335,14 @@ export async function getGenerationContext(supabase: SupabaseClient): Promise<{
 
   // Real prompt-page URLs — the model once invented /prompts/<hebrew-title>
   // slugs and every internal link in a generated post 404'd.
-  const idToSlug = Object.fromEntries(
-    Object.entries(CATEGORY_SLUG_MAP).map(([slug, d]) => [d.id.toLowerCase(), slug]),
-  );
   const promptRows = (promptResult.data ?? []) as {
     id: string;
     title: string;
     category_id: string | null;
   }[];
   const existingPromptLinks = promptRows
-    .filter((p) => p.category_id && idToSlug[p.category_id.toLowerCase()])
-    .map((p) => ({
-      title: p.title,
-      url: `/prompts/${idToSlug[p.category_id!.toLowerCase()]}/${p.id}`,
-    }));
+    .map((p) => ({ title: p.title, url: promptPagePath(p.category_id, p.id) }))
+    .filter((l): l is { title: string; url: string } => l.url !== null);
 
   return {
     existingBlogTitles: (blogResult.data ?? []).map((b: { title: string }) => b.title),

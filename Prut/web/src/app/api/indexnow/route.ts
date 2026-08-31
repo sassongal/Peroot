@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { submitToIndexNowAwait } from "@/lib/indexnow";
 
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || "";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
@@ -38,26 +39,17 @@ export const POST = withAdmin(async (req, supabase) => {
       urls = [...staticUrls, ...blogUrls];
     }
 
-    const response = await fetch("https://api.indexnow.org/indexnow", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        host: new URL(SITE_URL).hostname,
-        key: INDEXNOW_KEY,
-        keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
-        urlList: urls,
-      }),
-    });
+    const result = await submitToIndexNowAwait(urls);
 
     return NextResponse.json({
-      success: response.ok,
-      status: response.status,
-      urlsSubmitted: urls.length,
+      success: result.ok,
+      status: result.status,
+      urlsSubmitted: result.submitted,
     });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });

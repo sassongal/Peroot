@@ -5,13 +5,15 @@ import { softwareAppSchema, faqSchema } from "@/lib/schema";
 import { PROMPT_LIBRARY_COUNT, PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 
 /**
- * Server-rendered SEO content for the homepage.
+ * Server-rendered content section for the homepage, in normal flow BELOW
+ * the app (page.tsx order) and ALWAYS VISIBLE to everyone.
  *
- * Renders a VISIBLE hero section with H1, value proposition, features,
- * CTAs, and FAQ. This is the content Google sees on first crawl.
- *
- * When HomeClient hydrates (adds .hydrated class), CSS hides this
- * section so users only see the interactive UI.
+ * INVARIANT — never hide this block (no display:none, no opacity:0, no
+ * hydration toggle): a previous version hid it on mobile + post-hydration,
+ * which made the homepage's copy, FAQ and internal links invisible to
+ * Google's mobile-first crawl and tripped the hidden-text pattern
+ * (2026-08-31 SEO audit). The page's single H1 lives in HomeViewChrome;
+ * this section's top heading is deliberately an h2.
  *
  * Also includes structured data (JSON-LD) for rich results.
  */

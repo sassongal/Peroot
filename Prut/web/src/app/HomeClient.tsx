@@ -1166,24 +1166,11 @@ function PageContent() {
     pendingConsumedRef.current = true;
 
     const load = async () => {
-      let text = pending.prompt;
-      // Public-library CTAs (/prompts/[id]) can only stash the 160-char PREVIEW
-      // - the full body is auth-gated. Now that the user is on the (authed) home
-      // page, fetch the full prompt by id so the input isn't a truncated "…".
-      // Templates and the home quota-wall already carry their full text.
-      if (pending.id && !pending.is_template && pending.source === "prompts-library") {
-        try {
-          const res = await fetch(getApiPath(`/api/p/${pending.id}`));
-          if (res.ok) {
-            const data = await res.json();
-            if (data && typeof data.prompt === "string" && data.prompt.trim()) {
-              text = data.prompt;
-            }
-          }
-        } catch {
-          /* keep the preview fallback - still usable */
-        }
-      }
+      const text = pending.prompt;
+      // The public-library CTAs stash the FULL prompt since the library was
+      // opened (2026-08-31) — no re-fetch needed. The old /api/p/[id] call here
+      // "un-truncated" a 160-char preview that no longer exists, and returned
+      // 401 for guests (who can now use library prompts too).
       handleUsePrompt({
         id: pending.id ?? `pending-${Date.now()}`,
         title: pending.title ?? "",

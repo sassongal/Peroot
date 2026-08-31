@@ -3,7 +3,7 @@ import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { pingGoogle } from "@/lib/google-ping";
 import { submitToIndexNow } from "@/lib/indexnow";
-import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
+import { promptPagePath } from "@/lib/category-slugs";
 import { z } from "zod";
 
 const ApproveSchema = z.object({
@@ -90,14 +90,12 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
     // New prompt pages are indexable landing pages — ping them out too
     if (data && data.length > 0) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
-      const idToSlug = Object.fromEntries(
-        Object.entries(CATEGORY_SLUG_MAP).map(([slug, d]) => [d.id.toLowerCase(), slug]),
-      );
       pingGoogle(`${siteUrl}/sitemap.xml`);
       submitToIndexNow(
         data
-          .filter((p) => p.category_id && idToSlug[p.category_id.toLowerCase()])
-          .map((p) => `${siteUrl}/prompts/${idToSlug[p.category_id!.toLowerCase()]}/${p.id}`),
+          .map((p) => promptPagePath(p.category_id, p.id))
+          .filter((path): path is string => path !== null)
+          .map((path) => `${siteUrl}${path}`),
       );
     }
 

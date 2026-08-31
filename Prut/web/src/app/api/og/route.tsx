@@ -18,13 +18,25 @@ const bidi = bidiFactory();
 function toVisualOrder(text: string): string {
   const embedding = bidi.getEmbeddingLevels(text, "rtl");
   const chars = text.split("");
-  bidi.getMirroredCharactersMap(text, embedding).forEach((ch: string, idx: number) => {
+  // NB: getMirroredCharactersMap takes the raw LEVELS ARRAY (it indexes
+  // embeddingLevels[i] directly); getReorderSegments takes the result object.
+  bidi.getMirroredCharactersMap(text, embedding.levels).forEach((ch: string, idx: number) => {
     chars[idx] = ch;
   });
   bidi.getReorderSegments(text, embedding).forEach(([start, end]: [number, number]) => {
     const slice = chars.slice(start, end + 1).reverse();
     chars.splice(start, slice.length, ...slice);
   });
+  // Reversal operates on UTF-16 code units — re-swap any surrogate pair it
+  // split (an emoji inside an RTL segment) so it renders instead of tofu.
+  for (let i = 0; i < chars.length - 1; i++) {
+    const a = chars[i].charCodeAt(0);
+    const b = chars[i + 1].charCodeAt(0);
+    if (a >= 0xdc00 && a <= 0xdfff && b >= 0xd800 && b <= 0xdbff) {
+      [chars[i], chars[i + 1]] = [chars[i + 1], chars[i]];
+      i++;
+    }
+  }
   return chars.join("");
 }
 
@@ -38,7 +50,26 @@ function RtlText({
   style: Record<string, string | number>;
   gap?: number;
 }) {
-  const words = text.trim().split(/\s+/).map(toVisualOrder);
+  // Group CONSECUTIVE strongly-LTR words (Latin/digits — platform names like
+  // "Stable Diffusion") into one unit: row-reverse placement would otherwise
+  // flip their word order ("Diffusion Stable"). Each unit keeps its own
+  // internal order; RTL/neutral words get per-word visual reordering.
+  const rawWords = text.trim().split(/\s+/);
+  const isLtrWord = (w: string) => /[A-Za-z0-9]/.test(w) && !/[\u0590-\u05FF\u0600-\u06FF]/.test(w);
+  const words: string[] = [];
+  let ltrRun: string[] = [];
+  for (const w of rawWords) {
+    if (isLtrWord(w)) {
+      ltrRun.push(w);
+    } else {
+      if (ltrRun.length) {
+        words.push(ltrRun.join(" "));
+        ltrRun = [];
+      }
+      words.push(toVisualOrder(w));
+    }
+  }
+  if (ltrRun.length) words.push(ltrRun.join(" "));
   return (
     <div
       style={{

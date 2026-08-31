@@ -11,9 +11,11 @@ declare module "bidi-js" {
       start?: number,
       end?: number,
     ): [number, number][];
+    // Takes the raw levels ARRAY (result.levels), unlike getReorderSegments
+    // which takes the whole result object — bidi-js indexes it directly.
     getMirroredCharactersMap(
       text: string,
-      embeddingLevelsResult: EmbeddingLevelsResult,
+      embeddingLevels: Uint8Array,
       start?: number,
       end?: number,
     ): Map<number, string>;
