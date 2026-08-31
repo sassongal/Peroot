@@ -204,6 +204,12 @@ export function PromptInput({
   const [scoreBreakdownOpen, setScoreBreakdownOpen] = useState(false);
   const [guestGateFeature, setGuestGateFeature] = useState<string | null>(null);
 
+  // Image/video engines always emit English prompts (generation platforms
+  // require it), so the output-language control is locked there.
+  const outputLangLocked =
+    selectedCapability === CapabilityMode.IMAGE_GENERATION ||
+    selectedCapability === CapabilityMode.VIDEO_GENERATION;
+
   // Close language picker on click outside
   useEffect(() => {
     if (!showLangPicker) return;
@@ -534,39 +540,6 @@ export function PromptInput({
                         <Mic className="w-5 h-5 group-hover/mic:scale-110 transition-transform" />
                       )}
                     </button>
-                    {/* Language picker */}
-                    <div className="relative" data-lang-picker>
-                      <button
-                        onClick={() => setShowLangPicker((prev) => !prev)}
-                        className="px-2 py-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-xs bg-black/5 dark:bg-black/30 text-(--text-muted) border border-(--glass-border) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
-                        title="שפת הקלטה"
-                        aria-label="בחר שפת הקלטה"
-                      >
-                        {VOICE_LANGUAGES.find((l) => l.code === voiceLang)?.short ?? "HE"}
-                      </button>
-                      {showLangPicker && (
-                        <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-(--glass-border) rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[120px] md:min-w-[140px] max-w-[calc(100vw-2rem)]">
-                          {VOICE_LANGUAGES.map((lang) => (
-                            <button
-                              key={lang.code}
-                              onClick={() => {
-                                setVoiceLang(lang.code);
-                                setShowLangPicker(false);
-                              }}
-                              className={cn(
-                                "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
-                                voiceLang === lang.code
-                                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
-                                  : "text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/5",
-                              )}
-                            >
-                              <span className="font-mono font-bold text-[10px]">{lang.short}</span>
-                              <span>{lang.label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
                     {isListening && (
                       <span className="text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
                         מקליט...
@@ -574,6 +547,57 @@ export function PromptInput({
                     )}
                   </>
                 )}
+                {/* Output language — this control sets the RESULT language (it
+                    also drives voice recognition), so it lives outside the mic
+                    support gate: browsers without SpeechRecognition still get
+                    it. Image/video modes force English (platform requirement),
+                    so it is disabled there with the reason. */}
+                <div className="relative" data-lang-picker>
+                  <button
+                    onClick={() => setShowLangPicker((prev) => !prev)}
+                    disabled={outputLangLocked}
+                    className={cn(
+                      "px-2 py-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center gap-1 rounded-full text-xs bg-black/5 dark:bg-black/30 border border-(--glass-border) backdrop-blur-md transition-all",
+                      outputLangLocked
+                        ? "text-(--text-muted) opacity-50 cursor-not-allowed"
+                        : "text-(--text-muted) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer",
+                    )}
+                    title={
+                      outputLangLocked
+                        ? "במצבי תמונה ווידאו הפלט באנגלית, זו דרישת פלטפורמות היצירה"
+                        : "שפת הפלט של הפרומפט"
+                    }
+                    aria-label="בחר את שפת הפלט"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    {outputLangLocked
+                      ? "EN"
+                      : (VOICE_LANGUAGES.find((l) => l.code === voiceLang)?.short ?? "HE")}
+                  </button>
+                  {showLangPicker && !outputLangLocked && (
+                    <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-(--glass-border) rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[120px] md:min-w-[140px] max-w-[calc(100vw-2rem)]">
+                      <div className="px-3 pt-2 pb-1 text-[10px] text-(--text-muted)">שפת הפלט</div>
+                      {VOICE_LANGUAGES.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => {
+                            setVoiceLang(lang.code);
+                            setShowLangPicker(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
+                            voiceLang === lang.code
+                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
+                              : "text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/5",
+                          )}
+                        >
+                          <span className="font-mono font-bold text-[10px]">{lang.short}</span>
+                          <span>{lang.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Left side (RTL): Context attachment icons + model selector */}

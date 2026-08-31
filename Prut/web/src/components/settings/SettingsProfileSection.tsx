@@ -82,6 +82,7 @@ export function SettingsProfileSection({
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
+              onBlur={onSaveDisplayName}
               dir="rtl"
               placeholder="שם תצוגה"
               className="bg-white/5 border border-white/10 focus:border-indigo-500/60 rounded-lg px-3 py-2.5 text-white font-bold text-base w-full focus:outline-none transition-colors"

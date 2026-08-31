@@ -44,10 +44,6 @@ const DidYouKnowBanner = dynamic(
   () => import("@/components/ui/DidYouKnowBanner").then((mod) => mod.DidYouKnowBanner),
   { ssr: false, loading: () => <div className="h-[48px]" /> },
 );
-const UpgradeNudge = dynamic(() => import("@/components/features/prompt-improver/UpgradeNudge"), {
-  ssr: false,
-  loading: () => null,
-});
 
 /** Subset of useFeatureDiscovery() return value needed for rendering */
 interface FeatureDiscoveryRenderProps {
@@ -84,10 +80,6 @@ interface HomeViewChromeProps {
   onCloseLoginRequired: () => void;
   loginRequiredConfig: { title?: string; message?: string; feature?: string };
 
-  // Upgrade nudge
-  showUpgradeNudge: boolean;
-  onDismissUpgradeNudge: () => void;
-
   // Onboarding
   showOnboarding: boolean;
   user: unknown;
@@ -115,8 +107,6 @@ function HomeViewChromeInner({
   isLoginRequiredModalOpen,
   onCloseLoginRequired,
   loginRequiredConfig,
-  showUpgradeNudge,
-  onDismissUpgradeNudge,
   showOnboarding,
   user,
   onOnboardingComplete,
@@ -207,17 +197,6 @@ function HomeViewChromeInner({
         message={loginRequiredConfig.message}
         feature={loginRequiredConfig.feature}
       />
-
-      {/* Upgrade Nudge Popup */}
-      {showUpgradeNudge && (
-        <UpgradeNudge
-          type="exhausted"
-          onUpgrade={() => {
-            window.location.href = "/pricing";
-          }}
-          onDismiss={onDismissUpgradeNudge}
-        />
-      )}
 
       {/* What Is This Modal */}
       <WhatIsThisModal isOpen={showWhatIsThis} onClose={onCloseWhatIsThis} />

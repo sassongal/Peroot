@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -23,7 +23,7 @@ import { useHistory } from "@/hooks/useHistory";
 import { useLibrary } from "@/hooks/useLibrary";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ActivityLogRow, UsageStatsState } from "@/components/settings/settings-types";
 import { SettingsProfileSection } from "@/components/settings/SettingsProfileSection";
 import { SettingsStatsSection } from "@/components/settings/SettingsStatsSection";
@@ -39,10 +39,21 @@ import { resolveAvatarUrl, avatarFallbackUrl as uiAvatarsFallback } from "@/lib/
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialSection = searchParams.get("tab") || "profile";
   const billingSuccessParam = searchParams.get("success") === "true";
   const [activeSection, setActiveSection] = useState<string>(initialSection);
+
+  // Keep the section in the URL (shareable, refresh-safe) and follow the URL
+  // when it changes (back/forward, external links into a specific tab).
+  useEffect(() => {
+    setActiveSection(searchParams.get("tab") || "profile");
+  }, [searchParams]);
+  const selectSection = (id: string) => {
+    setActiveSection(id);
+    router.replace(id === "profile" ? "/settings" : `/settings?tab=${id}`, { scroll: false });
+  };
   const [isAdmin, setIsAdmin] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -52,6 +63,8 @@ export default function SettingsPage() {
   const [isClearingHistory, setIsClearingHistory] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [isSavingName, setIsSavingName] = useState(false);
+  // Last name persisted to the DB — lets blur-autosave skip no-op writes.
+  const savedNameRef = useRef("");
 
   const supabase = useMemo(() => createClient(), []);
   const { history, clearHistory } = useHistory();
@@ -103,12 +116,13 @@ export default function SettingsPage() {
               .single(),
             supabase.from("site_settings").select("daily_free_limit").single(),
           ]);
-          setDisplayName(
+          const loadedName =
             profile?.display_name ||
-              user.user_metadata?.full_name ||
-              user.email?.split("@")[0] ||
-              "",
-          );
+            user.user_metadata?.full_name ||
+            user.email?.split("@")[0] ||
+            "";
+          setDisplayName(loadedName);
+          savedNameRef.current = loadedName.trim();
           setCredits({
             balance: profile?.credits_balance ?? 0,
             dailyLimit: settings?.daily_free_limit ?? 2,
@@ -217,7 +231,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
+      <main className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
       </main>
     );
@@ -225,11 +239,11 @@ export default function SettingsPage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center p-4">
+      <main className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4">
           <Shield className="w-16 h-16 text-slate-600 mx-auto" />
-          <h1 className="text-2xl font-bold text-white">נדרשת התחברות</h1>
-          <p className="text-slate-400">עליך להתחבר כדי לגשת להגדרות החשבון</p>
+          <h1 className="text-2xl font-bold text-foreground">נדרשת התחברות</h1>
+          <p className="text-muted-foreground">עליך להתחבר כדי לגשת להגדרות החשבון</p>
           <Link
             href="/login"
             className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl transition-colors"
@@ -368,6 +382,8 @@ export default function SettingsPage() {
 
   const handleSaveDisplayName = async () => {
     if (!user || !displayName.trim()) return;
+    // Autosave-on-blur guard: don't re-save (or toast) an unchanged name.
+    if (displayName.trim() === savedNameRef.current) return;
     setIsSavingName(true);
     try {
       const { error } = await supabase
@@ -375,6 +391,7 @@ export default function SettingsPage() {
         .update({ display_name: displayName.trim() })
         .eq("id", user.id);
       if (error) throw error;
+      savedNameRef.current = displayName.trim();
       toast.success("השם עודכן בהצלחה");
     } catch {
       toast.error("שגיאה בעדכון השם");
@@ -401,7 +418,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-background text-foreground">
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-900/10 blur-[150px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[150px] rounded-full" />
@@ -409,14 +426,15 @@ export default function SettingsPage() {
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="cursor-pointer flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
           >
             <ChevronLeft className="w-5 h-5 group-hover:translate-x-[-4px] transition-transform" />
             <span>חזרה</span>
-          </Link>
-          <div className="h-6 w-px bg-white/10" />
+          </button>
+          <div className="h-6 w-px bg-border" />
           <h1 className="text-2xl font-bold">הגדרות חשבון</h1>
         </div>
 
@@ -431,11 +449,11 @@ export default function SettingsPage() {
               <button
                 key={section.id}
                 type="button"
-                onClick={() => setActiveSection(section.id)}
+                onClick={() => selectSection(section.id)}
                 className={`cursor-pointer shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
                   activeSection === section.id
                     ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                    : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground border border-transparent"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -464,11 +482,11 @@ export default function SettingsPage() {
                   <button
                     key={section.id}
                     type="button"
-                    onClick={() => setActiveSection(section.id)}
+                    onClick={() => selectSection(section.id)}
                     className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-xl text-start transition-all ${
                       activeSection === section.id
                         ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                        : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground border border-transparent"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -489,7 +507,7 @@ export default function SettingsPage() {
             )}
           </div>
 
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl p-6 backdrop-blur-sm">
             {activeSection === "profile" && (
               <SettingsProfileSection
                 user={user}

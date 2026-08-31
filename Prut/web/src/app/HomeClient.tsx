@@ -19,6 +19,7 @@ import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { UserMenu } from "@/components/layout/user-nav";
+import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import dynamic from "next/dynamic";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -306,7 +307,6 @@ function PageContent() {
     message?: string;
     feature?: string;
   }>({});
-  const [showUpgradeNudge, setShowUpgradeNudge] = useState(false);
   // Quota-exhausted modal - shown for the *structured* server quota error, which
   // carries a refreshAt so we can render a live countdown to the reset.
   const [quotaModal, setQuotaModal] = useState<{
@@ -446,11 +446,9 @@ function PageContent() {
       }
     } else if (!isProPlan) {
       trackPaywallHit("daily_limit", "enhance_error");
-      if (structured) {
-        setQuotaModal({ variant: "free", refreshAt });
-      } else {
-        setShowUpgradeNudge(true);
-      }
+      // One quota surface only: structured errors carry refreshAt for the
+      // countdown; fuzzy ones open the same modal without it (U1.9).
+      setQuotaModal({ variant: "free", refreshAt: structured ? refreshAt : null });
     }
   }, [ps.error, ps.input, user, isProPlan]);
 
@@ -750,7 +748,7 @@ function PageContent() {
       // Pro/admin: skip - server auto-refreshes at spend time; local counter is stale.
       if (user && !isProPlan && creditsRemaining !== null && creditsRemaining <= 0) {
         trackPaywallHit("daily_limit", "preflight");
-        setShowUpgradeNudge(true);
+        setQuotaModal({ variant: "free", refreshAt: null });
         return;
       }
 
@@ -765,7 +763,7 @@ function PageContent() {
           );
         } else if (requiredAction === "upgrade") {
           trackPaywallHit("daily_limit", "required_action");
-          setShowUpgradeNudge(true);
+          setQuotaModal({ variant: "free", refreshAt: null });
         }
         return;
       }
@@ -876,7 +874,7 @@ function PageContent() {
 
         // Pro preview nudge: after 3rd enhance for free users (once per session)
         if (user && creditsRemaining !== null && creditsRemaining <= 0) {
-          // Already handled by UpgradeNudge
+          // Already handled by QuotaExhaustedModal
         } else if (user && !sessionStorage.getItem("pro_nudge_shown")) {
           const enhanceCount = parseInt(sessionStorage.getItem("session_enhance_count") || "0") + 1;
           sessionStorage.setItem("session_enhance_count", String(enhanceCount));
@@ -1469,6 +1467,26 @@ function PageContent() {
     [saveCompletionToPersonal, handleShare, dispatch, setViewMode, handleNavLibrary],
   );
 
+  // U1.13: the app view lives in the URL (?view=library|personal) so it is
+  // shareable, survives refresh, and returning from /pricing restores it.
+  // window.history is used instead of useSearchParams to keep the ISR
+  // homepage statically rendered (useSearchParams forces a CSR bailout).
+  const viewSyncedRef = useRef(false);
+  useEffect(() => {
+    if (viewSyncedRef.current) return;
+    viewSyncedRef.current = true;
+    const v = new URLSearchParams(window.location.search).get("view");
+    if (v === "library") setViewMode("library");
+    else if (v === "personal") setViewMode("personal");
+  }, [setViewMode]);
+  useEffect(() => {
+    if (!viewSyncedRef.current) return;
+    const url = new URL(window.location.href);
+    if (viewMode === "home") url.searchParams.delete("view");
+    else url.searchParams.set("view", viewMode);
+    window.history.replaceState(window.history.state, "", url);
+  }, [viewMode]);
+
   const handleMobileTabChange = useCallback(
     (tab: string) => {
       if (tab === "home") setViewMode("home");
@@ -1481,6 +1499,10 @@ function PageContent() {
   );
 
   // --- Render ---
+
+  // U1.12: the mobile tab bar's active state reflects what the user actually
+  // sees — the history drawer and FAQ panel light their own tabs up.
+  const mobileActiveTab = sidebarOpen ? "history" : mobileFaqOpen ? "faq" : viewMode;
 
   const handleTopNavNavigate = useCallback(
     (view: "home" | "library" | "personal") => {
@@ -1536,18 +1558,48 @@ function PageContent() {
     </TopNavBar>
   );
 
+  // History drawer + mobile FAQ panel are app-level overlays: the mobile tab
+  // bar opens them from EVERY view, so they mount in every branch (U1.12).
+  const appOverlays = (
+    <>
+      <SidebarDrawer
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        history={history}
+        isLoaded={isLoaded}
+        onRestore={handleRestore}
+        onClear={clearHistory}
+        onSaveToPersonal={addPersonalPromptFromHistory}
+        onCopy={handleCopyText}
+        onStartNew={() => setViewMode("home")}
+        onNavPersonal={handleNavPersonal}
+        onNavFavorites={handleNavFavorites}
+        onNavLibrary={handleNavLibrary}
+        personalView={personalView}
+        prefetchPersonalLibrary={prefetchPersonalLibrary}
+        onRenameHistoryTitle={updateHistoryTitle}
+        onBumpHistoryLastUsed={bumpHistoryLastUsed}
+      />
+      <MobileFaqPanel isOpen={mobileFaqOpen} onClose={() => setMobileFaqOpen(false)} />
+    </>
+  );
+
   if (viewMode === "library") {
     return (
       <>
         {topNavBar}
-        <ErrorBoundary name="LibraryView">
-          <LibraryView
-            onUsePrompt={handleUsePrompt}
-            onCopyText={async (t) => {
-              await handleCopyText(t);
-            }}
-          />
-        </ErrorBoundary>
+        <div className="pb-16 md:pb-0">
+          <ErrorBoundary name="LibraryView">
+            <LibraryView
+              onUsePrompt={handleUsePrompt}
+              onCopyText={async (t) => {
+                await handleCopyText(t);
+              }}
+            />
+          </ErrorBoundary>
+        </div>
+        {appOverlays}
+        <MobileTabBar activeTab={mobileActiveTab} onTabChange={handleMobileTabChange} />
       </>
     );
   }
@@ -1556,18 +1608,22 @@ function PageContent() {
     return (
       <>
         {topNavBar}
-        <ErrorBoundary name="PersonalLibraryView">
-          <PersonalLibraryView
-            onUsePrompt={handleUsePrompt}
-            onCopyText={async (t) => {
-              await handleCopyText(t);
-            }}
-            handleImportHistory={handleImportHistory}
-            historyLength={history.length}
-            openToGraph={pendingGraph}
-            onGraphOpened={() => setPendingGraph(false)}
-          />
-        </ErrorBoundary>
+        <div className="pb-16 md:pb-0">
+          <ErrorBoundary name="PersonalLibraryView">
+            <PersonalLibraryView
+              onUsePrompt={handleUsePrompt}
+              onCopyText={async (t) => {
+                await handleCopyText(t);
+              }}
+              handleImportHistory={handleImportHistory}
+              historyLength={history.length}
+              openToGraph={pendingGraph}
+              onGraphOpened={() => setPendingGraph(false)}
+            />
+          </ErrorBoundary>
+        </div>
+        {appOverlays}
+        <MobileTabBar activeTab={mobileActiveTab} onTabChange={handleMobileTabChange} />
       </>
     );
   }
@@ -1583,7 +1639,7 @@ function PageContent() {
         onClose={() => setQuotaModal(null)}
       />
       <HomeViewChrome
-        viewMode={viewMode}
+        viewMode={mobileActiveTab}
         onTabChange={handleMobileTabChange}
         discovery={discovery}
         onDiscoveryCtaClick={handleDiscoveryCtaClick}
@@ -1597,37 +1653,10 @@ function PageContent() {
         isLoginRequiredModalOpen={isLoginRequiredModalOpen}
         onCloseLoginRequired={() => setIsLoginRequiredModalOpen(false)}
         loginRequiredConfig={loginRequiredConfig}
-        showUpgradeNudge={showUpgradeNudge}
-        onDismissUpgradeNudge={() => setShowUpgradeNudge(false)}
         showOnboarding={showOnboarding}
         user={user}
         onOnboardingComplete={handleOnboardingComplete}
-        overlays={
-          <>
-            {/* Sidebar Drawer (extracted component) */}
-            <SidebarDrawer
-              isOpen={sidebarOpen}
-              onClose={() => setSidebarOpen(false)}
-              history={history}
-              isLoaded={isLoaded}
-              onRestore={handleRestore}
-              onClear={clearHistory}
-              onSaveToPersonal={addPersonalPromptFromHistory}
-              onCopy={handleCopyText}
-              onStartNew={() => setViewMode("home")}
-              onNavPersonal={handleNavPersonal}
-              onNavFavorites={handleNavFavorites}
-              onNavLibrary={handleNavLibrary}
-              personalView={personalView}
-              prefetchPersonalLibrary={prefetchPersonalLibrary}
-              onRenameHistoryTitle={updateHistoryTitle}
-              onBumpHistoryLastUsed={bumpHistoryLastUsed}
-            />
-
-            {/* Mobile FAQ Panel (extracted component) */}
-            <MobileFaqPanel isOpen={mobileFaqOpen} onClose={() => setMobileFaqOpen(false)} />
-          </>
-        }
+        overlays={appOverlays}
       >
         {!ps.completion && !ps.isLoading ? (
           /* INPUT MODE (extracted component) */

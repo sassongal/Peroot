@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/service";
-import { CATEGORY_LABELS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { fetchAllActiveLibraryPrompts } from "@/lib/public-library";
 import { extractVariables } from "@/lib/variable-utils";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, faqSchema } from "@/lib/schema";
@@ -45,35 +46,13 @@ export const metadata: Metadata = {
 };
 
 /** Server-side fetch of library prompts that contain {variable} placeholders.
- *  Cookieless service client + ISR (revalidate below): public data only. */
+ *  Cookieless service client + ISR (revalidate below): public data only.
+ *  Fetches the WHOLE catalog (batched) so the displayed template count is
+ *  real, not the length of a truncated page. */
 async function getTemplates(): Promise<LibraryPrompt[]> {
   try {
     const supabase = createServiceClient();
-
-    const { data, error } = await supabase
-      .from("public_library_prompts")
-      .select("*, source:source_metadata")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false })
-      .limit(500);
-
-    // Distinguish a real failure (→ error boundary with retry) from a genuinely
-    // empty result, so an outage doesn't masquerade as "no templates".
-    if (error) throw new Error("templates_load_failed");
-    if (!data) return [];
-
-    // Normalize category keys
-    const categoryKeyMap = Object.fromEntries(
-      Object.keys(CATEGORY_LABELS).map((k) => [k.toLowerCase(), k]),
-    );
-
-    const mapped: LibraryPrompt[] = data.map(
-      ({ category_id, ...rest }) =>
-        ({
-          ...rest,
-          category: (category_id && categoryKeyMap[category_id.toLowerCase()]) || "General",
-        }) as LibraryPrompt,
-    );
+    const mapped = await fetchAllActiveLibraryPrompts(supabase);
 
     // Filter to only prompts that contain at least one FILLABLE variable, using
     // the same strict tokenizer the fill UI uses (extractVariables), so the
