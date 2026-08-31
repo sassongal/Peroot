@@ -1,7 +1,61 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
+import bidiFactory from "bidi-js";
 
 export const runtime = "edge";
+
+// ---------------------------------------------------------------------------
+// RTL shaping. Satori draws characters in LOGICAL order and implements no
+// BiDi algorithm, so raw Hebrew renders mirrored ("בדיקת" → "תקידב"). We
+// reorder each WORD to visual order (UAX#9 via bidi-js, including bracket
+// mirroring) and let a row-reverse flex container handle word order and
+// line wrapping — reordering a whole multi-line string would put the
+// sentence's end on the first line when Satori wraps it.
+// ---------------------------------------------------------------------------
+
+const bidi = bidiFactory();
+
+function toVisualOrder(text: string): string {
+  const embedding = bidi.getEmbeddingLevels(text, "rtl");
+  const chars = text.split("");
+  bidi.getMirroredCharactersMap(text, embedding).forEach((ch: string, idx: number) => {
+    chars[idx] = ch;
+  });
+  bidi.getReorderSegments(text, embedding).forEach(([start, end]: [number, number]) => {
+    const slice = chars.slice(start, end + 1).reverse();
+    chars.splice(start, slice.length, ...slice);
+  });
+  return chars.join("");
+}
+
+/** Render RTL text as word spans in a wrapping row-reverse flex line. */
+function RtlText({
+  text,
+  style,
+  gap = 10,
+}: {
+  text: string;
+  style: Record<string, string | number>;
+  gap?: number;
+}) {
+  const words = text.trim().split(/\s+/).map(toVisualOrder);
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row-reverse",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        columnGap: `${gap}px`,
+        ...style,
+      }}
+    >
+      {words.map((w, i) => (
+        <span key={i}>{w}</span>
+      ))}
+    </div>
+  );
+}
 
 const CATEGORY_THEMES: Record<string, { accent: string; glow: string; emoji: string }> = {
   פרילנסרים: { accent: "#8b5cf6", glow: "rgba(139,92,246,0.15)", emoji: "💼" },
@@ -129,40 +183,36 @@ export async function GET(req: NextRequest) {
             fontWeight: 700,
           }}
         >
-          <span>{category}</span>
+          <span>{toVisualOrder(category)}</span>
         </div>
       )}
 
       {/* Title */}
-      <div
+      <RtlText
+        text={title}
+        gap={12}
         style={{
           fontSize: title.length > 40 ? "42px" : "48px",
           fontWeight: 700,
           color: "white",
-          textAlign: "center",
           lineHeight: 1.3,
           maxWidth: "900px",
-          direction: "rtl",
         }}
-      >
-        {title}
-      </div>
+      />
 
       {/* Subtitle */}
       {subtitle && (
-        <div
+        <RtlText
+          text={subtitle}
+          gap={7}
           style={{
             fontSize: "20px",
             color: "#94a3b8",
             marginTop: "20px",
-            textAlign: "center",
-            direction: "rtl",
             maxWidth: "700px",
             lineHeight: 1.5,
           }}
-        >
-          {subtitle}
-        </div>
+        />
       )}
 
       {/* Bottom bar */}
