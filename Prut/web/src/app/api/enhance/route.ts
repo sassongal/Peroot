@@ -24,6 +24,7 @@ import {
   applyGuestCookie,
   buildGuestCookieHeader,
   checkAndDecrementGuestCredits,
+  isGuestAccessAllowed,
 } from "@/lib/guest-service";
 import { refundEnhanceCredit } from "./lib/refund";
 import {
@@ -274,21 +275,25 @@ export async function POST(req: Request) {
       if (bearerToken && userId) useServiceClient = true;
     }
 
-    // Guests can't create — the product requires registration before any
-    // enhance. Reject unauthenticated requests up front (the web client already
-    // routes guests to the register wall; this closes the raw-API path too).
+    // Guests get one enhance per rolling 24h (Redis-backed, cookie+IP-hash
+    // identity, STANDARD mode only, no attachments) while
+    // site_settings.allow_guest_access is on. The register wall moved to
+    // AFTER the first result, where the value of signing up is visible
+    // (owner decision, 2026-08-31) — a hard pre-enhance 401 here was the
+    // funnel's biggest leak.
     if (!userId) {
-      return NextResponse.json(
-        {
-          error: "יש להתחבר כדי ליצור פרומפטים. ההרשמה חינמית.",
-          code: "login_required",
-        },
-        { status: 401 },
-      );
+      const guestAllowed = await isGuestAccessAllowed();
+      if (!guestAllowed) {
+        return NextResponse.json(
+          {
+            error: "יש להתחבר כדי ליצור פרומפטים. ההרשמה חינמית.",
+            code: "login_required",
+          },
+          { status: 401 },
+        );
+      }
     }
 
-    // Retained for the (now unreachable) guest branches below; kept so the large
-    // downstream flow that references it continues to type-check.
     const isGuest = !userId;
 
     // When using Bearer token or API key, RLS won't have auth.uid() set,

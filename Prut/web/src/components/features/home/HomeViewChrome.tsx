@@ -72,6 +72,7 @@ interface HomeViewChromeProps {
   isLoading: boolean;
   streamPhase: StreamPhase;
   hasCompletion: boolean;
+  onStopStream?: () => void;
 
   // What Is This modal
   showWhatIsThis: boolean;
@@ -107,6 +108,7 @@ function HomeViewChromeInner({
   isLoading,
   streamPhase,
   hasCompletion,
+  onStopStream,
   showWhatIsThis,
   onCloseWhatIsThis,
   onOpenWhatIsThis,
@@ -192,7 +194,7 @@ function HomeViewChromeInner({
         )}
 
         <LoadingOverlay isVisible={isLoading} phase={streamPhase} />
-        <StreamingProgress phase={streamPhase} />
+        <StreamingProgress phase={streamPhase} onStop={isLoading ? onStopStream : undefined} />
 
         {children}
       </div>

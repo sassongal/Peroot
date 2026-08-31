@@ -736,14 +736,10 @@ function PageContent() {
       const inputText = textOverride ?? ps.input;
       if (!inputText.trim() || ps.isLoading || enhanceCooldownRef.current) return;
 
-      // Guests can't create at all - every enhance attempt (including the very
-      // first) routes straight to the register wall. Preserve their text so it's
-      // restored after they sign up.
-      if (!user) {
-        if (inputText.trim()) setPendingPrompt({ prompt: inputText, source: "home-quota-wall" });
-        showLoginRequired("שיפור פרומפט");
-        return;
-      }
+      // Guests enhance too: their 1/24h credit is real (usePromptLimits +
+      // the server's Redis guest quota decide via canUsePrompt below). The
+      // register wall comes after the first result, where signing up has
+      // visible value (owner decision, 2026-08-31).
 
       enhanceCooldownRef.current = true;
       setTimeout(() => {
@@ -1344,19 +1340,35 @@ function PageContent() {
       showLoginRequired("שמירת פרומפטים");
       return;
     }
-    const itemsToAdd = history.map((item) => ({
-      title: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
-      prompt: item.enhanced,
-      category: item.category,
-      personal_category: PERSONAL_DEFAULT_CATEGORY,
-      capability_mode: CapabilityMode.STANDARD,
-      use_case: "נשמר מהיסטוריה",
-      source: "manual" as const,
-      tags: [] as string[],
-    }));
+    // Dedupe against what's already saved: this button once silently doubled
+    // whole libraries (no confirm, no dedupe), sitting next to an innocent
+    // "היסטוריה" folder with the same name.
+    const existingBodies = new Set(personalLibrary.map((p) => p.prompt.trim()));
+    const itemsToAdd = history
+      .filter((item) => !existingBodies.has(item.enhanced.trim()))
+      .map((item) => ({
+        title: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
+        prompt: item.enhanced,
+        category: item.category,
+        personal_category: PERSONAL_DEFAULT_CATEGORY,
+        capability_mode: CapabilityMode.STANDARD,
+        use_case: "נשמר מהיסטוריה",
+        source: "manual" as const,
+        tags: [] as string[],
+      }));
+    if (itemsToAdd.length === 0) {
+      toast.info("כל ההיסטוריה כבר שמורה בספרייה");
+      return;
+    }
+    const ok = await confirmDialog({
+      title: "ייבוא היסטוריה לספרייה",
+      message: `לשמור ${itemsToAdd.length} פרומפטים מההיסטוריה לספרייה האישית? כפילויות קיימות ידולגו.`,
+      confirmLabel: "ייבוא",
+    });
+    if (!ok) return;
     await addPrompts(itemsToAdd);
-    toast.success("כל ההיסטוריה יובאה!");
-  }, [user, history, addPrompts]);
+    toast.success(`${itemsToAdd.length} פרומפטים יובאו מההיסטוריה`);
+  }, [user, history, addPrompts, personalLibrary, confirmDialog]);
 
   const handleOnboardingComplete = useCallback(
     async (data?: { role: string; goal: string }) => {
@@ -1578,6 +1590,7 @@ function PageContent() {
         isLoading={ps.isLoading}
         streamPhase={ps.streamPhase}
         hasCompletion={!!ps.completion}
+        onStopStream={handleStop}
         showWhatIsThis={showWhatIsThis}
         onCloseWhatIsThis={() => setShowWhatIsThis(false)}
         onOpenWhatIsThis={() => setShowWhatIsThis(true)}

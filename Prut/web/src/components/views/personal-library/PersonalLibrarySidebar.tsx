@@ -12,14 +12,17 @@ import {
   LayoutTemplate,
   History,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
+import { CapabilityMode } from "@/lib/capability-mode";
+import type { PersonalPrompt } from "@/lib/types";
 import {
   usePersonalLibraryFolders,
   usePersonalLibrarySidebar,
+  usePersonalLibraryShell,
 } from "./context/PersonalLibraryContext";
 
 interface PersonalLibrarySidebarProps {
@@ -38,8 +41,28 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
     cancelRenameCategory,
     selectedCapabilityFilter,
     setSelectedCapabilityFilter,
-    personalCapabilityCounts,
+    setCapabilityFilter,
   } = ctx;
+
+  // Bridge: the pill writes the UI-level selection; the server page fetch must
+  // follow it. Before this, the filter was wired to nothing — a chip appeared,
+  // the header said "תוצאות", and the list never changed.
+  useEffect(() => {
+    setCapabilityFilter(selectedCapabilityFilter ?? null);
+  }, [selectedCapabilityFilter, setCapabilityFilter]);
+
+  // Counts come from the WHOLE library (lazy corpus), not the current 15-row
+  // page slice, which made the numbers change while paging.
+  const { corpusPrompts } = usePersonalLibraryShell();
+  const corpusCapabilityCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    Object.values(CapabilityMode).forEach((mode) => (counts[mode] = 0));
+    corpusPrompts.forEach((p: PersonalPrompt) => {
+      const mode = p.capability_mode ?? CapabilityMode.STANDARD;
+      counts[mode] = (counts[mode] || 0) + 1;
+    });
+    return counts as Record<CapabilityMode, number>;
+  }, [corpusPrompts]);
 
   const { effectiveFolder, folderCounts, setFolder, handleFolderContextMenu, addFolder } =
     usePersonalLibraryFolders();
@@ -163,7 +186,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
           <CapabilityFilter
             value={selectedCapabilityFilter}
             onChange={setSelectedCapabilityFilter}
-            counts={personalCapabilityCounts}
+            counts={corpusCapabilityCounts}
           />
         </div>
       </div>

@@ -53,6 +53,8 @@ export const useLibraryContext = () => {
       isPersonalLoaded: data.isPersonalLoaded,
       libraryCapabilityCounts: data.libraryCapabilityCounts,
       personalCapabilityCounts: data.personalCapabilityCounts,
+      capabilityFilter: data.capabilityFilter,
+      setCapabilityFilter: data.setCapabilityFilter,
       // Pagination
       page: data.page,
       pageSize: data.pageSize,

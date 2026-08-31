@@ -14,6 +14,34 @@ import { randomUUID, createHash } from "crypto";
 import type { NextRequest, NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
 import { logger } from "@/lib/logger";
+import { createServiceClient } from "@/lib/supabase/service";
+
+// ---------------------------------------------------------------------------
+// Kill switch: site_settings.allow_guest_access, cached per instance for 60s
+// so the enhance hot path pays one DB read a minute, not one per request.
+// Fails OPEN (guests allowed) — quota still bounds them at 1/24h.
+// ---------------------------------------------------------------------------
+
+let guestAccessCache: { value: boolean; ts: number } | null = null;
+
+export async function isGuestAccessAllowed(): Promise<boolean> {
+  if (guestAccessCache && Date.now() - guestAccessCache.ts < 60_000) {
+    return guestAccessCache.value;
+  }
+  try {
+    const { data } = await createServiceClient()
+      .from("site_settings")
+      .select("allow_guest_access")
+      .limit(1)
+      .maybeSingle();
+    const value = data?.allow_guest_access !== false;
+    guestAccessCache = { value, ts: Date.now() };
+    return value;
+  } catch (e) {
+    logger.warn("[GuestService] allow_guest_access read failed, defaulting open:", e);
+    return true;
+  }
+}
 
 const GUEST_COOKIE = "peroot_guest_id";
 const GUEST_DAILY_LIMIT = 1;

@@ -106,6 +106,26 @@ vi.mock("@/lib/ratelimit", () => ({
   checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
 }));
 
+// Guest service — guests get one enhance per rolling 24h while
+// site_settings.allow_guest_access is on (the register wall moved to AFTER
+// the first result, owner decision 2026-08-31). The real module talks to
+// Redis + the service client, so it is fully mocked here.
+const GUEST_TEST_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+const mockIsGuestAccessAllowed = vi.fn();
+const mockResolveGuestId = vi.fn();
+const mockCheckAndDecrementGuestCredits = vi.fn();
+const mockRefundGuestCredit = vi.fn();
+vi.mock("@/lib/guest-service", () => ({
+  isGuestAccessAllowed: (...args: unknown[]) => mockIsGuestAccessAllowed(...args),
+  resolveGuestId: (...args: unknown[]) => mockResolveGuestId(...args),
+  checkAndDecrementGuestCredits: (...args: unknown[]) => mockCheckAndDecrementGuestCredits(...args),
+  refundGuestCredit: (...args: unknown[]) => mockRefundGuestCredit(...args),
+  applyGuestCookie: vi.fn(),
+  buildGuestCookieHeader: vi.fn(() => "peroot_guest_id=test; Path=/"),
+  getGuestQuotaStatus: vi.fn(async () => ({ remaining: 1, refreshAt: null })),
+  GUEST_CONSTANTS: { GUEST_COOKIE: "peroot_guest_id", GUEST_DAILY_LIMIT: 1 },
+}));
+
 // API key validation
 const mockValidateApiKey = vi.fn();
 vi.mock("@/lib/api-auth", () => ({
@@ -417,6 +437,16 @@ beforeEach(() => {
   mockValidateApiKey.mockResolvedValue({ valid: false, error: "Not configured" });
   mockEnqueueJob.mockResolvedValue(undefined);
   mockTrackApiUsage.mockReturnValue(undefined);
+
+  // Guest defaults: access on, known id, quota available.
+  mockIsGuestAccessAllowed.mockResolvedValue(true);
+  mockResolveGuestId.mockResolvedValue({ id: GUEST_TEST_ID, needsCookie: false });
+  mockCheckAndDecrementGuestCredits.mockResolvedValue({
+    allowed: true,
+    remaining: 0,
+    refreshAt: null,
+  });
+  mockRefundGuestCredit.mockResolvedValue(undefined);
 });
 
 // ===========================================================================
@@ -504,9 +534,25 @@ describe("POST /api/enhance", () => {
   // 4. Authentication
   // -----------------------------------------------------------------------
   describe("authentication", () => {
-    it("rejects a guest with 401 login_required (no unauthenticated enhance)", async () => {
+    it("streams for a guest when guest access is on (register wall comes after the result)", async () => {
       setupGuestUser();
       setupMockStream();
+
+      const req = makeRequest(VALID_BODY);
+      const res = await POST(req);
+
+      expect(res.status).toBe(200);
+      // The guest spends a guest credit (Redis rolling window), never a
+      // user credit.
+      expect(mockResolveGuestId).toHaveBeenCalled();
+      expect(mockCheckAndDecrementGuestCredits).toHaveBeenCalledWith(GUEST_TEST_ID);
+      expect(mockCheckAndDecrementCredits).not.toHaveBeenCalled();
+    });
+
+    it("rejects a guest with 401 login_required when allow_guest_access is off", async () => {
+      setupGuestUser();
+      setupMockStream();
+      mockIsGuestAccessAllowed.mockResolvedValue(false);
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
@@ -514,15 +560,17 @@ describe("POST /api/enhance", () => {
       expect(res.status).toBe(401);
       const body = await res.json();
       expect(body.code).toBe("login_required");
-      // Guests are rejected before any rate-limit / credit work runs.
+      // The kill switch rejects before any rate-limit / credit work runs.
       expect(mockCheckRateLimit).not.toHaveBeenCalled();
+      expect(mockCheckAndDecrementGuestCredits).not.toHaveBeenCalled();
     });
 
-    it("rejects an unauthenticated request even with no IP (401 login_required)", async () => {
+    it("returns 400 unidentified_source for a guest with no IP headers", async () => {
       mockGetUser.mockResolvedValue({ data: { user: null } });
       mockSupabaseFrom.mockReturnValue(mockQueryBuilder({ data: null }));
 
-      // Request without any IP headers — still a guest, still rejected.
+      // Without any IP header the guest can't be identified for rate
+      // limiting, so the request is rejected before spending anything.
       const req = new Request("http://localhost/api/enhance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -530,9 +578,10 @@ describe("POST /api/enhance", () => {
       });
       const res = await POST(req);
 
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(400);
       const body = await res.json();
-      expect(body.code).toBe("login_required");
+      expect(body.code).toBe("unidentified_source");
+      expect(mockCheckAndDecrementGuestCredits).not.toHaveBeenCalled();
     });
 
     // -------------------------------------------------------------------
@@ -651,7 +700,7 @@ describe("POST /api/enhance", () => {
   // 5 & 6. Rate limiting
   // -----------------------------------------------------------------------
   describe("rate limiting", () => {
-    it("rejects a guest before rate limiting even runs (401 login_required)", async () => {
+    it("rate limits a guest on the guest tier (429 before any credit spend)", async () => {
       setupGuestUser();
       mockCheckRateLimit.mockResolvedValue({
         success: false,
@@ -663,10 +712,10 @@ describe("POST /api/enhance", () => {
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
 
-      expect(res.status).toBe(401);
-      const body = await res.json();
-      expect(body.code).toBe("login_required");
-      expect(mockCheckRateLimit).not.toHaveBeenCalled();
+      expect(res.status).toBe(429);
+      // Guests are keyed by client IP on the "guest" tier.
+      expect(mockCheckRateLimit).toHaveBeenCalledWith("127.0.0.1", "guest");
+      expect(mockCheckAndDecrementGuestCredits).not.toHaveBeenCalled();
     });
 
     it("returns 429 when free-tier user is rate limited", async () => {
@@ -726,14 +775,25 @@ describe("POST /api/enhance", () => {
       expect(body.balance).toBe(0);
     });
 
-    it("rejects a guest before any credit check (401 login_required)", async () => {
+    it("returns 403 guest_quota_exhausted when the guest rolling window is spent", async () => {
       setupGuestUser();
       setupMockStream();
+      const refreshAt = new Date(Date.now() + 60 * 60 * 1000);
+      mockCheckAndDecrementGuestCredits.mockResolvedValue({
+        allowed: false,
+        remaining: 0,
+        refreshAt,
+      });
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
 
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(403);
+      const body = await res.json();
+      expect(body.code).toBe("guest_quota_exhausted");
+      expect(body.refresh_at).toBe(refreshAt.toISOString());
+      // The guest never reaches generation, and user credits are untouched.
+      expect(mockGenerateStream).not.toHaveBeenCalled();
       expect(mockCheckAndDecrementCredits).not.toHaveBeenCalled();
     });
 
@@ -788,15 +848,17 @@ describe("POST /api/enhance", () => {
       expect(mockGenerateStream).toHaveBeenCalledWith(expect.objectContaining({ userTier: "pro" }));
     });
 
-    it("does not generate for a guest, returns 401 login_required", async () => {
+    it("streams for a guest with the guest tier passed to the gateway", async () => {
       setupGuestUser();
       setupMockStream();
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
 
-      expect(res.status).toBe(401);
-      expect(mockGenerateStream).not.toHaveBeenCalled();
+      expect(res.status).toBe(200);
+      expect(mockGenerateStream).toHaveBeenCalledWith(
+        expect.objectContaining({ userTier: "guest" }),
+      );
     });
 
     it("passes tone and category to the engine", async () => {
@@ -850,17 +912,17 @@ describe("POST /api/enhance", () => {
       expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId);
     });
 
-    it("never reaches generation/refund for a guest (401 login_required)", async () => {
+    it("refunds the guest credit (not a user credit) when AIGateway throws", async () => {
       setupGuestUser();
       mockGenerateStream.mockRejectedValue(new Error("AI failure"));
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
 
-      // Guest is rejected up front, so generation never runs and there is
-      // nothing to refund.
-      expect(res.status).toBe(401);
-      expect(mockGenerateStream).not.toHaveBeenCalled();
+      expect(res.status).toBe(500);
+      // The guest was charged before generation, so the failure restores
+      // the rolling-window slot; user-credit refund must not run.
+      expect(mockRefundGuestCredit).toHaveBeenCalledWith(GUEST_TEST_ID);
       expect(mockRefundCredit).not.toHaveBeenCalled();
     });
 
@@ -1149,9 +1211,9 @@ describe("POST /api/enhance", () => {
       );
     });
 
-    it("returns 401 login_required when a guest requests any mode", async () => {
-      // Policy: guests can't create at all — every enhance is rejected up front
-      // regardless of capability mode. Registered free users get all modes.
+    it("returns 403 login_required when a guest requests a non-STANDARD mode", async () => {
+      // Policy: guests are locked to STANDARD; every other mode requires
+      // registration. Registered free users get all modes.
       setupGuestUser();
       setupMockStream();
 
@@ -1161,9 +1223,29 @@ describe("POST /api/enhance", () => {
       });
       const res = await POST(req);
 
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(403);
       const body = await res.json();
       expect(body.code).toBe("login_required");
+      expect(mockCheckAndDecrementGuestCredits).not.toHaveBeenCalled();
+      expect(mockGenerateStream).not.toHaveBeenCalled();
+    });
+
+    it("returns 403 login_required when a guest attaches context", async () => {
+      // Guests cannot use context attachments (cost floor + registration
+      // incentive) — the gate fires before any credit spend.
+      setupGuestUser();
+      setupMockStream();
+
+      const req = makeRequest({
+        prompt: "test",
+        context: [{ type: "file", name: "notes.txt", content: "attached context" }],
+      });
+      const res = await POST(req);
+
+      expect(res.status).toBe(403);
+      const body = await res.json();
+      expect(body.code).toBe("login_required");
+      expect(mockCheckAndDecrementGuestCredits).not.toHaveBeenCalled();
     });
 
     it("allows free user to use STANDARD capability mode", async () => {

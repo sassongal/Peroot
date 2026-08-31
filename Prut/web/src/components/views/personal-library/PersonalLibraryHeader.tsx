@@ -80,14 +80,16 @@ export function PersonalLibraryHeader() {
           <div>
             <h2 className="text-xl md:text-3xl font-serif text-(--text-primary)">ספריה אישית</h2>
             <p className="text-xs text-(--text-muted) mt-0.5">
-              {isFiltering ? (
+              {localViewType === "graph" ? (
+                <>מפת הקשרים של כל הספרייה</>
+              ) : isFiltering ? (
                 <span className="text-amber-600 dark:text-amber-400 font-medium">
                   {usedTotalCount} תוצאות
                 </span>
               ) : (
                 <>{usedTotalCount} פרומפטים</>
-              )}{" "}
-              · {activeFolderLabel}
+              )}
+              {localViewType === "graph" ? null : <> · {activeFolderLabel}</>}
             </p>
           </div>
         </div>
@@ -235,97 +237,106 @@ export function PersonalLibraryHeader() {
         </div>
       )}
 
-      {/* Search + Sort + Actions: full width search; on mobile toolbar scrolls horizontally */}
-      <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
-        <SearchAutosuggest
-          value={localSearch}
-          onChange={handleSearchChange}
-          prompts={filteredPersonalLibrary}
-          placeholder="חיפוש..."
-          className="w-full md:flex-1 md:min-w-[180px]"
-          enableGlobalShortcut
-        />
+      {/* Search + Sort + Actions apply to the GRID only. In graph mode they were
+          rendered but wired to nothing (the graph has its own controls), so a
+          user could filter to 3 favorites, switch to graph, and stare at 200
+          nodes under a toolbar that pretended to be active. */}
+      {localViewType === "grid" && (
+        <>
+          <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
+            <SearchAutosuggest
+              value={localSearch}
+              onChange={handleSearchChange}
+              prompts={filteredPersonalLibrary}
+              placeholder="חיפוש..."
+              className="w-full md:flex-1 md:min-w-[180px]"
+              enableGlobalShortcut
+            />
 
-        <div className="flex items-center gap-2 -mx-1 px-1 overflow-x-auto scrollbar-hide pb-0.5 md:overflow-visible md:flex-wrap md:pb-0 md:mx-0 md:px-0">
-          <select
-            value={currentSort}
-            onChange={(e) => handleSortChange(e.target.value)}
-            className="shrink-0 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2 px-2 md:px-3 text-xs md:text-sm text-(--text-primary) focus:outline-none focus:border-black/15 dark:border-white/30 min-h-[44px] max-w-[130px] md:max-w-none"
-          >
-            <option value="recent">עודכן לאחרונה</option>
-            <option value="title">אלפביתי</option>
-            <option value="usage">בשימוש גבוה</option>
-            <option value="custom">סדר ידני</option>
-            <option value="last_used">שימוש אחרון</option>
-            <option value="performance">ביצועים</option>
-          </select>
+            <div className="flex items-center gap-2 -mx-1 px-1 overflow-x-auto scrollbar-hide pb-0.5 md:overflow-visible md:flex-wrap md:pb-0 md:mx-0 md:px-0">
+              <select
+                value={currentSort}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="shrink-0 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2 px-2 md:px-3 text-xs md:text-sm text-(--text-primary) focus:outline-none focus:border-black/15 dark:border-white/30 min-h-[44px] max-w-[130px] md:max-w-none"
+              >
+                <option value="recent">עודכן לאחרונה</option>
+                <option value="title">אלפביתי</option>
+                <option value="usage">בשימוש גבוה</option>
+                <option value="custom">סדר ידני</option>
+                <option value="last_used">שימוש אחרון</option>
+                <option value="performance">ביצועים</option>
+              </select>
 
-          <button
-            onClick={() => setSelectionMode(!selectionMode)}
-            className={cn(
-              "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-              selectionMode
-                ? "bg-blue-600 border-blue-500 text-(--text-primary) shadow-lg shadow-blue-900/30"
-                : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
-            )}
-            title="בחירת פריטים לפעולות מרובות (מחיקה, העברה, תיוג, ייצוא)"
-            aria-pressed={selectionMode}
-          >
-            <CheckSquare className="w-3.5 h-3.5" />
-            <span>{selectionMode && selectedCount > 0 ? `נבחרו ${selectedCount}` : "בחירה"}</span>
-          </button>
+              <button
+                onClick={() => setSelectionMode(!selectionMode)}
+                className={cn(
+                  "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  selectionMode
+                    ? "bg-blue-600 border-blue-500 text-(--text-primary) shadow-lg shadow-blue-900/30"
+                    : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
+                )}
+                title="בחירת פריטים לפעולות מרובות (מחיקה, העברה, תיוג, ייצוא)"
+                aria-pressed={selectionMode}
+              >
+                <CheckSquare className="w-3.5 h-3.5" />
+                <span>
+                  {selectionMode && selectedCount > 0 ? `נבחרו ${selectedCount}` : "בחירה"}
+                </span>
+              </button>
 
-          <button
-            onClick={() => importFileRef.current?.click()}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-(--glass-border) text-(--text-muted) text-xs hover:text-(--text-primary) hover:bg-(--glass-bg) transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-            title="ייבוא"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            <span>ייבוא</span>
-          </button>
-          <input
-            ref={importFileRef}
-            type="file"
-            accept=".json"
-            onChange={handleImportFile}
-            className="hidden"
+              <button
+                onClick={() => importFileRef.current?.click()}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-(--glass-border) text-(--text-muted) text-xs hover:text-(--text-primary) hover:bg-(--glass-bg) transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                title="ייבוא"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>ייבוא</span>
+              </button>
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".json"
+                onChange={handleImportFile}
+                className="hidden"
+              />
+
+              <button
+                onClick={handleImportHistory}
+                disabled={historyLength === 0}
+                className={cn(
+                  "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  historyLength === 0
+                    ? "border-(--glass-border) text-slate-600 cursor-not-allowed"
+                    : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
+                )}
+              >
+                <History className="w-3.5 h-3.5" />
+                <span>ייבוא היסטוריה</span>
+              </button>
+
+              {selectionMode && (
+                <button
+                  onClick={selectAllVisible}
+                  className="shrink-0 px-3 py-2 rounded-lg text-xs text-(--text-secondary) hover:text-(--text-primary) border border-(--glass-border) hover:bg-(--glass-bg) transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                >
+                  בחר הכל ({displayItems.length})
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Active filter chips */}
+          <ActiveFilterChips
+            searchQuery={localSearch}
+            onClearSearch={() => handleSearchChange("")}
+            capabilityFilter={selectedCapabilityFilter}
+            onClearCapability={() => setSelectedCapabilityFilter(null)}
+            favoritesMode={effectiveFolder === "favorites"}
+            onClearFavorites={() => setFolder("all")}
+            className="mt-1"
           />
-
-          <button
-            onClick={handleImportHistory}
-            disabled={historyLength === 0}
-            className={cn(
-              "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-              historyLength === 0
-                ? "border-(--glass-border) text-slate-600 cursor-not-allowed"
-                : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
-            )}
-          >
-            <History className="w-3.5 h-3.5" />
-            <span>היסטוריה</span>
-          </button>
-
-          {selectionMode && (
-            <button
-              onClick={selectAllVisible}
-              className="shrink-0 px-3 py-2 rounded-lg text-xs text-(--text-secondary) hover:text-(--text-primary) border border-(--glass-border) hover:bg-(--glass-bg) transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-            >
-              בחר הכל ({displayItems.length})
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Active filter chips */}
-      <ActiveFilterChips
-        searchQuery={localSearch}
-        onClearSearch={() => handleSearchChange("")}
-        capabilityFilter={selectedCapabilityFilter}
-        onClearCapability={() => setSelectedCapabilityFilter(null)}
-        favoritesMode={effectiveFolder === "favorites"}
-        onClearFavorites={() => setFolder("all")}
-        className="mt-1"
-      />
+        </>
+      )}
     </div>
   );
 }

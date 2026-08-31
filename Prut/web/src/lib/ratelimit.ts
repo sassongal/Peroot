@@ -123,16 +123,6 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(10, "1 m"),
     prefix: "@peroot/ratelimit:speed-test",
   }),
-  siteSearchGuest: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(30, "1 m"),
-    prefix: "@peroot/ratelimit:site-search-guest",
-  }),
-  siteSearchUser: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(60, "1 m"),
-    prefix: "@peroot/ratelimit:site-search-user",
-  }),
   // Generic admin state-changing operations (ban/moderate/credits/etc).
   // Guards against a compromised admin token or runaway script; legit
   // admin usage will never approach 120 writes/min.
@@ -194,8 +184,6 @@ type RateLimitTier =
   | "chainFree"
   | "chainPro"
   | "speedTest"
-  | "siteSearchGuest"
-  | "siteSearchUser"
   | "publicPromptFetch"
   | "passwordReset"
   | "questions"

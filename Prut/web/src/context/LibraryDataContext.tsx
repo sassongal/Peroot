@@ -51,6 +51,8 @@ interface LibraryDataContextType {
   // Capability counts
   libraryCapabilityCounts: Record<CapabilityMode, number>;
   personalCapabilityCounts: Record<CapabilityMode, number>;
+  capabilityFilter: string | null;
+  setCapabilityFilter: (cap: string | null) => void;
 
   // CRUD Actions
   addPrompt: (
@@ -168,10 +170,12 @@ export function LibraryDataProvider({
     activeFolder,
     sortBy,
     searchQuery,
+    capabilityFilter,
     setPage,
     setActiveFolder,
     setSortBy,
     setSearchQuery,
+    setCapabilityFilter,
     addPrompt,
     removePrompt,
     incrementUseCount,
@@ -395,10 +399,12 @@ export function LibraryDataProvider({
       activeFolder,
       searchQuery,
       sortBy,
+      capabilityFilter,
       setPage,
       setActiveFolder,
       setSearchQuery,
       setSortBy,
+      setCapabilityFilter,
       libraryCapabilityCounts,
       personalCapabilityCounts,
       addPrompt: addPromptWithSuggestion,
@@ -440,10 +446,12 @@ export function LibraryDataProvider({
       activeFolder,
       searchQuery,
       sortBy,
+      capabilityFilter,
       setPage,
       setActiveFolder,
       setSearchQuery,
       setSortBy,
+      setCapabilityFilter,
       libraryCapabilityCounts,
       personalCapabilityCounts,
       addPromptWithSuggestion,
