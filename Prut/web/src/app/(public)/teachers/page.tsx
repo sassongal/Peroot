@@ -154,25 +154,6 @@ export default function TeachersPage() {
         className="min-h-screen bg-background text-foreground selection:bg-amber-500/30"
         dir="rtl"
       >
-        {/* Header */}
-        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-          <div className="max-w-6xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
-            <Link
-              href="/"
-              className="text-lg font-serif font-bold text-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-            >
-              Peroot
-            </Link>
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-            >
-              חזרה לדף הבית
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-          </div>
-        </header>
-
         <main className="max-w-6xl mx-auto px-4 md:px-8 pb-24">
           {/* ── Hero ──────────────────────────────────────────────────────── */}
           <section className="py-16 md:py-24 text-center space-y-6">
