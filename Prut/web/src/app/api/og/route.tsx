@@ -15,20 +15,8 @@ export const runtime = "edge";
 
 const bidi = bidiFactory();
 
-function toVisualOrder(text: string): string {
-  const embedding = bidi.getEmbeddingLevels(text, "rtl");
-  const chars = text.split("");
-  // NB: getMirroredCharactersMap takes the raw LEVELS ARRAY (it indexes
-  // embeddingLevels[i] directly); getReorderSegments takes the result object.
-  bidi.getMirroredCharactersMap(text, embedding.levels).forEach((ch: string, idx: number) => {
-    chars[idx] = ch;
-  });
-  bidi.getReorderSegments(text, embedding).forEach(([start, end]: [number, number]) => {
-    const slice = chars.slice(start, end + 1).reverse();
-    chars.splice(start, slice.length, ...slice);
-  });
-  // Reversal operates on UTF-16 code units — re-swap any surrogate pair it
-  // split (an emoji inside an RTL segment) so it renders instead of tofu.
+function repairSurrogates(s: string): string {
+  const chars = s.split("");
   for (let i = 0; i < chars.length - 1; i++) {
     const a = chars[i].charCodeAt(0);
     const b = chars[i + 1].charCodeAt(0);
@@ -40,49 +28,66 @@ function toVisualOrder(text: string): string {
   return chars.join("");
 }
 
-/** Render RTL text as word spans in a wrapping row-reverse flex line. */
-function RtlText({
-  text,
-  style,
-  gap = 10,
-}: {
-  text: string;
-  style: Record<string, string | number>;
-  gap?: number;
-}) {
-  // Group CONSECUTIVE strongly-LTR words (Latin/digits — platform names like
-  // "Stable Diffusion") into one unit: row-reverse placement would otherwise
-  // flip their word order ("Diffusion Stable"). Each unit keeps its own
-  // internal order; RTL/neutral words get per-word visual reordering.
-  const rawWords = text.trim().split(/\s+/);
-  const isLtrWord = (w: string) => /[A-Za-z0-9]/.test(w) && !/[\u0590-\u05FF\u0600-\u06FF]/.test(w);
-  const words: string[] = [];
-  let ltrRun: string[] = [];
-  for (const w of rawWords) {
-    if (isLtrWord(w)) {
-      ltrRun.push(w);
+/** Full UAX#9 visual reordering (incl. bracket mirroring) of ONE line.
+ *  Reordering operates on UTF-16 code units, so split surrogate pairs
+ *  (emoji inside RTL segments) are re-paired afterwards. */
+function toVisualOrder(line: string): string {
+  const embedding = bidi.getEmbeddingLevels(line, "rtl");
+  return repairSurrogates(bidi.getReorderedString(line, embedding));
+}
+
+/**
+ * Break LOGICAL text into lines by estimated width, then visually reorder
+ * each line as a whole. BiDi is defined per-LINE — reordering the whole
+ * string and letting Satori wrap it would put the sentence's end on the
+ * first line, and word-level tricks mis-ordered mixed runs like the
+ * "ל-Stable Diffusion" prefix case. The width estimate is conservative
+ * (0.62em/char for bold Hebrew) so a line never overflows into a Satori
+ * re-wrap.
+ */
+function breakAndReorder(text: string, maxWidthPx: number, fontSizePx: number): string[] {
+  const limit = Math.max(8, Math.floor(maxWidthPx / (fontSizePx * 0.62)));
+  const words = text.trim().split(/\s+/);
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    const cand = cur ? `${cur} ${w}` : w;
+    if (cur && cand.length > limit) {
+      lines.push(cur);
+      cur = w;
     } else {
-      if (ltrRun.length) {
-        words.push(ltrRun.join(" "));
-        ltrRun = [];
-      }
-      words.push(toVisualOrder(w));
+      cur = cand;
     }
   }
-  if (ltrRun.length) words.push(ltrRun.join(" "));
+  if (cur) lines.push(cur);
+  return lines.map(toVisualOrder);
+}
+
+/** Render RTL text: manual line-breaking + whole-line visual reordering. */
+function RtlText({
+  text,
+  maxWidthPx,
+  fontSizePx,
+  style,
+}: {
+  text: string;
+  maxWidthPx: number;
+  fontSizePx: number;
+  style: Record<string, string | number>;
+}) {
+  const lines = breakAndReorder(text, maxWidthPx, fontSizePx);
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "row-reverse",
-        flexWrap: "wrap",
-        justifyContent: "center",
-        columnGap: `${gap}px`,
+        flexDirection: "column",
+        alignItems: "center",
+        fontSize: `${fontSizePx}px`,
         ...style,
       }}
     >
-      {words.map((w, i) => (
-        <span key={i}>{w}</span>
+      {lines.map((line, i) => (
+        <span key={i}>{line}</span>
       ))}
     </div>
   );
@@ -269,9 +274,9 @@ export async function GET(req: NextRequest) {
       {/* Title */}
       <RtlText
         text={title}
-        gap={12}
+        maxWidthPx={900}
+        fontSizePx={title.length > 40 ? 42 : 48}
         style={{
-          fontSize: title.length > 40 ? "42px" : "48px",
           fontWeight: 700,
           color: "white",
           lineHeight: 1.3,
@@ -283,9 +288,9 @@ export async function GET(req: NextRequest) {
       {subtitle && (
         <RtlText
           text={subtitle}
-          gap={7}
+          maxWidthPx={700}
+          fontSizePx={20}
           style={{
-            fontSize: "20px",
             color: "#94a3b8",
             marginTop: "20px",
             maxWidth: "700px",
