@@ -32,23 +32,42 @@ const google = createGoogleGenerativeAI({
 // Schemas — Blog
 // ---------------------------------------------------------------------------
 
+// Soft limits (tag count, meta lengths) are CLAMPED after generation, never
+// enforced by the schema — a hard .max() here once threw away a complete,
+// valid article because the model emitted 7 tags instead of 6
+// (AI_NoObjectGeneratedError, Sentry JAVASCRIPT-NEXTJS-M). The schema keeps
+// only true invariants: fields exist, types match, content is substantial.
 const BlogPostSchema = z.object({
-  title: z.string().min(10).max(200).describe("כותרת המאמר בעברית"),
-  englishTitle: z.string().min(5).max(200).describe("Article title in English (for the slug)"),
+  title: z.string().min(10).describe("כותרת המאמר בעברית"),
+  englishTitle: z.string().min(5).describe("Article title in English (for the slug)"),
   content: z
     .string()
     .min(500)
     .describe("גוף המאמר: HTML עם H2 לכותרות משנה, בלי H1 ובלי עטיפת div/article"),
-  excerpt: z.string().min(30).max(600).describe("תקציר 2-3 משפטים"),
-  metaTitle: z.string().min(10).max(90).describe("כותרת SEO, עד 60 תווים"),
-  metaDescription: z.string().min(30).max(255).describe("תיאור SEO, עד 155 תווים, כולל CTA"),
-  category: z.string().min(2).max(60).describe("שם קטגוריה מהרשימה שסופקה"),
-  tags: z.array(z.string().min(1).max(40)).min(2).max(6),
+  excerpt: z.string().min(30).describe("תקציר 2-3 משפטים"),
+  metaTitle: z.string().min(10).describe("כותרת SEO, עד 60 תווים"),
+  metaDescription: z.string().min(30).describe("תיאור SEO, עד 155 תווים, כולל CTA"),
+  category: z.string().min(2).describe("שם קטגוריה מהרשימה שסופקה"),
+  tags: z.array(z.string().min(1)).min(1).describe("3-5 תגים"),
   internalLinks: z
     .array(z.object({ title: z.string(), slug: z.string() }))
-    .max(5)
     .describe("2-3 פרומפטים רלוונטיים מהספרייה"),
 });
+
+/** Clamp soft limits the schema deliberately does not enforce. */
+function clampBlogPost(post: GeneratedBlogPost): GeneratedBlogPost {
+  return {
+    ...post,
+    title: post.title.slice(0, 200),
+    englishTitle: post.englishTitle.slice(0, 200),
+    excerpt: post.excerpt.slice(0, 600),
+    metaTitle: post.metaTitle.slice(0, 90),
+    metaDescription: post.metaDescription.slice(0, 255),
+    category: post.category.slice(0, 60),
+    tags: post.tags.slice(0, 6).map((t) => t.slice(0, 40)),
+    internalLinks: post.internalLinks.slice(0, 5),
+  };
+}
 
 type GeneratedBlogPost = z.infer<typeof BlogPostSchema>;
 
@@ -65,17 +84,18 @@ interface BlogGenerationParams {
 // Schemas — Prompts
 // ---------------------------------------------------------------------------
 
+// Same clamp-don't-reject policy as the blog schema (see note above).
 const GeneratedPromptSchema = z.object({
-  title: z.string().min(5).max(150).describe("שם הפרומפט בעברית — ברור ותיאורי"),
+  title: z.string().min(5).describe("שם הפרומפט בעברית — ברור ותיאורי"),
   prompt: z
     .string()
     .min(80)
     .describe("הפרומפט המלא עם {{משתנה}} בסוגריים מסולסלים; מקצועי, מובנה ומפורט"),
-  use_case: z.string().min(10).max(500).describe("מתי ולמה להשתמש בפרומפט"),
-  variables: z.array(z.string().min(1).max(60)).max(10),
-  output_format: z.string().min(5).max(500).describe("תיאור מדויק של הפלט הצפוי"),
-  quality_checks: z.array(z.string().min(3).max(200)).min(1).max(5),
-  category_id: z.string().min(2).max(60).describe("ה-ID המדויק מהרשימה (באנגלית)"),
+  use_case: z.string().min(10).describe("מתי ולמה להשתמש בפרומפט"),
+  variables: z.array(z.string().min(1)).describe("שמות המשתנים"),
+  output_format: z.string().min(5).describe("תיאור מדויק של הפלט הצפוי"),
+  quality_checks: z.array(z.string().min(3)).min(1).describe("2-3 בדיקות איכות"),
+  category_id: z.string().min(2).describe("ה-ID המדויק מהרשימה (באנגלית)"),
   capability_mode: z.enum([
     "STANDARD",
     "DEEP_RESEARCH",
@@ -84,6 +104,18 @@ const GeneratedPromptSchema = z.object({
     "VIDEO_GENERATION",
   ]),
 });
+
+function clampPrompt(p: GeneratedPrompt): GeneratedPrompt {
+  return {
+    ...p,
+    title: p.title.slice(0, 150),
+    use_case: p.use_case.slice(0, 500),
+    variables: p.variables.slice(0, 10).map((v) => v.slice(0, 60)),
+    output_format: p.output_format.slice(0, 500),
+    quality_checks: p.quality_checks.slice(0, 5).map((c) => c.slice(0, 200)),
+    category_id: p.category_id.slice(0, 60),
+  };
+}
 
 type GeneratedPrompt = z.infer<typeof GeneratedPromptSchema>;
 
@@ -186,7 +218,7 @@ ${(existingPromptLinks ?? existingPromptTitles.map((t) => ({ title: t, url: "/pr
     `[ContentFactory] Blog generated in ${durationMs}ms, tokens: ${usage?.totalTokens ?? "unknown"}`,
   );
 
-  return object;
+  return clampBlogPost(object);
 }
 
 // ---------------------------------------------------------------------------
@@ -263,7 +295,7 @@ ${existingTitles.slice(0, 100).join("\n")}
   );
 
   return {
-    prompts: object.prompts,
+    prompts: object.prompts.map(clampPrompt),
     usage: { totalTokens: usage?.totalTokens ?? 0 },
   };
 }

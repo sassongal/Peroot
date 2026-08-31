@@ -20,49 +20,37 @@ const CATEGORY_THEMES: Record<string, { accent: string; glow: string; emoji: str
 
 const DEFAULT_THEME = { accent: "#f59e0b", glow: "rgba(245,158,11,0.15)", emoji: "✨" };
 
-// A modern UA so the Google Fonts CSS API serves woff2 `src` URLs.
-const FONT_UA =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-
-// Load the Hebrew font for the OG image. Resolves the CURRENT woff2 URL from the
+// Load the Hebrew font for the OG image. Resolves the CURRENT font URL from the
 // Google Fonts CSS API rather than a hardcoded versioned gstatic URL — those
-// rotate (v46 → v50 → …), and a rotted URL 404s to an HTML page. The previous
-// code fed that HTML into the font parser ("Unsupported OpenType signature <!DO"
-// in Sentry). Every step is guarded and the woff2 magic bytes are verified, so
-// any failure returns null and the image renders with a fallback font instead of
-// throwing.
+// rotate (v46 → v50 → …), and a rotted URL 404s to an HTML page.
+//
+// CRITICAL FORMAT NOTE: Satori (the renderer behind next/og) parses TTF/OTF/
+// WOFF only — NOT woff2. A previous version deliberately fetched woff2 (even
+// validating its 'wOF2' magic bytes) and every render with a loaded font threw
+// "Unsupported OpenType signature wOF2" mid-stream (Sentry, 2026-08-31). The
+// CSS API returns TTF sources when the client looks like an ancient browser,
+// so we request it with a bare UA and validate a TTF/OTF signature.
 async function loadHebrewFont(): Promise<ArrayBuffer | null> {
   try {
     const cssRes = await fetch(
       "https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@700",
-      { headers: { "User-Agent": FONT_UA } },
+      // Ancient UA → Google serves format('truetype') sources
+      { headers: { "User-Agent": "Mozilla/5.0" } },
     );
     if (!cssRes.ok) return null;
     const css = await cssRes.text();
 
-    // Prefer the @font-face subset whose unicode-range covers the Hebrew block
-    // (U+0590–05FF); fall back to the first woff2 URL in the sheet.
-    let chosen: string | null = null;
-    let firstUrl: string | null = null;
-    const re = /src:\s*url\((https:[^)]+\.woff2)\)[^;]*;\s*unicode-range:\s*([^;]+);/g;
-    for (let m = re.exec(css); m; m = re.exec(css)) {
-      if (!firstUrl) firstUrl = m[1];
-      if (/0590/i.test(m[2])) {
-        chosen = m[1];
-        break;
-      }
-    }
-    const url = chosen ?? firstUrl;
-    if (!url) return null;
+    const m = css.match(/url\((https:[^)]+\.ttf)\)/);
+    if (!m) return null;
 
-    const fontRes = await fetch(url);
+    const fontRes = await fetch(m[1]);
     if (!fontRes.ok) return null;
     const buf = await fontRes.arrayBuffer();
 
-    // Validate the woff2 signature ('wOF2') so an HTML error body never reaches
-    // the font parser.
-    const sig = new Uint8Array(buf.slice(0, 4));
-    if (sig[0] !== 0x77 || sig[1] !== 0x4f || sig[2] !== 0x46 || sig[3] !== 0x32) {
+    // Accept TrueType (0x00010000), OpenType/CFF ('OTTO') or legacy 'true' —
+    // anything else (HTML error page, woff2) must never reach the parser.
+    const sig = new DataView(buf).getUint32(0);
+    if (sig !== 0x00010000 && sig !== 0x4f54544f && sig !== 0x74727565) {
       return null;
     }
     return buf;
@@ -71,11 +59,22 @@ async function loadHebrewFont(): Promise<ArrayBuffer | null> {
   }
 }
 
-// Cache the load once per edge isolate.
-const hebrewFont = loadHebrewFont();
+// Cache a SUCCESSFUL load per edge isolate; a transient failure clears the
+// cache so the next request retries instead of serving fallback-font images
+// for the isolate's whole lifetime.
+let hebrewFontPromise: Promise<ArrayBuffer | null> | null = null;
+function getHebrewFont(): Promise<ArrayBuffer | null> {
+  if (!hebrewFontPromise) {
+    hebrewFontPromise = loadHebrewFont().then((font) => {
+      if (!font) hebrewFontPromise = null;
+      return font;
+    });
+  }
+  return hebrewFontPromise;
+}
 
 export async function GET(req: NextRequest) {
-  const fontData = await hebrewFont;
+  const fontData = await getHebrewFont();
 
   const { searchParams } = req.nextUrl;
   const title = searchParams.get("title") || "Peroot";
