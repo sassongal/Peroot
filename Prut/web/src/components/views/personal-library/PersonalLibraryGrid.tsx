@@ -84,7 +84,7 @@ export function PersonalLibraryGrid() {
       try {
         await importChain(detail.json);
         setChainsExpanded(true);
-        toast.success("שרשרת משותפת נוספה לספריה שלך");
+        toast.success("שרשרת משותפת נוספה לספרייה שלך");
       } catch {
         toast.error("ייבוא השרשרת נכשל");
       }
@@ -227,7 +227,7 @@ export function PersonalLibraryGrid() {
         <div className="rounded-xl border border-white/8 bg-(--glass-bg) p-4 space-y-3">
           <h3 className="text-sm font-semibold text-(--text-secondary) flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-blue-400" />
-            מועדפים מהספריה הציבורית
+            מועדפים מהספרייה הציבורית
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {libraryFavorites.map((p) => (

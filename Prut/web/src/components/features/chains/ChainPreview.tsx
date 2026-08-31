@@ -528,7 +528,7 @@ export function ChainPreview({
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 text-sm font-semibold transition-colors"
         >
           <Save className="w-4 h-4" />
-          שמור שרשרת לספריה
+          שמור שרשרת לספרייה
         </button>
       </div>
     </div>

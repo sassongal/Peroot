@@ -66,7 +66,7 @@ const COMPARISON_FEATURES = [
     icon: Library,
   },
   {
-    name: "ספריה אישית ללא הגבלה",
+    name: "ספרייה אישית ללא הגבלה",
     free: false,
     pro: true,
     icon: Library,

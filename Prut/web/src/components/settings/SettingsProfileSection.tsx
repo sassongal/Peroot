@@ -135,7 +135,7 @@ export function SettingsProfileSection({
         <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10 text-center">
           <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 mx-auto mb-1.5 sm:mb-2" />
           <p className="text-xl sm:text-2xl font-bold">{personalLibraryLength}</p>
-          <p className="text-[10px] sm:text-xs text-slate-400">ספריה</p>
+          <p className="text-[10px] sm:text-xs text-slate-400">ספרייה</p>
         </div>
         <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10 text-center">
           <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 mx-auto mb-1.5 sm:mb-2" />

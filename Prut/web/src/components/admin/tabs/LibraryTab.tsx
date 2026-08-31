@@ -144,7 +144,7 @@ export function LibraryTab() {
             Public Repository
           </h2>
           <p className="text-zinc-500 font-medium tracking-wide">
-            ניהול ספריה ציבורית, ייבוא נתונים רוחבי וארכיטקטורת קטגוריות
+            ניהול ספרייה ציבורית, ייבוא נתונים רוחבי וארכיטקטורת קטגוריות
           </p>
         </div>
 

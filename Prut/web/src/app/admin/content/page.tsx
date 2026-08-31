@@ -8,19 +8,23 @@ import { Factory, PenTool, FileText, Mail, Search } from "lucide-react";
 // ── Lazy-loaded tab components ─────────────────────────────────────────────────
 
 const ContentFactoryTab = lazy(() =>
-  import("@/components/admin/tabs/ContentFactoryTab").then((m) => ({ default: m.ContentFactoryTab }))
+  import("@/components/admin/tabs/ContentFactoryTab").then((m) => ({
+    default: m.ContentFactoryTab,
+  })),
 );
 const BlogTab = lazy(() =>
-  import("@/components/admin/tabs/BlogTab").then((m) => ({ default: m.BlogTab }))
+  import("@/components/admin/tabs/BlogTab").then((m) => ({ default: m.BlogTab })),
 );
 const LibraryTab = lazy(() =>
-  import("@/components/admin/tabs/LibraryTab").then((m) => ({ default: m.LibraryTab }))
+  import("@/components/admin/tabs/LibraryTab").then((m) => ({ default: m.LibraryTab })),
 );
 const EmailCampaignsTab = lazy(() =>
-  import("@/components/admin/tabs/EmailCampaignsTab").then((m) => ({ default: m.EmailCampaignsTab }))
+  import("@/components/admin/tabs/EmailCampaignsTab").then((m) => ({
+    default: m.EmailCampaignsTab,
+  })),
 );
 const SeoConsoleTab = lazy(() =>
-  import("@/components/admin/tabs/SeoConsoleTab").then((m) => ({ default: m.SeoConsoleTab }))
+  import("@/components/admin/tabs/SeoConsoleTab").then((m) => ({ default: m.SeoConsoleTab })),
 );
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -34,11 +38,11 @@ interface TabConfig {
 }
 
 const TABS: TabConfig[] = [
-  { id: "factory",   label: "מפעל תוכן", icon: Factory  },
-  { id: "blog",      label: "בלוג",       icon: PenTool  },
-  { id: "library",   label: "ספריה",      icon: FileText },
-  { id: "campaigns", label: "קמפיינים",   icon: Mail     },
-  { id: "seo",       label: "SEO",        icon: Search   },
+  { id: "factory", label: "מפעל תוכן", icon: Factory },
+  { id: "blog", label: "בלוג", icon: PenTool },
+  { id: "library", label: "ספרייה", icon: FileText },
+  { id: "campaigns", label: "קמפיינים", icon: Mail },
+  { id: "seo", label: "SEO", icon: Search },
 ];
 
 // ── Tab loading skeleton ───────────────────────────────────────────────────────
@@ -65,7 +69,6 @@ export default function ContentHubPage() {
   return (
     <AdminLayout>
       <div dir="rtl" className="space-y-8 animate-in fade-in duration-700 pb-24">
-
         {/* Page header */}
         <div className="space-y-1">
           <h1 className="text-4xl font-black text-white tracking-tight">Content Hub</h1>
@@ -85,7 +88,7 @@ export default function ContentHubPage() {
                   "font-black text-[10px] uppercase tracking-widest",
                   isActive
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5",
                 )}
               >
                 <Icon className="w-4 h-4" />
@@ -97,13 +100,12 @@ export default function ContentHubPage() {
 
         {/* Tab content */}
         <Suspense fallback={<TabSkeleton />}>
-          {activeTab === "factory"   && <ContentFactoryTab />}
-          {activeTab === "blog"      && <BlogTab />}
-          {activeTab === "library"   && <LibraryTab />}
+          {activeTab === "factory" && <ContentFactoryTab />}
+          {activeTab === "blog" && <BlogTab />}
+          {activeTab === "library" && <LibraryTab />}
           {activeTab === "campaigns" && <EmailCampaignsTab />}
-          {activeTab === "seo"       && <SeoConsoleTab />}
+          {activeTab === "seo" && <SeoConsoleTab />}
         </Suspense>
-
       </div>
     </AdminLayout>
   );

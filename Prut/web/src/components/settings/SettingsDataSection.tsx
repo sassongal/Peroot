@@ -35,7 +35,7 @@ export function SettingsDataSection({
           <div className="flex-1">
             <h3 className="font-semibold">ייצוא נתונים</h3>
             <p className="text-sm text-slate-400">
-              הורד את כל הנתונים שלך כקובץ JSON - כולל פרופיל, היסטוריה, ספריה, מועדפים, סטטיסטיקות
+              הורד את כל הנתונים שלך כקובץ JSON - כולל פרופיל, היסטוריה, ספרייה, מועדפים, סטטיסטיקות
               ויומן פעילות
             </p>
           </div>

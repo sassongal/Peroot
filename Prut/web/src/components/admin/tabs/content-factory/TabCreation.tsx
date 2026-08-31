@@ -219,7 +219,7 @@ export function TabCreation({
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="פרומפטים בספריה"
+          label="פרומפטים בספרייה"
           value={stats?.totalPrompts ?? ", "}
           color="blue"
           icon={BookOpen}

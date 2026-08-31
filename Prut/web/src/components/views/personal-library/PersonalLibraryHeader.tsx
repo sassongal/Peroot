@@ -78,7 +78,7 @@ export function PersonalLibraryHeader() {
             <Menu className="w-4 h-4" />
           </button>
           <div>
-            <h2 className="text-xl md:text-3xl font-serif text-(--text-primary)">ספריה אישית</h2>
+            <h2 className="text-xl md:text-3xl font-serif text-(--text-primary)">ספרייה אישית</h2>
             <p className="text-xs text-(--text-muted) mt-0.5">
               {localViewType === "graph" ? (
                 <>מפת הקשרים של כל הספרייה</>

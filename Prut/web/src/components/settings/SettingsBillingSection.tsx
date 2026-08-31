@@ -122,7 +122,7 @@ export function SettingsBillingSection({
             </li>
             <li className="flex items-center gap-2">
               <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              ספריה אישית + מועדפים ללא הגבלה
+              ספרייה אישית + מועדפים ללא הגבלה
             </li>
             <li className="flex items-center gap-2">
               <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />

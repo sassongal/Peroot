@@ -12,8 +12,33 @@ import { breadcrumbSchema, speakablePageSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { PromptSearch } from "@/components/features/library/PromptSearch";
+import { createServiceClient } from "@/lib/supabase/service";
+import { promptPagePath } from "@/lib/category-slugs";
+
+// ISR: the popular strip refreshes hourly; everything else is static.
+export const revalidate = 3600;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+
+/** The catalogue index should show real prompts, not just category doors
+ *  (U3.1: it previously displayed zero prompts). Recently-used is the live
+ *  popularity signal the table actually carries. */
+async function getPopularPrompts(): Promise<
+  Array<{ id: string; title: string; use_case: string | null; category_id: string | null }>
+> {
+  try {
+    const { data } = await createServiceClient()
+      .from("public_library_prompts")
+      .select("id, title, use_case, category_id")
+      .eq("is_active", true)
+      .not("last_used_at", "is", null)
+      .order("last_used_at", { ascending: false })
+      .limit(6);
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
 
 export const metadata: Metadata = {
   title: `ספריית פרומפטים בעברית: ${PROMPT_TEMPLATE_COUNT} תבניות`,
@@ -108,9 +133,10 @@ function groupSlugsByCollection() {
   return collectionGroups;
 }
 
-export default function PromptsIndexPage() {
+export default async function PromptsIndexPage() {
   const groups = groupSlugsByCollection();
   const totalCategories = Object.keys(CATEGORY_SLUG_MAP).length;
+  const popular = await getPopularPrompts();
 
   return (
     <>
@@ -180,6 +206,52 @@ export default function PromptsIndexPage() {
 
           {/* Search */}
           <PromptSearch />
+
+          {/* Catalogue filter (U3.1): templates are a slice of THIS catalogue,
+              prompts that carry fillable {variables}. */}
+          <div className="flex items-center gap-2 mb-10 -mt-4" dir="rtl">
+            <span className="text-xs text-muted-foreground">סינון:</span>
+            <Link
+              href="/templates"
+              className="text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-500/30 transition-colors"
+            >
+              רק תבניות עם {"{משתנים}"}
+            </Link>
+          </div>
+
+          {/* Popular prompts — real content above the category doors */}
+          {popular.length > 0 && (
+            <section className="mb-12 md:mb-16" aria-label="פרומפטים פופולריים">
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-border">
+                <span className="text-2xl" role="img" aria-hidden="true">
+                  🔥
+                </span>
+                <h2 className="text-xl md:text-2xl font-serif text-foreground">הכי בשימוש עכשיו</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {popular.map((p) => {
+                  const href = promptPagePath(p.category_id, p.id);
+                  if (!href) return null;
+                  return (
+                    <Link
+                      key={p.id}
+                      href={href}
+                      className="flex flex-col gap-1.5 p-4 rounded-xl border border-border bg-secondary hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all group"
+                    >
+                      <span className="text-sm font-semibold text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">
+                        {p.title}
+                      </span>
+                      {p.use_case && (
+                        <span className="text-xs text-muted-foreground line-clamp-2 leading-snug">
+                          {p.use_case}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {/* Category groups */}
           <div className="space-y-12 md:space-y-16">

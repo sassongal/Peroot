@@ -3,9 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Moon, MoreHorizontal, Plug, Sparkles, Sun } from "lucide-react";
+import { BookOpen, Moon, MoreHorizontal, Plug, Sparkles, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { createClient } from "@/lib/supabase/client";
 
 /**
  * Branded top bar for the PUBLIC pages (marketing/content/docs) — the same
@@ -34,6 +35,19 @@ const MORE_LINKS: { href: string; label: string }[] = [
 export function PublicNavBar() {
   const { theme, toggleTheme } = useTheme();
   const [moreOpen, setMoreOpen] = useState(false);
+  // U3.5: a signed-in reader on a content page gets a direct road back to
+  // their own library, not only an upsell-looking CTA.
+  const [hasSession, setHasSession] = useState(false);
+  useEffect(() => {
+    try {
+      createClient()
+        .auth.getSession()
+        .then(({ data }) => setHasSession(!!data.session))
+        .catch(() => {});
+    } catch {
+      /* ignore */
+    }
+  }, []);
   const moreWrapRef = useRef<HTMLDivElement>(null);
   const moreTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -166,6 +180,15 @@ export function PublicNavBar() {
           >
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
+          {hasSession && (
+            <Link
+              href="/?view=personal"
+              className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/8 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
+              <BookOpen className="w-4 h-4" />
+              לספרייה שלי
+            </Link>
+          )}
           <Link
             href="/"
             className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-bold bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"

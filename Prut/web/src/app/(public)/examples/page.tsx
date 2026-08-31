@@ -208,7 +208,7 @@ export default function ExamplesPage() {
           />
           <CrossLinkCard
             href="/prompts"
-            title="עוד תבניות בספריה הציבורית"
+            title="עוד תבניות בספרייה הציבורית"
             description={`${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים ב-30+ קטגוריות`}
           />
           <CrossLinkCard

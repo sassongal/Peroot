@@ -132,7 +132,7 @@ export function useResultActions({
     });
     recordUsageSignal("save", ps.completion);
     markFeatureUsed("peroot_used_personal_library");
-    toast.success("נשמר לספריה האישית!");
+    toast.success("נשמר לספרייה האישית!");
   }, [
     user,
     ps.completion,
@@ -239,7 +239,7 @@ export function useResultActions({
         source: "manual",
       });
       recordUsageSignal("save", item.enhanced);
-      toast.success("נשמר לספריה האישית!");
+      toast.success("נשמר לספרייה האישית!");
     },
     [user, addPrompt, showLoginRequired],
   );

@@ -241,14 +241,14 @@ export function ChainBuilder({
                   <textarea
                     value={step.prompt_text}
                     onChange={(e) => updateStep(step.id, { prompt_text: e.target.value })}
-                    placeholder="כתוב פרומפט או בחר מהספריה..."
+                    placeholder="כתוב פרומפט או בחר מהספרייה..."
                     className="w-full h-24 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20 resize-none"
                   />
                   {/* Quick select from personal library */}
                   {personalPrompts.length > 0 && !step.prompt_id && (
                     <details className="group">
                       <summary className="text-xs text-slate-500 hover:text-amber-400 cursor-pointer transition-colors">
-                        בחר מהספריה האישית
+                        בחר מהספרייה האישית
                       </summary>
                       <div className="mt-2 max-h-32 overflow-y-auto space-y-1 border border-white/5 rounded-lg p-2 bg-black/30">
                         {personalPrompts.slice(0, 20).map((p) => (

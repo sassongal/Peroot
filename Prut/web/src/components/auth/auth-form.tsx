@@ -227,7 +227,7 @@ export function AuthForm() {
         </h1>
         <p className="text-[13px] text-white/35 leading-relaxed">
           {isLogin
-            ? "התחבר כדי לגשת לספריה ולהיסטוריה האישית שלך"
+            ? "התחבר כדי לגשת לספרייה ולהיסטוריה האישית שלך"
             : "צור חשבון כדי לשמור ולנהל את הפרומפטים שלך"}
         </p>
       </div>

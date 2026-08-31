@@ -21,6 +21,7 @@ import { VideoPlatform } from "@/lib/video-platforms";
 import { UserMenu } from "@/components/layout/user-nav";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
@@ -49,13 +50,6 @@ import { useI18n } from "@/context/I18nContext";
 import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
 
 // Dynamic imports for route-level views
-const LibraryView = dynamic(
-  () => import("@/components/views/LibraryView").then((mod) => mod.LibraryView),
-  {
-    ssr: false,
-    loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-96" />,
-  },
-);
 const PersonalLibraryView = dynamic(
   () => import("@/components/views/PersonalLibraryView").then((mod) => mod.PersonalLibraryView),
   {
@@ -113,6 +107,7 @@ const getPromptKey = (text: string) => {
 
 function PageContent() {
   const t = useI18n();
+  const router = useRouter();
   const {
     user,
     history,
@@ -1179,13 +1174,13 @@ function PageContent() {
   }, [handleUsePrompt]);
 
   const handleBackToLibrary = useCallback(() => {
-    if (previousView === "personal" || previousView === "library") {
-      setViewMode(previousView);
+    if (previousView === "library") {
+      router.push("/prompts");
     } else {
       setViewMode("personal");
     }
     setPreviousView(null);
-  }, [previousView, setViewMode]);
+  }, [previousView, setViewMode, router]);
 
   const handleRestore = useCallback(
     (item: HistoryItem) => {
@@ -1217,7 +1212,7 @@ function PageContent() {
         source_history_id: item.id,
       });
       recordUsageSignal("save", item.enhanced);
-      toast.success("נשמר לספריה האישית!");
+      toast.success("נשמר לספרייה האישית!");
     },
     [user, addPrompt],
   );
@@ -1240,7 +1235,7 @@ function PageContent() {
     });
     recordUsageSignal("save", ps.completion);
     markFeatureUsed("peroot_used_personal_library");
-    toast.success("נשמר לספריה האישית!");
+    toast.success("נשמר לספרייה האישית!");
   }, [
     user,
     ps.completion,
@@ -1423,9 +1418,11 @@ function PageContent() {
     setPersonalView("favorites");
   }, [setViewMode, setPersonalView]);
 
+  // U3.1 (owner decision 31.8): the in-app LibraryView is gone. "ספרייה"
+  // navigates to /prompts — the same table, public, indexed and paginated.
   const handleNavLibrary = useCallback(() => {
-    setViewMode("library");
-  }, [setViewMode]);
+    router.push("/prompts");
+  }, [router]);
 
   // --- Render callbacks for sub-components ---
 
@@ -1468,7 +1465,7 @@ function PageContent() {
     if (viewSyncedRef.current) return;
     viewSyncedRef.current = true;
     const v = new URLSearchParams(window.location.search).get("view");
-    if (v === "library") setViewMode("library");
+    if (v === "library") router.replace("/prompts");
     else if (v === "personal") setViewMode("personal");
   }, [setViewMode]);
   useEffect(() => {
@@ -1575,26 +1572,6 @@ function PageContent() {
       <MobileFaqPanel isOpen={mobileFaqOpen} onClose={() => setMobileFaqOpen(false)} />
     </>
   );
-
-  if (viewMode === "library") {
-    return (
-      <>
-        {topNavBar}
-        <div className="pb-16 md:pb-0">
-          <ErrorBoundary name="LibraryView">
-            <LibraryView
-              onUsePrompt={handleUsePrompt}
-              onCopyText={async (t) => {
-                await handleCopyText(t);
-              }}
-            />
-          </ErrorBoundary>
-        </div>
-        {appOverlays}
-        <MobileTabBar activeTab={mobileActiveTab} onTabChange={handleMobileTabChange} />
-      </>
-    );
-  }
 
   if (viewMode === "personal") {
     return (

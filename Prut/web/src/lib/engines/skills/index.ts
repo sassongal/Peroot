@@ -1313,7 +1313,7 @@ const CATEGORY_KEYWORDS: Record<ExampleCategory, string[]> = {
     "REST",
     "GraphQL",
     "SDK",
-    "ספריה",
+    "ספרייה",
     "פריימוורק",
     "technical",
     "tech",

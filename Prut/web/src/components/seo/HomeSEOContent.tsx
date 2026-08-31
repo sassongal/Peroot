@@ -183,7 +183,7 @@ export function HomeSEOContent() {
               לדייק את התוצאה.
             </li>
             <li className="text-muted-foreground">
-              <strong className="text-foreground">שמירה</strong> , העתיקו, שמרו לספריה האישית, או
+              <strong className="text-foreground">שמירה</strong> , העתיקו, שמרו לספרייה האישית, או
               המשיכו לשפר.
             </li>
           </ol>

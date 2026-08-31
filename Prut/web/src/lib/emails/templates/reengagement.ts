@@ -1,6 +1,6 @@
-import { escapeHtml, emailLayoutBranded } from './base';
+import { escapeHtml, emailLayoutBranded } from "./base";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.peroot.space';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.peroot.space";
 
 export interface ReengagementTemplate {
   id: string;
@@ -11,10 +11,12 @@ export interface ReengagementTemplate {
 
 export const REENGAGEMENT_TEMPLATES: ReengagementTemplate[] = [
   {
-    id: 'inactive_7d',
+    id: "inactive_7d",
     inactiveDays: 7,
-    subject: 'חסר לנו! יש פרומפטים שמחכים לך',
-    html: (name, unsubscribeUrl) => emailLayoutBranded(`
+    subject: "חסר לנו! יש פרומפטים שמחכים לך",
+    html: (name, unsubscribeUrl) =>
+      emailLayoutBranded(
+        `
       <h2 style="color: #3b82f6; font-size: 22px;">היי ${escapeHtml(name)}</h2>
       <p>שמנו לב שלא ביקרת אצלנו בשבוע האחרון. המערכת שלנו המשיכה להשתפר בינתיים!</p>
 
@@ -30,15 +32,20 @@ export const REENGAGEMENT_TEMPLATES: ReengagementTemplate[] = [
       <div style="text-align: center; margin-top: 30px;">
         <a href="${APP_URL}" style="background: linear-gradient(135deg, #f59e0b, #eab308); color: #0a0a0a; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 800;">חזרו ליצור</a>
       </div>
-    `, unsubscribeUrl, 'הסרה ממיילי ריאנגייג׳מנט'),
+    `,
+        unsubscribeUrl,
+        "הסרה ממיילי ריאנגייג׳מנט",
+      ),
   },
   {
-    id: 'inactive_14d',
+    id: "inactive_14d",
     inactiveDays: 14,
-    subject: 'הפרומפטים שלך מחכים לך + בונוס קרדיטים',
-    html: (name, unsubscribeUrl) => emailLayoutBranded(`
+    subject: "הפרומפטים שלך מחכים לך + בונוס קרדיטים",
+    html: (name, unsubscribeUrl) =>
+      emailLayoutBranded(
+        `
       <h2 style="color: #f59e0b; font-size: 22px;">היי ${escapeHtml(name)}</h2>
-      <p>עברו שבועיים מאז ביקרת ב-Peroot. הספריה האישית שלך עדיין שומרת את כל הפרומפטים שיצרת.</p>
+      <p>עברו שבועיים מאז ביקרת ב-Peroot. הספרייה האישית שלך עדיין שומרת את כל הפרומפטים שיצרת.</p>
 
       <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 20px 0;">
         <p style="font-weight: bold; margin: 0 0 8px 0;">מתנה קטנה ממנו:</p>
@@ -50,13 +57,18 @@ export const REENGAGEMENT_TEMPLATES: ReengagementTemplate[] = [
       <div style="text-align: center; margin-top: 30px;">
         <a href="${APP_URL}" style="background: #f59e0b; color: #000; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold;">חזרו עכשיו</a>
       </div>
-    `, unsubscribeUrl, 'הסרה ממיילי ריאנגייג׳מנט'),
+    `,
+        unsubscribeUrl,
+        "הסרה ממיילי ריאנגייג׳מנט",
+      ),
   },
   {
-    id: 'inactive_30d',
+    id: "inactive_30d",
     inactiveDays: 30,
-    subject: 'נשמח לדעת מה חסר לך',
-    html: (name, unsubscribeUrl) => emailLayoutBranded(`
+    subject: "נשמח לדעת מה חסר לך",
+    html: (name, unsubscribeUrl) =>
+      emailLayoutBranded(
+        `
       <h2 style="color: #8b5cf6; font-size: 22px;">היי ${escapeHtml(name)}</h2>
       <p>עבר חודש מאז שהשתמשת ב-Peroot. נשמח לדעת איך נוכל להיות שימושיים יותר בשבילך.</p>
 
@@ -74,6 +86,9 @@ export const REENGAGEMENT_TEMPLATES: ReengagementTemplate[] = [
       <div style="text-align: center; margin-top: 30px;">
         <a href="${APP_URL}" style="background: linear-gradient(135deg, #f59e0b, #eab308); color: #0a0a0a; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 800;">חזרו ל-Peroot</a>
       </div>
-    `, unsubscribeUrl, 'הסרה ממיילי ריאנגייג׳מנט'),
+    `,
+        unsubscribeUrl,
+        "הסרה ממיילי ריאנגייג׳מנט",
+      ),
   },
 ];

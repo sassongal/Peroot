@@ -331,7 +331,7 @@ export function PromptCard({
             <button
               onClick={onSaveToPersonal}
               className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
-              title="שמור לספריה אישית"
+              title="שמור לספרייה אישית"
             >
               <BookOpen className="w-4 h-4" />
               <span className="hidden md:inline text-sm">שמור</span>

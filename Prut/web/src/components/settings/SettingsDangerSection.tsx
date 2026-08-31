@@ -41,8 +41,8 @@ export function SettingsDangerSection({
           <div className="flex-1">
             <h3 className="font-semibold text-red-400">מחיקת חשבון</h3>
             <p className="text-sm text-slate-400">
-              מחיקת החשבון תסיר לצמיתות את כל הנתונים שלך כולל היסטוריה, ספריה אישית ומועדפים. פעולה
-              זו לא ניתנת לביטול.
+              מחיקת החשבון תסיר לצמיתות את כל הנתונים שלך כולל היסטוריה, ספרייה אישית ומועדפים.
+              פעולה זו לא ניתנת לביטול.
             </p>
           </div>
         </div>

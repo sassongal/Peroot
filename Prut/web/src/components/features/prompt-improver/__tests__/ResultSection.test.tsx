@@ -16,7 +16,7 @@ vi.mock("@/context/I18nContext", () => ({
       copy_tooltip: "העתק",
       copy_button: "העתק פרומפט",
       copied: "הועתק!",
-      save: "שמור בספריה",
+      save: "שמור בספרייה",
       variables_title: "משתנים",
     },
     toasts: { copied: "הועתק" },
@@ -74,7 +74,7 @@ describe("ResultSection, redesign", () => {
     expect(screen.getByTestId("more-panel")).toHaveClass(/morePanelOpen/);
   });
 
-  it("'שמור בספריה' in more panel is enabled by default", () => {
+  it("'שמור בספרייה' in more panel is enabled by default", () => {
     render(<ResultSection {...defaultProps} />);
     fireEvent.click(screen.getByRole("button", { name: /עוד אפשרויות/ }));
     const saveBtn = screen.getByTestId("more-save-library");

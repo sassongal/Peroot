@@ -557,10 +557,10 @@ export function ResultSection({
               <BookOpen className="w-[14px] h-[14px]" style={{ opacity: 0.5 }} />
               {savedToLibrary ? (
                 <>
-                  שמור בספריה <span className={styles.savedBadge}>✓ נשמר</span>
+                  שמור בספרייה <span className={styles.savedBadge}>✓ נשמר</span>
                 </>
               ) : (
-                "שמור בספריה"
+                "שמור בספרייה"
               )}
             </button>
 

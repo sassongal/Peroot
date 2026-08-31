@@ -344,7 +344,7 @@ export default async function CategoryPage({ params }: Props) {
               רוצים פרומפטים מותאמים אישית?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-              הצטרפו ל-Peroot וצרו פרומפטים מקצועיים בשניות. שדרוג אוטומטי, ספריה אישית וגישה ל-
+              הצטרפו ל-Peroot וצרו פרומפטים מקצועיים בשניות. שדרוג אוטומטי, ספרייה אישית וגישה ל-
               {PROMPT_LIBRARY_COUNT} פרומפטים.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
