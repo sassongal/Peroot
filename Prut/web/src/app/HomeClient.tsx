@@ -721,15 +721,6 @@ function PageContent() {
 
   const enhanceCooldownRef = useRef(false);
 
-  // Surprise Me - random prompt
-  const handleSurpriseMe = () => {
-    if (!filteredLibrary || filteredLibrary.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * filteredLibrary.length);
-    const randomPrompt = filteredLibrary[randomIndex];
-    dispatch({ type: "SET_INPUT", payload: randomPrompt.prompt });
-    toast.success(`"${randomPrompt.title}" נטען!`);
-  };
-
   const handleEnhance = useCallback(
     async (textOverride?: string) => {
       // textOverride lets "שפר שוב" refine the generated result instead of the
@@ -1692,11 +1683,6 @@ function PageContent() {
             onUsePrompt={handleUsePrompt}
             incrementUseCount={incrementUseCount}
             onNavToPersonalLibrary={() => setViewMode("personal")}
-            filteredLibrary={filteredLibrary}
-            libraryPrompts={libraryPrompts}
-            onSurpriseMe={handleSurpriseMe}
-            onNavLibrary={handleNavLibrary}
-            dispatch={dispatch}
             contextAttachments={context.attachments}
             onAddFile={context.addFile}
             onAddFiles={context.addFiles}

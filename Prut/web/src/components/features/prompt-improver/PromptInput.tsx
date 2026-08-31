@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useMemo, Dispatch, SetStateAction } from "react";
-import { Wand2, Mic, MicOff, Paperclip, Globe, ImageIcon, Zap } from "lucide-react";
+import { Wand2, Mic, MicOff, Paperclip, Globe, ImageIcon, Zap, Plus } from "lucide-react";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
@@ -203,6 +203,9 @@ export function PromptInput({
   const [isDragOver, setIsDragOver] = useState(false);
   const [scoreBreakdownOpen, setScoreBreakdownOpen] = useState(false);
   const [guestGateFeature, setGuestGateFeature] = useState<string | null>(null);
+  // U2.1: the tools row (files/URL/image/mic/language/model) is collapsed
+  // behind one "+" button by default.
+  const [showTools, setShowTools] = useState(false);
 
   // Image/video engines always emit English prompts (generation platforms
   // require it), so the output-language control is locked there.
@@ -517,259 +520,288 @@ export function PromptInput({
               </div>
             </div>
 
-            {/* Voice + Context Icons row — z-40 so TargetModelSelect dropdown stacks above footer (z-20) and enhance CTA */}
-            <div className="flex items-center justify-between px-6 pt-2 relative z-40">
-              {/* Right side (RTL): Voice + Language */}
-              <div className="flex items-center gap-1.5">
-                {isSupported && (
-                  <>
-                    <button
-                      onClick={toggleListening}
-                      className={cn(
-                        "p-2.5 min-h-[44px] min-w-[44px] rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
-                        isListening
-                          ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse"
-                          : "bg-black/5 dark:bg-black/30 text-(--text-muted) border border-(--glass-border) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10",
-                      )}
-                      title={isListening ? "עצור הקלטה" : "הקלט קולית"}
-                      aria-label={isListening ? "עצור הקלטה" : "הקלט קולית"}
-                    >
-                      {isListening ? (
-                        <MicOff className="w-5 h-5" />
-                      ) : (
-                        <Mic className="w-5 h-5 group-hover/mic:scale-110 transition-transform" />
-                      )}
-                    </button>
-                    {isListening && (
-                      <span className="text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
-                        מקליט...
-                      </span>
-                    )}
-                  </>
+            {/* Tools row (U2.1 first-screen diet): everything secondary —
+                files, URL, image, mic, output language, target model — folds
+                behind ONE "+" toggle so the first screen carries the task,
+                not the toolbox. z-40 so TargetModelSelect dropdown stacks
+                above footer (z-20) and enhance CTA. */}
+            <div className="flex items-start justify-between px-6 pt-2 relative z-40 gap-2">
+              <button
+                type="button"
+                onClick={() => setShowTools((prev) => !prev)}
+                aria-expanded={showTools}
+                aria-label={showTools ? "סגור כלים" : "כלים: קבצים, קול, שפה ומודל יעד"}
+                className={cn(
+                  "shrink-0 flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-full text-xs font-medium border transition-all cursor-pointer relative",
+                  showTools
+                    ? "bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-300"
+                    : "bg-black/5 dark:bg-black/30 border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10",
                 )}
-                {/* Output language — this control sets the RESULT language (it
+              >
+                <Plus
+                  className={cn(
+                    "w-4 h-4 transition-transform duration-200",
+                    showTools && "rotate-45",
+                  )}
+                />
+                <span>כלים</span>
+                {hasAttachments && !showTools && (
+                  <span
+                    className="absolute -top-0.5 -start-0.5 w-2 h-2 rounded-full bg-amber-400"
+                    title="יש קבצים מצורפים"
+                  />
+                )}
+              </button>
+              {showTools && (
+                <div className="flex items-center gap-1.5 flex-wrap animate-in fade-in duration-200">
+                  {isSupported && (
+                    <>
+                      <button
+                        onClick={toggleListening}
+                        className={cn(
+                          "p-2.5 min-h-[44px] min-w-[44px] rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
+                          isListening
+                            ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse"
+                            : "bg-black/5 dark:bg-black/30 text-(--text-muted) border border-(--glass-border) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10",
+                        )}
+                        title={isListening ? "עצור הקלטה" : "הקלט קולית"}
+                        aria-label={isListening ? "עצור הקלטה" : "הקלט קולית"}
+                      >
+                        {isListening ? (
+                          <MicOff className="w-5 h-5" />
+                        ) : (
+                          <Mic className="w-5 h-5 group-hover/mic:scale-110 transition-transform" />
+                        )}
+                      </button>
+                      {isListening && (
+                        <span className="text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
+                          מקליט...
+                        </span>
+                      )}
+                    </>
+                  )}
+                  {/* Output language — this control sets the RESULT language (it
                     also drives voice recognition), so it lives outside the mic
                     support gate: browsers without SpeechRecognition still get
                     it. Image/video modes force English (platform requirement),
                     so it is disabled there with the reason. */}
-                <div className="relative" data-lang-picker>
-                  <button
-                    onClick={() => setShowLangPicker((prev) => !prev)}
-                    disabled={outputLangLocked}
-                    className={cn(
-                      "px-2 py-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center gap-1 rounded-full text-xs bg-black/5 dark:bg-black/30 border border-(--glass-border) backdrop-blur-md transition-all",
-                      outputLangLocked
-                        ? "text-(--text-muted) opacity-50 cursor-not-allowed"
-                        : "text-(--text-muted) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer",
-                    )}
-                    title={
-                      outputLangLocked
-                        ? "במצבי תמונה ווידאו הפלט באנגלית, זו דרישת פלטפורמות היצירה"
-                        : "שפת הפלט של הפרומפט"
-                    }
-                    aria-label="בחר את שפת הפלט"
-                  >
-                    <Globe className="w-3.5 h-3.5" />
-                    {outputLangLocked
-                      ? "EN"
-                      : (VOICE_LANGUAGES.find((l) => l.code === voiceLang)?.short ?? "HE")}
-                  </button>
-                  {showLangPicker && !outputLangLocked && (
-                    <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-(--glass-border) rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[120px] md:min-w-[140px] max-w-[calc(100vw-2rem)]">
-                      <div className="px-3 pt-2 pb-1 text-[10px] text-(--text-muted)">שפת הפלט</div>
-                      {VOICE_LANGUAGES.map((lang) => (
-                        <button
-                          key={lang.code}
-                          onClick={() => {
-                            setVoiceLang(lang.code);
-                            setShowLangPicker(false);
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
-                            voiceLang === lang.code
-                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
-                              : "text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/5",
-                          )}
-                        >
-                          <span className="font-mono font-bold text-[10px]">{lang.short}</span>
-                          <span>{lang.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Left side (RTL): Context attachment icons + model selector */}
-              <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                {capabilitySupportsTargetModel(selectedCapability) && (
-                  <TargetModelSelect
-                    value={targetModel}
-                    onChange={setTargetModel}
-                    disabled={isLoading}
-                  />
-                )}
-
-                {/* File upload */}
-                {onAddFile && (
-                  <>
-                    {!isGuest && (
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
-                        multiple
-                        className="hidden"
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files ?? []);
-                          if (files.length > 1 && onAddFiles) {
-                            onAddFiles(files)
-                              .then(() => toast.success(`${files.length} קבצים נקלטו בהצלחה`))
-                              .catch((err: unknown) =>
-                                toastUploadError(
-                                  err instanceof Error ? err.message : "שגיאה בהוספת קבצים",
-                                ),
-                              );
-                          } else if (files.length > 1) {
-                            // onAddFiles not wired — fall back to first file only
-                            toast.info("ניתן לצרף קובץ אחד בכל פעם");
-                          } else if (files.length === 1) {
-                            Promise.resolve()
-                              .then(() => onAddFile(files[0]))
-                              .then(() => toast.success(`"${files[0].name}" נקלט בהצלחה`))
-                              .catch((err: unknown) =>
-                                toastUploadError(
-                                  err instanceof Error ? err.message : "שגיאה בהוספת קובץ",
-                                ),
-                              );
-                          }
-                          e.target.value = "";
-                        }}
-                      />
-                    )}
+                  <div className="relative" data-lang-picker>
                     <button
-                      onClick={() => {
-                        if (isGuest) setGuestGateFeature("צירוף קבצים");
-                        else fileInputRef.current?.click();
-                      }}
+                      onClick={() => setShowLangPicker((prev) => !prev)}
+                      disabled={outputLangLocked}
                       className={cn(
-                        "p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors cursor-pointer",
-                        "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
+                        "px-2 py-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center gap-1 rounded-full text-xs bg-black/5 dark:bg-black/30 border border-(--glass-border) backdrop-blur-md transition-all",
+                        outputLangLocked
+                          ? "text-(--text-muted) opacity-50 cursor-not-allowed"
+                          : "text-(--text-muted) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer",
                       )}
                       title={
-                        isGuest ? "התחבר/י כדי לצרף קובץ" : "צרף קובץ (PDF, Word, Excel, CSV, TXT)"
+                        outputLangLocked
+                          ? "במצבי תמונה ווידאו הפלט באנגלית, זו דרישת פלטפורמות היצירה"
+                          : "שפת הפלט של הפרומפט"
                       }
-                      aria-label="צרף קובץ"
-                      disabled={isLoading}
+                      aria-label="בחר את שפת הפלט"
                     >
-                      <Paperclip className="w-4 h-4" />
+                      <Globe className="w-3.5 h-3.5" />
+                      {outputLangLocked
+                        ? "EN"
+                        : (VOICE_LANGUAGES.find((l) => l.code === voiceLang)?.short ?? "HE")}
                     </button>
-                  </>
-                )}
-
-                {/* URL input */}
-                {onAddUrl && (
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        if (isGuest) setGuestGateFeature("צירוף קישור");
-                        else setShowUrlInput((prev) => !prev);
-                      }}
-                      className={cn(
-                        "p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors cursor-pointer",
-                        showUrlInput
-                          ? "text-amber-400 bg-amber-500/10"
-                          : "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
-                      )}
-                      title={isGuest ? "התחבר/י כדי לצרף קישור" : "צרף קישור URL"}
-                      aria-label="צרף קישור"
-                      disabled={isLoading}
-                    >
-                      <Globe className="w-4 h-4" />
-                    </button>
-                    {!isGuest && showUrlInput && (
-                      <div className="absolute bottom-full end-0 mb-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                        <input
-                          type="url"
-                          value={urlValue}
-                          onChange={(e) => setUrlValue(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && urlValue.trim()) {
-                              const url = urlValue.trim();
-                              setUrlValue("");
-                              setShowUrlInput(false);
-                              Promise.resolve()
-                                .then(() => onAddUrl(url))
-                                .then(() => toast.success("הקישור נוסף ועובד בהצלחה"))
-                                .catch((err: unknown) =>
-                                  toastUploadError(
-                                    err instanceof Error ? err.message : "שגיאה בהוספת קישור",
-                                  ),
-                                );
-                            }
-                            if (e.key === "Escape") setShowUrlInput(false);
-                          }}
-                          placeholder="הדביקו כתובת URL ולחצו Enter"
-                          className="w-64 px-3 py-2 rounded-xl text-xs bg-white/95 dark:bg-zinc-900/95 border border-(--glass-border) text-(--text-primary) placeholder:text-(--text-muted) shadow-xl backdrop-blur-md focus:outline-none focus:border-amber-500/50"
-                          dir="ltr"
-                          autoFocus
-                        />
+                    {showLangPicker && !outputLangLocked && (
+                      <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-(--glass-border) rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[120px] md:min-w-[140px] max-w-[calc(100vw-2rem)]">
+                        <div className="px-3 pt-2 pb-1 text-[10px] text-(--text-muted)">
+                          שפת הפלט
+                        </div>
+                        {VOICE_LANGUAGES.map((lang) => (
+                          <button
+                            key={lang.code}
+                            onClick={() => {
+                              setVoiceLang(lang.code);
+                              setShowLangPicker(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
+                              voiceLang === lang.code
+                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
+                                : "text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/5",
+                            )}
+                          >
+                            <span className="font-mono font-bold text-[10px]">{lang.short}</span>
+                            <span>{lang.label}</span>
+                          </button>
+                        ))}
                       </div>
                     )}
                   </div>
-                )}
 
-                {/* Image upload */}
-                {onAddImage && (
-                  <>
-                    {!isGuest && (
-                      <input
-                        ref={imageInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            Promise.resolve()
-                              .then(() => onAddImage(file))
-                              .then(() => toast.success(`"${file.name}" נוספה ועובדה בהצלחה`))
-                              .catch((err: unknown) =>
-                                toastUploadError(
-                                  err instanceof Error ? err.message : "שגיאה בהוספת תמונה",
-                                ),
-                              );
-                          }
-                          e.target.value = "";
-                        }}
-                      />
-                    )}
-                    <button
-                      onClick={() => {
-                        if (isGuest) setGuestGateFeature("צירוף תמונה");
-                        else imageInputRef.current?.click();
-                      }}
-                      className={cn(
-                        "p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors cursor-pointer",
-                        "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
-                      )}
-                      title={isGuest ? "התחבר/י כדי לצרף תמונה" : "צרף תמונה"}
-                      aria-label="צרף תמונה"
+                  {capabilitySupportsTargetModel(selectedCapability) && (
+                    <TargetModelSelect
+                      value={targetModel}
+                      onChange={setTargetModel}
                       disabled={isLoading}
-                    >
-                      <ImageIcon className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
+                    />
+                  )}
 
-                {/* Attachment indicator dot */}
-                {hasAttachments && (
-                  <div
-                    className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"
-                    title="יש קבצים מצורפים"
-                  />
-                )}
-              </div>
+                  {/* File upload */}
+                  {onAddFile && (
+                    <>
+                      {!isGuest && (
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files ?? []);
+                            if (files.length > 1 && onAddFiles) {
+                              onAddFiles(files)
+                                .then(() => toast.success(`${files.length} קבצים נקלטו בהצלחה`))
+                                .catch((err: unknown) =>
+                                  toastUploadError(
+                                    err instanceof Error ? err.message : "שגיאה בהוספת קבצים",
+                                  ),
+                                );
+                            } else if (files.length > 1) {
+                              // onAddFiles not wired — fall back to first file only
+                              toast.info("ניתן לצרף קובץ אחד בכל פעם");
+                            } else if (files.length === 1) {
+                              Promise.resolve()
+                                .then(() => onAddFile(files[0]))
+                                .then(() => toast.success(`"${files[0].name}" נקלט בהצלחה`))
+                                .catch((err: unknown) =>
+                                  toastUploadError(
+                                    err instanceof Error ? err.message : "שגיאה בהוספת קובץ",
+                                  ),
+                                );
+                            }
+                            e.target.value = "";
+                          }}
+                        />
+                      )}
+                      <button
+                        onClick={() => {
+                          if (isGuest) setGuestGateFeature("צירוף קבצים");
+                          else fileInputRef.current?.click();
+                        }}
+                        className={cn(
+                          "p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors cursor-pointer",
+                          "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
+                        )}
+                        title={
+                          isGuest
+                            ? "התחבר/י כדי לצרף קובץ"
+                            : "צרף קובץ (PDF, Word, Excel, CSV, TXT)"
+                        }
+                        aria-label="צרף קובץ"
+                        disabled={isLoading}
+                      >
+                        <Paperclip className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+
+                  {/* URL input */}
+                  {onAddUrl && (
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          if (isGuest) setGuestGateFeature("צירוף קישור");
+                          else setShowUrlInput((prev) => !prev);
+                        }}
+                        className={cn(
+                          "p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors cursor-pointer",
+                          showUrlInput
+                            ? "text-amber-400 bg-amber-500/10"
+                            : "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
+                        )}
+                        title={isGuest ? "התחבר/י כדי לצרף קישור" : "צרף קישור URL"}
+                        aria-label="צרף קישור"
+                        disabled={isLoading}
+                      >
+                        <Globe className="w-4 h-4" />
+                      </button>
+                      {!isGuest && showUrlInput && (
+                        <div className="absolute bottom-full end-0 mb-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                          <input
+                            type="url"
+                            value={urlValue}
+                            onChange={(e) => setUrlValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && urlValue.trim()) {
+                                const url = urlValue.trim();
+                                setUrlValue("");
+                                setShowUrlInput(false);
+                                Promise.resolve()
+                                  .then(() => onAddUrl(url))
+                                  .then(() => toast.success("הקישור נוסף ועובד בהצלחה"))
+                                  .catch((err: unknown) =>
+                                    toastUploadError(
+                                      err instanceof Error ? err.message : "שגיאה בהוספת קישור",
+                                    ),
+                                  );
+                              }
+                              if (e.key === "Escape") setShowUrlInput(false);
+                            }}
+                            placeholder="הדביקו כתובת URL ולחצו Enter"
+                            className="w-64 px-3 py-2 rounded-xl text-xs bg-white/95 dark:bg-zinc-900/95 border border-(--glass-border) text-(--text-primary) placeholder:text-(--text-muted) shadow-xl backdrop-blur-md focus:outline-none focus:border-amber-500/50"
+                            dir="ltr"
+                            autoFocus
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Image upload */}
+                  {onAddImage && (
+                    <>
+                      {!isGuest && (
+                        <input
+                          ref={imageInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              Promise.resolve()
+                                .then(() => onAddImage(file))
+                                .then(() => toast.success(`"${file.name}" נוספה ועובדה בהצלחה`))
+                                .catch((err: unknown) =>
+                                  toastUploadError(
+                                    err instanceof Error ? err.message : "שגיאה בהוספת תמונה",
+                                  ),
+                                );
+                            }
+                            e.target.value = "";
+                          }}
+                        />
+                      )}
+                      <button
+                        onClick={() => {
+                          if (isGuest) setGuestGateFeature("צירוף תמונה");
+                          else imageInputRef.current?.click();
+                        }}
+                        className={cn(
+                          "p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors cursor-pointer",
+                          "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
+                        )}
+                        title={isGuest ? "התחבר/י כדי לצרף תמונה" : "צרף תמונה"}
+                        aria-label="צרף תמונה"
+                        disabled={isLoading}
+                      >
+                        <ImageIcon className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Attachment indicator dot */}
+                  {hasAttachments && (
+                    <div className="w-2 h-2 rounded-full bg-amber-400" title="יש קבצים מצורפים" />
+                  )}
+                </div>
+              )}
             </div>
 
             {!inputVal.trim() && !isListening && (

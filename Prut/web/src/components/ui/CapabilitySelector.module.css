@@ -126,22 +126,18 @@
   filter: drop-shadow(0 2px 8px rgba(253,190,0,0.4));
 }
 
-/* Mode label under icon */
+/* Mode label under icon — ALWAYS visible (U2.1: no naked icons on mobile;
+   four of the five modes were unlabeled unless active). */
 .pillLabel {
   font-size: 10px;
   font-weight: 700;
   color: var(--text-muted);
-  opacity: 0;
-  max-height: 0;
-  overflow: hidden;
-  transition: opacity 0.25s, max-height 0.35s;
   position: relative;
   z-index: 1;
   white-space: nowrap;
+  transition: color 0.25s;
 }
 .pillBtnActive .pillLabel {
-  opacity: 1;
-  max-height: 16px;
   color: var(--text-primary);
 }
 

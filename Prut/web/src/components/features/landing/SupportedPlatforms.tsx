@@ -95,19 +95,24 @@ function MarqueeRow({
 
 function SupportedPlatformsImpl() {
   return (
-    <section
-      aria-label="פלטפורמות נתמכות"
-      className="mt-6 mb-4 -mx-4 md:-mx-6 select-none"
-    >
+    <section aria-label="פלטפורמות נתמכות" className="mt-6 mb-4 -mx-4 md:-mx-6 select-none">
       {/* Local keyframes + reduced-motion + edge fade */}
       <style jsx>{`
         @keyframes peroot-marquee-left {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
         }
         @keyframes peroot-marquee-right {
-          from { transform: translateX(-50%); }
-          to   { transform: translateX(0); }
+          from {
+            transform: translateX(-50%);
+          }
+          to {
+            transform: translateX(0);
+          }
         }
         @media (prefers-reduced-motion: reduce) {
           :global(.marquee-track) {
@@ -134,7 +139,7 @@ function SupportedPlatformsImpl() {
 
       <div className="flex items-center justify-center mb-3 px-4">
         <span className="text-xs font-medium text-(--text-muted) tracking-wide">
-          לכל מנוע שפה משלו. פרוט מדבר את כולן.
+          לכל מנוע שפה משלו. פירוט מדבר את כולן.
         </span>
       </div>
 

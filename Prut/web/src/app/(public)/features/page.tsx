@@ -31,6 +31,7 @@ import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { CursorSpotlight } from "@/components/ui/CursorSpotlight";
 import { CtaPulse } from "@/components/ui/CtaPulse";
 import { BrandWatermark } from "@/components/ui/BrandWatermark";
+import { SupportedPlatforms } from "@/components/features/landing/SupportedPlatforms";
 import Image from "next/image";
 
 const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
@@ -556,6 +557,11 @@ export default function FeaturesPage() {
                 ))}
               </div>
             </div>
+          </section>
+
+          {/* ── Supported engines marquee (moved from the homepage, U2.1) ── */}
+          <section className="pb-10">
+            <SupportedPlatforms />
           </section>
 
           {/* ── Storytelling Walkthrough ── */}
