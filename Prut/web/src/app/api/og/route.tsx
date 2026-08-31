@@ -127,8 +127,56 @@ function getHebrewFont(): Promise<ArrayBuffer | null> {
   return hebrewFontPromise;
 }
 
+// ---------------------------------------------------------------------------
+// Brand assets — the real puzzle-פ mark and the gold "פֵּרוּט" hero wordmark
+// (the wordmark is an image, so it needs no BiDi handling and carries the
+// niqqud exactly as the site hero does). Fetched once per isolate from our
+// own public/ and embedded as data URIs; on any failure the bar falls back
+// to text so the image still renders.
+// ---------------------------------------------------------------------------
+
+const ASSET_BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+
+function bufToDataUri(buf: ArrayBuffer, mime: string): string {
+  const bytes = new Uint8Array(buf);
+  let bin = "";
+  const CHUNK = 8192;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return `data:${mime};base64,${btoa(bin)}`;
+}
+
+async function loadPngAsset(path: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${ASSET_BASE}${path}`);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    // PNG magic bytes — never feed an HTML error page to the renderer
+    const sig = new Uint8Array(buf.slice(0, 4));
+    if (sig[0] !== 0x89 || sig[1] !== 0x50 || sig[2] !== 0x4e || sig[3] !== 0x47) return null;
+    return bufToDataUri(buf, "image/png");
+  } catch {
+    return null;
+  }
+}
+
+let brandAssetsPromise: Promise<{ mark: string | null; wordmark: string | null }> | null = null;
+function getBrandAssets(): Promise<{ mark: string | null; wordmark: string | null }> {
+  if (!brandAssetsPromise) {
+    brandAssetsPromise = Promise.all([
+      loadPngAsset("/images/peroot_logo_pack/logo_dark_navbar_2x.png"),
+      loadPngAsset("/Peroot-hero.png"),
+    ]).then(([mark, wordmark]) => {
+      if (!mark && !wordmark) brandAssetsPromise = null;
+      return { mark, wordmark };
+    });
+  }
+  return brandAssetsPromise;
+}
+
 export async function GET(req: NextRequest) {
-  const fontData = await getHebrewFont();
+  const [fontData, brand] = await Promise.all([getHebrewFont(), getBrandAssets()]);
 
   const { searchParams } = req.nextUrl;
   const title = searchParams.get("title") || "Peroot";
@@ -227,24 +275,39 @@ export async function GET(req: NextRequest) {
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "8px",
-              background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}99)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "16px",
-              fontWeight: 900,
-              color: "white",
-            }}
-          >
-            P
-          </div>
-          <div style={{ fontSize: "16px", fontWeight: 700, color: "#e2e8f0" }}>PEROOT</div>
+        {/* Real brand: puzzle-פ mark + the gold פֵּרוּט wordmark (image, so the
+            niqqud renders exactly as the site hero). Text fallback if assets
+            failed to load. */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {brand.mark ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={brand.mark} alt="" width={38} height={38} />
+          ) : (
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                background: "linear-gradient(135deg, #F59E0B, #D97706)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "16px",
+                fontWeight: 900,
+                color: "white",
+              }}
+            >
+              פ
+            </div>
+          )}
+          {brand.wordmark ? (
+            // Hero wordmark is 720x316 — keep the aspect at 36px tall
+            <img src={brand.wordmark} alt="" width={82} height={36} />
+          ) : (
+            <div style={{ fontSize: "18px", fontWeight: 700, color: "#e2e8f0" }}>
+              {toVisualOrder("פרוט")}
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <div
