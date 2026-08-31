@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/", "/api/og"],
-        disallow: ["/admin/", "/api/", "/auth/", "/settings", "/developer"],
+        disallow: ["/admin/", "/api/", "/auth/", "/settings"],
       },
       // ── Search-time AI bots (explicitly allow) ────────────────────────────
       // These power ChatGPT search, Perplexity, Claude web, DuckDuckGo AI, Mistral,

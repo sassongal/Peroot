@@ -978,9 +978,9 @@ export default function GuidePage() {
               {/* Cross-links */}
               <section className="mt-8 mb-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <CrossLinkCard
-                  href="/guide/prompt-engineering"
-                  title="הנדסת פרומפטים: המדריך המעמיק"
-                  description="טכניקות מתקדמות, צ'קליסט ודוגמאות לפני ואחרי"
+                  href="/blog"
+                  title="הבלוג של פירוט"
+                  description="מאמרים מעשיים על עבודה נכונה עם מנועי AI"
                 />
                 <CrossLinkCard
                   href="/prompts"

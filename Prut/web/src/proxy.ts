@@ -36,7 +36,6 @@ const AUTH_REQUIRED_PREFIXES = [
   "/api/personal-library",
   "/api/chain",
   "/api/context",
-  "/api/speed-test",
   "/api/share",
   "/api/developer-keys",
   "/api/prompts/versions",

@@ -78,12 +78,6 @@ export function Footer() {
             {isHe ? "מדריך" : "Guide"}
           </Link>
           <Link
-            href="/guide/prompt-engineering"
-            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
-          >
-            {isHe ? "הנדסת פרומפטים" : "Prompt Engineering"}
-          </Link>
-          <Link
             href="/guides"
             className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
           >

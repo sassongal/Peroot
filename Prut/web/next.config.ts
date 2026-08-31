@@ -61,6 +61,15 @@ const nextConfig: NextConfig = {
         destination: "https://www.peroot.space/:path*",
         permanent: true,
       },
+      // U3.4: one prompt-writing guide. The two pages that answered the same
+      // question 301 into /guide so their equity consolidates instead of
+      // competing in search results.
+      { source: "/guide/prompt-engineering", destination: "/guide", permanent: true },
+      { source: "/blog/how-to-write-good-prompt", destination: "/guide", permanent: true },
+      // U3.5: orphan surfaces removed.
+      { source: "/developer", destination: "/connect", permanent: true },
+      { source: "/onboarding-preview", destination: "/", permanent: true },
+      { source: "/speed-test", destination: "/", permanent: true },
     ];
   },
   images: {
