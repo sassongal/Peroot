@@ -46,6 +46,10 @@ Peroot גם מחולל וגם משדרג פרומפטים בעברית: מנתח
 
 ${categories}
 
+## Full documentation
+
+- [llms-full.txt](${SITE_URL}/llms-full.txt): expanded English documentation of all five modes and the platform
+
 ## Organization
 
 - Peroot is built by JoyaTech (Gal Sasson), Haifa, Israel. Contact: ${SITE_URL}/contact

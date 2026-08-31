@@ -8,7 +8,7 @@
 - [Blog](https://www.peroot.space/blog): Guides and tutorials on prompt engineering
 - [Examples](https://www.peroot.space/examples): Sample prompts and use cases
 - [Prompt Writing Guide](https://www.peroot.space/guide): Professional Hebrew prompt engineering guide
-- [Prompt Library Index](https://www.peroot.space/prompts): Browse 480+ prompts by category
+- [Prompt Library Index](https://www.peroot.space/prompts): Browse 650+ free Hebrew prompts by category
 - [Privacy Policy](https://www.peroot.space/privacy)
 - [Terms of Service](https://www.peroot.space/terms)
 - [Contact](https://www.peroot.space/contact)
