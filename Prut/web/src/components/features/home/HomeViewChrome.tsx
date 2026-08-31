@@ -154,14 +154,15 @@ function HomeViewChromeInner({
           איך זה עובד
         </Link>
 
-        {/* Did You Know banner — reserve min-height to prevent CLS */}
+        {children}
+
+        {/* Did You Know — BELOW the task area (U2.2: never above the mode
+            selector), reserved height to prevent CLS. */}
         {!hasCompletion && !isLoading && (
           <div className="min-h-[48px]">
             <DidYouKnowBanner />
           </div>
         )}
-
-        {children}
       </div>
 
       {/* Login Modal */}

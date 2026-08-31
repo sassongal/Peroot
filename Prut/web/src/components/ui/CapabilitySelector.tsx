@@ -478,7 +478,8 @@ export function CapabilitySelector({
                 <Icon size={24} />
               </span>
               <span className={styles.pillLabel}>
-                {isLocked ? <Lock className="w-3 h-3 inline" /> : config.labelHe}
+                {isLocked && <Lock className="w-2.5 h-2.5 inline ms-0.5 opacity-70" />}
+                {config.labelHe}
               </span>
             </button>
           );

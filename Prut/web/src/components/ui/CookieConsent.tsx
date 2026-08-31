@@ -45,39 +45,36 @@ export function CookieConsent() {
       role="dialog"
       aria-label="הסכמה לעוגיות"
     >
-      <div className="max-w-2xl mx-auto bg-white dark:bg-[#111] border border-border rounded-2xl p-5 shadow-2xl backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center gap-4">
-        <div className="flex-1">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            אנחנו משתמשים בעוגיות לשיפור חווית השימוש ולניתוח נתונים.{" "}
-            <a
-              href="/privacy"
-              className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 underline underline-offset-2"
-            >
-              מדיניות פרטיות
-            </a>
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={handleAccept}
-            className="px-5 py-2 rounded-lg bg-amber-500 text-black text-sm font-semibold hover:bg-amber-400 transition-colors cursor-pointer"
+      {/* Compact single row (U2.2): the banner must never bury the input box. */}
+      <div className="max-w-2xl mx-auto bg-white dark:bg-[#111] border border-border rounded-xl px-3 py-2 shadow-2xl backdrop-blur-xl flex items-center gap-2">
+        <p className="flex-1 min-w-0 text-xs text-muted-foreground leading-snug">
+          אנחנו משתמשים בעוגיות לשיפור החוויה.{" "}
+          <a
+            href="/privacy"
+            className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 underline underline-offset-2"
           >
-            מאשר
-          </button>
-          <button
-            onClick={handleDecline}
-            className="px-5 py-2 rounded-lg border border-border text-muted-foreground text-sm hover:bg-secondary transition-colors cursor-pointer"
-          >
-            דחה
-          </button>
-          <button
-            onClick={handleDecline}
-            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-            aria-label="סגור"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+            פרטיות
+          </a>
+        </p>
+        <button
+          onClick={handleAccept}
+          className="shrink-0 px-4 py-1.5 min-h-[36px] rounded-lg bg-amber-500 text-black text-xs font-semibold hover:bg-amber-400 transition-colors cursor-pointer"
+        >
+          מאשר
+        </button>
+        <button
+          onClick={handleDecline}
+          className="shrink-0 px-3 py-1.5 min-h-[36px] rounded-lg border border-border text-muted-foreground text-xs hover:bg-secondary transition-colors cursor-pointer"
+        >
+          דחה
+        </button>
+        <button
+          onClick={handleDecline}
+          className="shrink-0 p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+          aria-label="סגור"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
