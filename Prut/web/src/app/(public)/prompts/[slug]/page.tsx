@@ -11,10 +11,6 @@ import { breadcrumbSchema, promptCollectionSchema, howToSchema, faqSchema } from
 import { CATEGORY_CONTENT } from "@/lib/category-content";
 import { PromptCardBodyGate } from "./PromptCardBodyGate";
 
-// Max chars of prompt body to render in public HTML. Guests see a preview;
-// authed clients fetch full text via /api/p/batch after mount.
-const PUBLIC_PREVIEW_CHARS = 160;
-
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 interface Props {
@@ -112,7 +108,7 @@ export default async function CategoryPage({ params }: Props) {
     .eq("is_active", true)
     .ilike("category_id", categoryData.id.toLowerCase())
     .order("created_at", { ascending: false })
-    .limit(60);
+    .limit(200); // covers the largest category (68) with headroom — a 60 cap orphaned tail prompts into sitemap-only pages
 
   const prompts: LibraryRow[] = error ? [] : data || [];
 
@@ -268,11 +264,7 @@ export default async function CategoryPage({ params }: Props) {
                       capabilityMode={prompt.capability_mode}
                       variables={prompt.variables}
                       detailHref={`/prompts/${slug}/${prompt.id}`}
-                      previewText={
-                        prompt.prompt.length > PUBLIC_PREVIEW_CHARS
-                          ? prompt.prompt.slice(0, PUBLIC_PREVIEW_CHARS).trimEnd() + "…"
-                          : prompt.prompt
-                      }
+                      fullText={prompt.prompt}
                     />
                   </article>
                 ))}

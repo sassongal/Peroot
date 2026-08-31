@@ -3,7 +3,11 @@ import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generateBlogPost, getGenerationContext } from "@/lib/content-factory/generate";
-import { generateSlugPair, ensureUniqueSlug, calculateReadTime } from "@/lib/content-factory/slug-utils";
+import {
+  generateSlugPair,
+  ensureUniqueSlug,
+  calculateReadTime,
+} from "@/lib/content-factory/slug-utils";
 import { findDuplicate } from "@/lib/content-factory/dedup";
 import { checkHebrewQuality } from "@/lib/content-factory/qa";
 
@@ -11,7 +15,11 @@ import { checkHebrewQuality } from "@/lib/content-factory/qa";
 export const maxDuration = 120;
 
 const GenerateBlogSchema = z.object({
-  topic: z.string().max(500).optional().transform(v => v?.trim() || undefined),
+  topic: z
+    .string()
+    .max(500)
+    .optional()
+    .transform((v) => v?.trim() || undefined),
   template: z.enum(["guide", "listicle", "comparison", "faq"]).optional(),
 });
 
@@ -31,7 +39,7 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid request data", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -51,7 +59,10 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
       .single();
 
     if (logInsertError) {
-      logger.error("[admin/content-factory/generate-blog] Failed to create log entry:", logInsertError);
+      logger.error(
+        "[admin/content-factory/generate-blog] Failed to create log entry:",
+        logInsertError,
+      );
     } else {
       logId = logEntry.id as string;
     }
@@ -60,20 +71,23 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
     const context = await getGenerationContext(supabase);
 
     // 3. Generate the blog post via AI
-    logger.info(`[admin/content-factory/generate-blog] Generating blog post, topic: ${topic ?? "auto"}, template: ${template}`);
+    logger.info(
+      `[admin/content-factory/generate-blog] Generating blog post, topic: ${topic ?? "auto"}, template: ${template}`,
+    );
     const generated = await generateBlogPost({
       topic,
       template,
       existingTitles: context.existingBlogTitles,
       existingCategories: context.blogCategories,
       existingPromptTitles: context.existingPromptTitles,
+      existingPromptLinks: context.existingPromptLinks,
     });
 
     // 4. Check for duplicates
     const duplicate = await findDuplicate(supabase, generated.title, "blog_posts");
     if (duplicate) {
       logger.warn(
-        `[admin/content-factory/generate-blog] Duplicate detected: "${generated.title}" similar to "${duplicate.existingTitle}" (score: ${duplicate.score})`
+        `[admin/content-factory/generate-blog] Duplicate detected: "${generated.title}" similar to "${duplicate.existingTitle}" (score: ${duplicate.score})`,
       );
 
       if (logId) {
@@ -95,7 +109,7 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
             score: duplicate.score,
           },
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -109,7 +123,9 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
     // 6b. Run Hebrew quality check
     const qa = checkHebrewQuality(generated.content);
     if (qa.issues.length > 0) {
-      logger.info(`[admin/content-factory/generate-blog] QA score: ${qa.score}, issues: ${qa.issues.join("; ")}`);
+      logger.info(
+        `[admin/content-factory/generate-blog] QA score: ${qa.score}, issues: ${qa.issues.join("; ")}`,
+      );
     }
 
     // 7. Insert into blog_posts as draft
@@ -171,7 +187,9 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
         .eq("id", logId);
     }
 
-    logger.info(`[admin/content-factory/generate-blog] Blog post created: "${generated.title}" (id: ${blogPost.id})`);
+    logger.info(
+      `[admin/content-factory/generate-blog] Blog post created: "${generated.title}" (id: ${blogPost.id})`,
+    );
 
     return NextResponse.json({ blogPost }, { status: 201 });
   } catch (err) {

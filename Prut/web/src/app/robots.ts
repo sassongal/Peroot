@@ -4,10 +4,13 @@ export default function robots(): MetadataRoute.Robots {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.peroot.space";
   return {
     rules: [
-      // Default: allow all crawlers, block private routes
+      // Default: allow all crawlers, block private routes.
+      // /api/og must stay explicitly allowed (longest-match wins over the /api/
+      // disallow): every blog/prompt/guide references its OG image there, and a
+      // blocked image kills Article rich results and Discover eligibility.
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/api/og"],
         disallow: ["/admin/", "/api/", "/auth/", "/settings", "/developer"],
       },
       // ── Search-time AI bots (explicitly allow) ────────────────────────────

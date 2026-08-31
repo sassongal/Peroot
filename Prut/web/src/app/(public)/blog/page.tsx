@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
-import { ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
@@ -90,19 +89,6 @@ export default async function BlogPage() {
               posts={posts ?? []}
             />
           )}
-
-          {/* Hidden Hebrew slug links for SEO crawlability */}
-          <nav className="sr-only" aria-hidden="true">
-            {(posts ?? []).map((post) => {
-              const hebrewSlug = ENGLISH_TO_HEBREW_SLUG[post.slug];
-              if (!hebrewSlug) return null;
-              return (
-                <Link key={`he-${post.slug}`} href={`/blog/${hebrewSlug}`}>
-                  {post.title}
-                </Link>
-              );
-            })}
-          </nav>
 
           {/* Cross-links */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-12">

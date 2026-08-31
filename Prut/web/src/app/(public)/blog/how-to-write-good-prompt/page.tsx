@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { articleSchema, breadcrumbSchema } from "@/lib/schema";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const ogImage = `${siteUrl}/api/og?title=${encodeURIComponent("איך לכתוב פרומפט טוב - המדריך המלא")}&subtitle=${encodeURIComponent("5 עקרונות שיהפכו כל פרומפט שלכם לפרומפט מקצועי")}&category=${encodeURIComponent("מדריכים")}`;
@@ -31,6 +33,27 @@ export const metadata: Metadata = {
 export default function HowToWriteGoodPrompt() {
   return (
     <div className="min-h-screen bg-background text-foreground p-4 md:p-8" dir="rtl">
+      {/* This hardcoded article is the head-term asset ("איך לכתוב פרומפט") —
+          it must carry the same Article/Breadcrumb schema its DB siblings get. */}
+      <JsonLd
+        data={articleSchema({
+          title: "איך לכתוב פרומפט טוב: 5 עקרונות עם דוגמאות",
+          excerpt:
+            "תפקיד, ספציפיות, פורמט, מגבלות ודוגמה: 5 העקרונות שהופכים פרומפט חלש לפרומפט מקצועי, עם דוגמאות לפני ואחרי.",
+          slug: "how-to-write-good-prompt",
+          published_at: "2026-05-10T08:00:00.000Z",
+          updated_at: "2026-08-31T08:00:00.000Z",
+          author: "Gal Sasson",
+          thumbnail_url: ogImage,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "בלוג", url: "/blog" },
+          { name: "איך לכתוב פרומפט טוב", url: "/blog/how-to-write-good-prompt" },
+        ])}
+      />
       <article className="max-w-3xl mx-auto">
         <Link
           href="/blog"

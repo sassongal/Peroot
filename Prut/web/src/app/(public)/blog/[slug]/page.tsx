@@ -11,7 +11,7 @@ import {
   howToSchema,
   speakablePageSchema,
 } from "@/lib/schema";
-import { HEBREW_BLOG_SLUGS, ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
+import { HEBREW_BLOG_SLUGS } from "@/lib/blog-slug-map";
 import { SafeHtml } from "@/components/ui/SafeHtml";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 import { BlogShareButtons } from "@/components/blog/BlogShareButtons";
@@ -96,14 +96,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ogImage = `${siteUrl}/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`;
 
   // Build hreflang alternates if Hebrew slug mapping exists
-  const hebrewSlug = ENGLISH_TO_HEBREW_SLUG[post.slug];
+  // Single-language site: self-referencing he-IL + x-default only. (A previous
+  // "he" alternate pointed at the legacy Hebrew slug, which 308-redirects —
+  // hreflang targets must resolve 200, so it invalidated the cluster.)
   const languages: Record<string, string> = {
     "he-IL": `/blog/${post.slug}`,
     "x-default": `/blog/${post.slug}`,
   };
-  if (hebrewSlug) {
-    languages["he"] = `/blog/${encodeURIComponent(hebrewSlug)}`;
-  }
 
   return {
     title,
@@ -393,6 +392,7 @@ export default async function BlogPostPage({ params }: Props) {
           excerpt: post.meta_description || post.excerpt || "",
           slug: post.slug,
           published_at: post.published_at,
+          updated_at: post.updated_at,
           author: post.author || "Gal Sasson",
           thumbnail_url: ogImageUrl,
         })}

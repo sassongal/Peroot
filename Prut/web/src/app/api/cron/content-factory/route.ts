@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
         existingTitles: context.existingBlogTitles,
         existingCategories: context.blogCategories,
         existingPromptTitles: context.existingPromptTitles,
+        existingPromptLinks: context.existingPromptLinks,
       });
 
       const duplicate = await findDuplicate(supabase, generatedBlog.title, "blog_posts");
@@ -296,6 +297,57 @@ export async function GET(request: NextRequest) {
     logger.info(
       `[Cron/ContentFactory] Run ${runId} complete. Blog: ${result.blog?.title ?? "none"}, Prompts: ${result.prompts.count}, Errors: ${result.errors.length}`,
     );
+
+    // ── 3. Draft-review SLA ─────────────────────────────────────────────────
+    // Drafts are worthless until a human publishes them — the blog once went
+    // silent for 6 weeks while drafts piled up unreviewed. Email the admin a
+    // digest whenever drafts are waiting, so the review loop cannot silently
+    // die again. ADMIN_EMAILS unset ⇒ log only.
+    try {
+      const { count: pendingDrafts } = await supabase
+        .from("blog_posts")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "draft");
+      const { count: pendingPrompts } = await supabase
+        .from("public_library_prompts")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", false);
+
+      const totalPending = (pendingDrafts ?? 0) + (pendingPrompts ?? 0);
+      const adminEmail = (process.env.ADMIN_EMAILS || "").split(",")[0]?.trim();
+
+      if (totalPending > 0 && adminEmail) {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+        const { EmailService } = await import("@/lib/emails/service");
+        await EmailService.send({
+          to: adminEmail,
+          subject: `מפעל התוכן: ${pendingDrafts ?? 0} טיוטות בלוג ו-${pendingPrompts ?? 0} פרומפטים מחכים לאישור`,
+          html: `<div dir="rtl" style="font-family:sans-serif;line-height:1.7">
+            <p>היי גל,</p>
+            <p>הריצה השבועית של מפעל התוכן הסתיימה.</p>
+            <ul>
+              <li>טיוטת בלוג חדשה: <strong>${result.blog?.title ?? "לא נוצרה השבוע"}</strong></li>
+              <li>ממתינות לאישור: <strong>${pendingDrafts ?? 0} טיוטות בלוג</strong> ו-<strong>${pendingPrompts ?? 0} פרומפטים</strong></li>
+            </ul>
+            <p>כל שבוע בלי פרסום מחליש את אות הרעננות מול גוגל ומנועי ה-AI (פרפלקסיטי מצטטת תוכן טרי פי 3).</p>
+            <p><a href="${siteUrl}/admin/content-factory">לאישור הטיוטות באדמין ←</a></p>
+          </div>`,
+          emailType: "admin_ops",
+          metadata: {
+            run_id: runId,
+            pending_blog: pendingDrafts ?? 0,
+            pending_prompts: pendingPrompts ?? 0,
+          },
+        });
+        logger.info(`[Cron/ContentFactory] Draft-SLA digest sent (${totalPending} pending)`);
+      } else if (totalPending > 0) {
+        logger.warn(
+          `[Cron/ContentFactory] ${totalPending} drafts pending review but ADMIN_EMAILS is unset — no digest sent`,
+        );
+      }
+    } catch (slaErr) {
+      logger.warn("[Cron/ContentFactory] Draft-SLA digest failed:", slaErr);
+    }
 
     await recordCronSuccess("content-factory");
 

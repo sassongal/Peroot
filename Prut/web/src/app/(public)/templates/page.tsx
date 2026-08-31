@@ -14,11 +14,18 @@ import type { LibraryPrompt } from "@/lib/types";
 // this cacheable instead of forcing a live DB query on every request.
 export const revalidate = 3600;
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+
+const OG_IMAGE = `${SITE_URL}/api/og?title=${encodeURIComponent("תבניות פרומפטים בעברית")}&subtitle=${encodeURIComponent("שדות למילוי, שדרוג אוטומטי, חינם")}`;
+
+// Single metadata source for /templates — a parallel layout.tsx metadata once
+// competed with this one, and Next's segment-level openGraph override dropped
+// the layout's og:image entirely.
 export const metadata: Metadata = {
   title: "תבניות פרומפטים בעברית עם משתנים למילוי",
   description:
     "תבניות פרומפטים מוכנות בעברית עם שדות למילוי. מלאו את המשתנים, שדרגו עם AI, והעתיקו פרומפט מוכן ל-ChatGPT, Claude ו-Gemini, בלי לכתוב מאפס.",
-  alternates: { canonical: "/templates" },
+  alternates: { canonical: "/templates", languages: { "he-IL": "/templates" } },
   openGraph: {
     title: "תבניות פרומפטים בעברית עם משתנים למילוי | Peroot",
     description: "בחרו תבנית, מלאו את המשתנים המסומנים, וקבלו פרומפט מותאם אישית בשניות.",
@@ -26,10 +33,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "he_IL",
     siteName: "Peroot",
+    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: "תבניות פרומפטים בעברית" }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "תבניות פרומפטים בעברית עם משתנים למילוי | Peroot",
+    description: "תבניות פרומפטים בעברית עם משתנים: בחרו, מלאו את השדות והעתיקו. חינם.",
+    images: [OG_IMAGE],
+  },
+  robots: { index: true, follow: true },
 };
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 /** Server-side fetch of library prompts that contain {variable} placeholders.
  *  Cookieless service client + ISR (revalidate below): public data only. */

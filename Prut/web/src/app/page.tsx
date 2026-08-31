@@ -14,10 +14,14 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="home-page-root">
+    <div>
+      {/* The interactive app renders first — the tool IS the hero. The SEO/marketing
+          content flows below it, VISIBLE to everyone (crawlers included): hiding it
+          with display:none/opacity:0 made the homepage empty under mobile-first
+          indexing and tripped the hidden-text pattern. */}
+      <HomeClient />
       {/* softwareAppSchema is rendered inside HomeSEOContent - no duplicate needed here */}
       <HomeSEOContent />
-      <HomeClient />
       <RecentBlogPosts />
     </div>
   );

@@ -14,7 +14,7 @@ export function organizationSchema() {
     description: `Peroot (פירוט) היא פלטפורמת הנדסת פרומפטים מקצועית בעברית. הפלטפורמה מאפשרת שיפור אוטומטי של פרומפטים ל-ChatGPT, Claude, Gemini ו-Midjourney, עם ספריית ${PROMPT_TEMPLATE_COUNT} תבניות, דירוג איכות מובנה ותמיכה מלאה בשפה העברית.`,
     logo: {
       "@type": "ImageObject",
-      url: `${SITE_URL}/assets/branding/logo.png`,
+      url: `${SITE_URL}/images/peroot_logo_pack/logo_1200.png`,
     },
     foundingDate: "2024",
     areaServed: {
@@ -105,7 +105,7 @@ export function articleSchema(post: {
       url: SITE_URL,
       logo: {
         "@type": "ImageObject",
-        url: `${SITE_URL}/assets/branding/logo.png`,
+        url: `${SITE_URL}/images/peroot_logo_pack/logo_1200.png`,
       },
     },
     image: post.thumbnail_url || undefined,
@@ -181,7 +181,7 @@ export function pricingSchema() {
         "@type": "Product",
         name: "Peroot Free",
         description: `תוכנית חינמית עם קרדיט אחד ביום, גישה לספריית ${PROMPT_LIBRARY_COUNT} פרומפטים, שיתוף פרומפטים ותוסף Chrome`,
-        image: `${SITE_URL}/assets/branding/logo.png`,
+        image: `${SITE_URL}/images/peroot_logo_pack/logo_1200.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",
@@ -196,7 +196,7 @@ export function pricingSchema() {
         name: "Peroot Pro",
         description:
           "150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספריה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא, יום ניסיון במתנה",
-        image: `${SITE_URL}/assets/branding/logo.png`,
+        image: `${SITE_URL}/images/peroot_logo_pack/logo_1200.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",

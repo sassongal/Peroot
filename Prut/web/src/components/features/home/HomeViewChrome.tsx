@@ -171,6 +171,12 @@ function HomeViewChromeInner({
           </div>
         </div>
 
+        {/* The page's single H1 — always visible (SEO: the homepage must carry a
+            real heading in the mobile-first render, never a hidden one). */}
+        <h1 className="text-center text-sm md:text-base font-medium text-(--text-secondary) -mt-2 md:-mt-1 px-4 leading-snug">
+          מחולל ומשדרג פרומפטים בעברית — ל-ChatGPT, Claude ו-Gemini
+        </h1>
+
         <button
           onClick={onOpenWhatIsThis}
           className="text-xs md:text-sm text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"

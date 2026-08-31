@@ -60,6 +60,18 @@ export function Footer() {
             {isHe ? "ספריית פרומפטים" : "Prompt Library"}
           </Link>
           <Link
+            href="/templates"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
+            {isHe ? "תבניות" : "Templates"}
+          </Link>
+          <Link
+            href="/connect"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
+            {isHe ? "Peroot Connect" : "Peroot Connect"}
+          </Link>
+          <Link
             href="/guide"
             className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
           >

@@ -1,17 +1,22 @@
 /**
  * AI content generation for Content Factory.
  *
- * Uses generateText (non-streaming) so callers receive the full result
- * synchronously before persisting to the database.
+ * Uses generateObject + zod so the model's JSON is schema-enforced by the
+ * provider. The previous generateText + hand-rolled JSON.parse repair chain
+ * failed on ~half of all runs (unescaped Hebrew quotes / control characters
+ * inside the HTML content field) — the same failure mode that broke
+ * style-analysis twice. Structured output is the house rule for model JSON.
  *
  * Models: gemini-2.5-flash for blog posts (quality matters),
  *         gemini-2.5-flash-lite for prompt batch generation (cost savings).
  */
 
-import { generateText } from "ai";
+import { generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 
 // ---------------------------------------------------------------------------
 // Provider
@@ -24,32 +29,63 @@ const google = createGoogleGenerativeAI({
 });
 
 // ---------------------------------------------------------------------------
-// Types — Blog
+// Schemas — Blog
 // ---------------------------------------------------------------------------
+
+const BlogPostSchema = z.object({
+  title: z.string().min(10).max(200).describe("כותרת המאמר בעברית"),
+  englishTitle: z.string().min(5).max(200).describe("Article title in English (for the slug)"),
+  content: z
+    .string()
+    .min(500)
+    .describe("גוף המאמר: HTML עם H2 לכותרות משנה, בלי H1 ובלי עטיפת div/article"),
+  excerpt: z.string().min(30).max(600).describe("תקציר 2-3 משפטים"),
+  metaTitle: z.string().min(10).max(90).describe("כותרת SEO, עד 60 תווים"),
+  metaDescription: z.string().min(30).max(255).describe("תיאור SEO, עד 155 תווים, כולל CTA"),
+  category: z.string().min(2).max(60).describe("שם קטגוריה מהרשימה שסופקה"),
+  tags: z.array(z.string().min(1).max(40)).min(2).max(6),
+  internalLinks: z
+    .array(z.object({ title: z.string(), slug: z.string() }))
+    .max(5)
+    .describe("2-3 פרומפטים רלוונטיים מהספרייה"),
+});
+
+type GeneratedBlogPost = z.infer<typeof BlogPostSchema>;
 
 interface BlogGenerationParams {
   topic?: string;
   template?: "guide" | "listicle" | "comparison" | "faq";
   existingTitles: string[];
   existingCategories: string[];
-  existingPromptTitles: string[]; // used for internal linking suggestions
-}
-
-interface GeneratedBlogPost {
-  title: string;
-  englishTitle: string;
-  content: string; // full HTML body (no wrapping <article> or <div>)
-  excerpt: string;
-  metaTitle: string;
-  metaDescription: string;
-  category: string;
-  tags: string[];
-  internalLinks: { title: string; slug: string }[];
+  existingPromptTitles: string[]; // legacy — titles only
+  existingPromptLinks?: { title: string; url: string }[]; // title + REAL page URL
 }
 
 // ---------------------------------------------------------------------------
-// Types — Prompts
+// Schemas — Prompts
 // ---------------------------------------------------------------------------
+
+const GeneratedPromptSchema = z.object({
+  title: z.string().min(5).max(150).describe("שם הפרומפט בעברית — ברור ותיאורי"),
+  prompt: z
+    .string()
+    .min(80)
+    .describe("הפרומפט המלא עם {{משתנה}} בסוגריים מסולסלים; מקצועי, מובנה ומפורט"),
+  use_case: z.string().min(10).max(500).describe("מתי ולמה להשתמש בפרומפט"),
+  variables: z.array(z.string().min(1).max(60)).max(10),
+  output_format: z.string().min(5).max(500).describe("תיאור מדויק של הפלט הצפוי"),
+  quality_checks: z.array(z.string().min(3).max(200)).min(1).max(5),
+  category_id: z.string().min(2).max(60).describe("ה-ID המדויק מהרשימה (באנגלית)"),
+  capability_mode: z.enum([
+    "STANDARD",
+    "DEEP_RESEARCH",
+    "IMAGE_GENERATION",
+    "AGENT_BUILDER",
+    "VIDEO_GENERATION",
+  ]),
+});
+
+type GeneratedPrompt = z.infer<typeof GeneratedPromptSchema>;
 
 interface PromptGenerationParams {
   topic?: string;
@@ -57,71 +93,6 @@ interface PromptGenerationParams {
   existingTitles: string[];
   existingCategories: { id: string; name_he: string }[];
   count?: number;
-}
-
-interface GeneratedPrompt {
-  title: string;
-  prompt: string;
-  use_case: string;
-  variables: string[];
-  output_format: string;
-  quality_checks: string[];
-  category_id: string;
-  capability_mode: string;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Strip markdown code fences that some models add around JSON responses,
- * then parse and return the result. Throws on invalid JSON so callers
- * get a clear error rather than a silent empty result.
- */
-function parseJsonResponse<T>(raw: string): T {
-  let cleaned = raw
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/```\s*$/i, "")
-    .trim();
-
-  try {
-    return JSON.parse(cleaned) as T;
-  } catch (firstError) {
-    // Gemini often puts unescaped newlines/tabs inside JSON string values
-    // (especially in HTML content fields). Fix them before retrying.
-    logger.warn("[ContentFactory] First JSON parse failed, attempting repair...");
-
-    // Fix unescaped control characters inside JSON string values
-    // Replace literal newlines/tabs/carriage returns that aren't already escaped
-    cleaned = cleaned
-      .replace(/(?<=:"[^"]*)\n/g, "\\n")
-      .replace(/(?<=:"[^"]*)\r/g, "\\r")
-      .replace(/(?<=:"[^"]*)\t/g, "\\t");
-
-    try {
-      return JSON.parse(cleaned) as T;
-    } catch {
-      // Last resort: try to extract JSON object from the response
-      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          // Aggressive cleanup: replace all control characters in string values
-          const aggressive = jsonMatch[0].replace(/[\x00-\x1F\x7F]/g, (ch) => {
-            if (ch === "\n") return "\\n";
-            if (ch === "\r") return "\\r";
-            if (ch === "\t") return "\\t";
-            return "";
-          });
-          return JSON.parse(aggressive) as T;
-        } catch {
-          // Give up
-        }
-      }
-      throw firstError;
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -135,6 +106,7 @@ export async function generateBlogPost(params: BlogGenerationParams): Promise<Ge
     existingTitles,
     existingCategories,
     existingPromptTitles,
+    existingPromptLinks,
   } = params;
 
   const templateInstructions: Record<NonNullable<BlogGenerationParams["template"]>, string> = {
@@ -157,10 +129,8 @@ export async function generateBlogPost(params: BlogGenerationParams): Promise<Ge
 - **Long-tail keywords**: כלול ביטויי חיפוש ארוכים בכותרות H2 ובתוכן (למשל: "איך לכתוב פרומפט ל-ChatGPT בעברית", לא רק "פרומפטים").
 - **Competitor awareness**: כתוב תוכן שמכסה את הנושא לעומק רב יותר ממה שקיים באינטרנט בעברית. הוסף ערך ייחודי שמתחרים לא מספקים.
 - **Featured Snippets**: מבנה כל H2 כשאלה או הוראה ברורה, כדי שגוגל יוכל להציג אותה כ-featured snippet.
+- **ציטוטים ונתונים (GEO)**: כלול נתונים מספריים קונקרטיים ועובדות ניתנות-לציטוט — מנועי תשובה (ChatGPT, Perplexity) מצטטים תוכן עם מספרים ומבנה שאלה-תשובה.
 - **הקשר ישראלי**: דוגמאות מקומיות, התייחסות לכלים פופולריים בישראל, שמות מותגים ישראליים.
-- **meta_title**: עד 60 תווים, כולל מילת מפתח ראשית.
-- **meta_description**: עד 155 תווים, כולל CTA וערך ייחודי.
-- **tags**: 3-5 תגים שאנשים מחפשים בגוגל ישראל.
 
 ## מבנה HTML
 - השתמש ב-H2 לכותרות משנה (חשוב לTOC ול-featured snippets)
@@ -171,23 +141,10 @@ export async function generateBlogPost(params: BlogGenerationParams): Promise<Ge
 - אל תעטוף את כל התוכן ב-div או ב-article
 
 ## קישורים פנימיים (חשוב ל-SEO!)
-כלול 2-3 קישורים לפרומפטים קיימים מהספרייה שרלוונטיים לתוכן, בפורמט:
-<a href="/prompts/[slug]">[שם הפרומפט]</a>
-בחר פרומפטים שמשלימים את הנושא — לא רנדומליים.
-
-## פורמט פלט
-החזר JSON בלבד, ללא markdown wrapping:
-{
-  "title": "כותרת המאמר בעברית",
-  "englishTitle": "Article Title In English (for slug)",
-  "content": "<h2>...</h2><p>...</p>...",
-  "excerpt": "תקציר 2-3 משפטים",
-  "metaTitle": "כותרת SEO (עד 60 תווים)",
-  "metaDescription": "תיאור SEO (עד 155 תווים)",
-  "category": "שם הקטגוריה מהרשימה",
-  "tags": ["תג1", "תג2", "תג3"],
-  "internalLinks": [{"title": "שם הפרומפט", "slug": "slug-של-הפרומפט"}]
-}`;
+כלול 2-3 קישורים לפרומפטים קיימים מהספרייה שרלוונטיים לתוכן. השתמש אך ורק
+בכתובות ה-URL המדויקות מהרשימה שתקבל (עמודה url) — אסור להמציא כתובת. פורמט:
+<a href="[url מהרשימה]">[שם הפרומפט]</a>
+בחר פרומפטים שמשלימים את הנושא — לא רנדומליים.`;
 
   const topicInstruction = topic
     ? `כתוב מאמר על הנושא: "${topic}"`
@@ -202,8 +159,11 @@ export async function generateBlogPost(params: BlogGenerationParams): Promise<Ge
 כותרות מאמרים קיימים (אל תחזור עליהם):
 ${existingTitles.slice(0, 50).join("\n")}
 
-פרומפטים קיימים בספרייה (לקישורים פנימיים):
-${existingPromptTitles.slice(0, 30).join("\n")}
+פרומפטים קיימים בספרייה (לקישורים פנימיים — השתמש ב-url המדויק בלבד):
+${(existingPromptLinks ?? existingPromptTitles.map((t) => ({ title: t, url: "/prompts" })))
+  .slice(0, 30)
+  .map((l) => `- ${l.title} → ${l.url}`)
+  .join("\n")}
 
 ## דרישות קריטיות:
 1. וודא שהנושא שבחרת לא מכוסה כבר ברשימת הכותרות למעלה — גם לא בניסוח אחר.
@@ -213,8 +173,9 @@ ${existingPromptTitles.slice(0, 30).join("\n")}
 
   const startTime = Date.now();
 
-  const { text, usage } = await generateText({
+  const { object, usage } = await generateObject({
     model: google("gemini-2.5-flash"),
+    schema: BlogPostSchema,
     system,
     prompt: userPrompt,
     temperature: 0.8,
@@ -225,7 +186,7 @@ ${existingPromptTitles.slice(0, 30).join("\n")}
     `[ContentFactory] Blog generated in ${durationMs}ms, tokens: ${usage?.totalTokens ?? "unknown"}`,
   );
 
-  return parseJsonResponse<GeneratedBlogPost>(text);
+  return object;
 }
 
 // ---------------------------------------------------------------------------
@@ -260,31 +221,7 @@ export async function generatePromptBatch(params: PromptGenerationParams): Promi
 - צור פרומפטים שפותרים בעיות אמיתיות שאנשים בישראל מתמודדים איתם
 - חשוב על use cases מעשיים: עסקים קטנים, פרילנסרים, מנהלי שיווק, יזמים, סטודנטים
 - כל פרומפט חייב להיות כזה שמשתמש ישתמש בו שוב ושוב — לא חד-פעמי
-- הוסף ערך ייחודי שלא קיים בכלים אחרים
-
-## capability_mode (בחר את המתאים ביותר):
-- STANDARD — שדרוג פרומפט כללי (ברירת מחדל)
-- DEEP_RESEARCH — מחקר מעמיק, ניתוח, דוחות
-- IMAGE_GENERATION — יצירת תמונות
-- AGENT_BUILDER — בניית סוכני AI, אוטומציה
-- VIDEO_GENERATION — יצירת וידאו
-
-## פורמט פלט
-החזר JSON בלבד, ללא markdown wrapping:
-{
-  "prompts": [
-    {
-      "title": "שם הפרומפט בעברית — ברור ותיאורי",
-      "prompt": "הפרומפט המלא עם {{משתנה}} בסוגריים מסולסלים. חייב להיות מקצועי, מובנה, ומפורט.",
-      "use_case": "תיאור ברור של מתי ולמה להשתמש בפרומפט הזה",
-      "variables": ["משתנה1", "משתנה2"],
-      "output_format": "תיאור מדויק של הפלט הצפוי",
-      "quality_checks": ["בדיקה1", "בדיקה2"],
-      "category_id": "the-exact-id-from-the-list-below",
-      "capability_mode": "STANDARD"
-    }
-  ]
-}`;
+- הוסף ערך ייחודי שלא קיים בכלים אחרים`;
 
   const topicInstruction = topic
     ? `צור ${count} פרומפטים מקצועיים בנושא: "${topic}"`
@@ -312,8 +249,9 @@ ${existingTitles.slice(0, 100).join("\n")}
 
   const startTime = Date.now();
 
-  const { text, usage } = await generateText({
+  const { object, usage } = await generateObject({
     model: google("gemini-2.5-flash-lite"),
+    schema: z.object({ prompts: z.array(GeneratedPromptSchema).min(1).max(10) }),
     system,
     prompt: userPrompt,
     temperature: 0.8,
@@ -324,10 +262,8 @@ ${existingTitles.slice(0, 100).join("\n")}
     `[ContentFactory] ${count} prompts generated in ${durationMs}ms, tokens: ${usage?.totalTokens ?? "unknown"}`,
   );
 
-  const parsed = parseJsonResponse<{ prompts: GeneratedPrompt[] }>(text);
-
   return {
-    prompts: parsed.prompts,
+    prompts: object.prompts,
     usage: { totalTokens: usage?.totalTokens ?? 0 },
   };
 }
@@ -347,6 +283,7 @@ export async function getGenerationContext(supabase: SupabaseClient): Promise<{
   existingBlogTitles: string[];
   existingBlogSlugs: string[];
   existingPromptTitles: string[];
+  existingPromptLinks: { title: string; url: string }[];
   existingCategories: { id: string; name_he: string }[];
   blogCategories: string[];
 }> {
@@ -358,16 +295,34 @@ export async function getGenerationContext(supabase: SupabaseClient): Promise<{
       .limit(100),
     supabase
       .from("public_library_prompts")
-      .select("title, category_id")
+      .select("id, title, category_id")
       .eq("is_active", true)
       .limit(200),
     supabase.from("library_categories").select("id, name_he").order("sort_order"),
   ]);
 
+  // Real prompt-page URLs — the model once invented /prompts/<hebrew-title>
+  // slugs and every internal link in a generated post 404'd.
+  const idToSlug = Object.fromEntries(
+    Object.entries(CATEGORY_SLUG_MAP).map(([slug, d]) => [d.id.toLowerCase(), slug]),
+  );
+  const promptRows = (promptResult.data ?? []) as {
+    id: string;
+    title: string;
+    category_id: string | null;
+  }[];
+  const existingPromptLinks = promptRows
+    .filter((p) => p.category_id && idToSlug[p.category_id.toLowerCase()])
+    .map((p) => ({
+      title: p.title,
+      url: `/prompts/${idToSlug[p.category_id!.toLowerCase()]}/${p.id}`,
+    }));
+
   return {
     existingBlogTitles: (blogResult.data ?? []).map((b: { title: string }) => b.title),
     existingBlogSlugs: (blogResult.data ?? []).map((b: { slug: string }) => b.slug),
-    existingPromptTitles: (promptResult.data ?? []).map((p: { title: string }) => p.title),
+    existingPromptTitles: promptRows.map((p) => p.title),
+    existingPromptLinks,
     existingCategories: categoryResult.data ?? [],
     blogCategories: Array.from(
       new Set((blogResult.data ?? []).map((b: { category: string }) => b.category).filter(Boolean)),

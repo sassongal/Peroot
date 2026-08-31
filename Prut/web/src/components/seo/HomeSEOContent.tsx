@@ -2,7 +2,7 @@ import Link from "next/link";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { FAQ_ITEMS } from "@/lib/faq-data";
 import { softwareAppSchema, faqSchema } from "@/lib/schema";
-import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
+import { PROMPT_LIBRARY_COUNT, PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 
 /**
  * Server-rendered SEO content for the homepage.
@@ -25,12 +25,14 @@ export function HomeSEOContent() {
       {/* webSiteSchema is already rendered in the root layout — no duplicate needed */}
       <JsonLd data={faqSchema(topFAQs.map((f) => ({ question: f.question, answer: f.answer })))} />
 
-      {/* Visible server-rendered hero — hidden after client hydration via CSS */}
-      <div className="home-seo-hero" dir="rtl">
+      {/* Always-visible content section below the app. Never hide this block —
+          it carries the homepage's copy, FAQ, and internal-link hub for search
+          and answer engines (the page's H1 lives in the app hero above). */}
+      <section className="home-seo-hero" dir="rtl" aria-label="על פירוט">
         <div className="max-w-4xl mx-auto px-4 py-12 md:py-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
             Peroot (פירוט) — מחולל ומשדרג פרומפטים בעברית
-          </h1>
+          </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 leading-relaxed">
             פלטפורמת הנדסת הפרומפטים (prompt engineering) המובילה בישראל. כתיבת פרומפטים מקצועיים
             לכל מודל שפה — ChatGPT, Claude, Gemini ו-Midjourney — בעברית, בחינם, תוך שניות.
@@ -95,6 +97,34 @@ export function HomeSEOContent() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Quotable facts — answer engines cite concrete numbers (GEO) */}
+        <div className="max-w-3xl mx-auto px-4 mb-16">
+          <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-6">
+            פירוט במספרים
+          </h2>
+          <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="p-4 rounded-xl border border-border bg-card">
+              <dt className="text-xs text-muted-foreground mb-1">פרומפטים בספרייה הציבורית</dt>
+              <dd className="text-2xl font-bold text-foreground">{PROMPT_LIBRARY_COUNT}</dd>
+            </div>
+            <div className="p-4 rounded-xl border border-border bg-card">
+              <dt className="text-xs text-muted-foreground mb-1">תבניות עם משתנים חכמים</dt>
+              <dd className="text-2xl font-bold text-foreground">{PROMPT_TEMPLATE_COUNT}</dd>
+            </div>
+            <div className="p-4 rounded-xl border border-border bg-card">
+              <dt className="text-xs text-muted-foreground mb-1">קטגוריות תוכן</dt>
+              <dd className="text-2xl font-bold text-foreground">30+</dd>
+            </div>
+            <div className="p-4 rounded-xl border border-border bg-card">
+              <dt className="text-xs text-muted-foreground mb-1">מצבי יצירה</dt>
+              <dd className="text-2xl font-bold text-foreground">5</dd>
+            </div>
+          </dl>
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            טקסט · מחקר מעמיק · תמונות · וידאו · סוכני AI — הכול בעברית נטיבית, RTL מלא.
+          </p>
         </div>
 
         {/* Head-term targeted section — boosts ranking for "הנדסת פרומפטים" / "כתיבת פרומפטים" */}
@@ -218,7 +248,7 @@ export function HomeSEOContent() {
             ))}
           </div>
         </div>
-      </div>
+      </section>
     </>
   );
 }

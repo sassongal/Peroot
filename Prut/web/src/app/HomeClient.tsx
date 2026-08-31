@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from "sonner";
@@ -1762,15 +1754,8 @@ function PageContent() {
 }
 
 export default function HomeClient() {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    wrapperRef.current?.classList.add("hydrated");
-  }, []);
-
   return (
     <div
-      ref={wrapperRef}
       className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-[var(--surface-body)] text-[var(--text-primary)] selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 w-full overflow-x-hidden"
       dir="rtl"
     >

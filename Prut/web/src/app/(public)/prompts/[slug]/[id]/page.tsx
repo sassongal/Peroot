@@ -10,11 +10,11 @@ import { breadcrumbSchema, promptCreativeWorkSchema } from "@/lib/schema";
 import { PromptBodyGate } from "./PromptBodyGate";
 import { UsePromptCTA } from "./UsePromptCTA";
 
-// Max chars of prompt body to render in public HTML. Keeps SEO-useful text
-// available while preventing the full prompt from leaking to guests via
-// view-source or the ISR cache. Authed clients fetch the full text via
-// /api/p/[id] after mount.
-const PUBLIC_PREVIEW_CHARS = 160;
+// The full prompt body is public and server-rendered (owner decision,
+// 2026-08-31): the raw prompt is the SEO/GEO asset — 650+ unique landing
+// pages — while the product (personalized enhancement) is pitched by the
+// CTA. The previous 160-char auth-gated stub made every library page a
+// thin near-duplicate and suppressed the whole domain.
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
@@ -102,8 +102,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // No " | Peroot" suffix; the root title template appends it (avoids a doubled
   // "… | Peroot | Peroot").
   const title = `${prompt.title} - ${categoryData.labelHe}`;
-  const baseDesc = prompt.use_case?.trim() || prompt.prompt?.slice(0, 100)?.trim() || "";
-  const description = `${baseDesc.slice(0, 100)}. פרומפט בעברית מוכן לשימוש ב-ChatGPT, Claude ו-Gemini.`;
+  // Lead with the page's own unique text (use case, else the prompt opening) so
+  // descriptions differ across the ~650 library pages; the suffix stays short
+  // and carries the category for variation.
+  const baseDesc = prompt.use_case?.trim() || prompt.prompt?.slice(0, 140)?.trim() || "";
+  const description = `${baseDesc.slice(0, 120)} · פרומפט ${categoryData.labelHe} מלא בעברית, חינם — כולל שדרוג אוטומטי ב-Peroot.`;
   const canonicalUrl = `/prompts/${slug}/${id}`;
   const ogImage = buildOgImageUrl(prompt.title, description, categoryData.labelHe);
 
@@ -249,19 +252,35 @@ export default async function PromptPage({ params }: Props) {
             </div>
           )}
 
-          {/* Prompt text block: full body served only to authed users via /api/p/[id] */}
+          {/* Prompt text block — full body, server-rendered, open to everyone */}
           <section aria-label="תוכן הפרומפט" className="mb-8">
             <PromptBodyGate
               promptId={p.id}
               title={p.title}
               slug={slug}
               capabilityMode={p.capability_mode}
-              previewText={
-                p.prompt.length > PUBLIC_PREVIEW_CHARS
-                  ? p.prompt.slice(0, PUBLIC_PREVIEW_CHARS).trimEnd() + "…"
-                  : p.prompt
-              }
+              fullText={p.prompt}
             />
+          </section>
+
+          {/* How to use — answer-shaped content for search + answer engines */}
+          <section aria-label="איך משתמשים בפרומפט" className="mb-8">
+            <h2 className="text-sm font-semibold text-foreground mb-3">איך משתמשים בפרומפט הזה?</h2>
+            <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside leading-relaxed">
+              <li>
+                העתיקו את הפרומפט המלא (כפתור ההעתקה למעלה) והדביקו ב-ChatGPT, Claude או Gemini.
+              </li>
+              {p.variables && p.variables.length > 0 && (
+                <li>
+                  החליפו את המשתנים בסוגריים המסולסלים — {p.variables.length} שדות להתאמה אישית —
+                  בפרטים שלכם.
+                </li>
+              )}
+              <li>
+                רוצים גרסה חדה יותר? לחצו על &quot;שדרגו פרומפט זה ב-Peroot&quot; — המערכת תרחיב
+                אותו עם הקשר, מבנה מקצועי ודירוג איכות, מותאם למודל היעד שלכם. חינם.
+              </li>
+            </ol>
           </section>
 
           {/* Variables */}
@@ -329,16 +348,7 @@ export default async function PromptPage({ params }: Props) {
               Peroot משדרגת כל פרומפט אוטומטית: מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר
               ב-ChatGPT, Claude ו-Gemini.
             </p>
-            <UsePromptCTA
-              id={p.id}
-              title={p.title}
-              slug={slug}
-              previewText={
-                p.prompt.length > PUBLIC_PREVIEW_CHARS
-                  ? p.prompt.slice(0, PUBLIC_PREVIEW_CHARS).trimEnd() + "…"
-                  : p.prompt
-              }
-            />
+            <UsePromptCTA id={p.id} title={p.title} slug={slug} previewText={p.prompt} />
           </section>
 
           {/* Back to category */}
