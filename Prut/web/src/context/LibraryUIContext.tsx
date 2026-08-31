@@ -93,8 +93,8 @@ interface LibraryUIContextType {
   setPersonalSort: (
     sort: "recent" | "title" | "usage" | "custom" | "last_used" | "performance",
   ) => void;
-  librarySort: "title" | "newest" | "rating";
-  setLibrarySort: (sort: "title" | "newest" | "rating") => void;
+  librarySort: "title" | "newest";
+  setLibrarySort: (sort: "title" | "newest") => void;
 
   // Derived / filtered data
   filteredLibrary: LibraryPrompt[];
@@ -181,7 +181,7 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
   const [personalSort, setPersonalSort] = useState<
     "recent" | "title" | "usage" | "custom" | "last_used" | "performance"
   >("recent");
-  const [librarySort, setLibrarySort] = useState<"title" | "newest" | "rating">("title");
+  const [librarySort, setLibrarySort] = useState<"title" | "newest">("title");
   const [personalView, setPersonalView] = useState<"all" | "favorites">("all");
 
   // Capability filters

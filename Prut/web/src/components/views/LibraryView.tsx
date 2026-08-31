@@ -12,7 +12,6 @@ import {
   X,
   Sparkles,
   ArrowRight,
-  Lock,
   ChevronLeft,
   ChevronsLeft,
   ChevronsRight,
@@ -45,7 +44,6 @@ const COLLECTION_ICONS: Record<string, React.ComponentType<{ className?: string 
   SparklesIcon,
 };
 
-const GUEST_FREE_LIMIT = 7;
 const ITEMS_PER_PAGE = 10;
 
 interface LibraryViewProps {
@@ -193,10 +191,9 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
 
       switch (librarySort) {
         case "newest":
-          return 0;
-        case "rating":
-        // "Rating" is kept for backward compat but no longer has a data source
-        // (rate-prompts + popularity were removed) — falls back to alphabetical.
+          // created_at can be a legacy epoch number or an ISO string; both
+          // convert through Date to a comparable timestamp.
+          return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
         case "title":
         default:
           return a.title.localeCompare(b.title);
@@ -217,9 +214,6 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     const start = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
     return sortedPrompts.slice(start, start + ITEMS_PER_PAGE);
   }, [sortedPrompts, safeCurrentPage]);
-
-  // Guest paywall: block after GUEST_FREE_LIMIT globally
-  const globalStart = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
 
   // Unique categories for quick-jump (from current filtered set)
   const uniqueCategories = useMemo(() => {
@@ -362,13 +356,12 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           />
           <select
             value={librarySort}
-            onChange={(e) => setLibrarySort(e.target.value as "title" | "newest" | "rating")}
+            onChange={(e) => setLibrarySort(e.target.value as "title" | "newest")}
             className="shrink-0 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2.5 px-2.5 min-h-[44px] text-base md:text-sm text-(--text-primary) focus:outline-none focus:border-black/15 dark:border-white/30"
             aria-label="מיון פרומפטים"
           >
             <option value="title">א-ב</option>
             <option value="newest">חדש</option>
-            <option value="rating">דירוג</option>
           </select>
         </div>
 
@@ -455,9 +448,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
 
       {/* Prompt Cards - Paginated flat list */}
       <div className="space-y-2.5 md:space-y-3 relative">
-        {pagePrompts.map((prompt, localIdx) => {
-          const absoluteIdx = globalStart + localIdx;
-          const isBlurred = isGuest && absoluteIdx >= GUEST_FREE_LIMIT;
+        {pagePrompts.map((prompt) => {
           const categoryLabel =
             CATEGORY_LABELS[prompt.category] ??
             CATEGORY_LABELS[prompt.category?.charAt(0).toUpperCase() + prompt.category?.slice(1)] ??
@@ -467,7 +458,6 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             <PromptCard
               key={prompt.id}
               prompt={prompt}
-              isBlurred={isBlurred}
               guestFavoriteHints={isGuest}
               isFavorite={favoriteLibraryIds.has(prompt.id)}
               isExpanded={expandedIds.has(prompt.id)}
@@ -492,43 +482,6 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             />
           );
         })}
-
-        {/* Guest paywall overlay */}
-        {isGuest &&
-          globalStart < GUEST_FREE_LIMIT &&
-          globalStart + ITEMS_PER_PAGE > GUEST_FREE_LIMIT && (
-            <div
-              dir="rtl"
-              className="flex flex-col items-center justify-center py-10 mt-2 rounded-2xl border border-(--glass-border) bg-linear-to-t from-black/80 to-black/40"
-            >
-              <div className="flex flex-col items-center gap-4 text-center max-w-md px-4">
-                <div className="flex items-center justify-center w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 mb-1">
-                  <Lock className="w-7 h-7 text-amber-600 dark:text-amber-400" />
-                </div>
-                <h3 className="text-xl font-serif font-semibold text-(--text-primary)">
-                  רוצה לראות את כל הספריה?
-                </h3>
-                <p className="text-sm text-(--text-muted) leading-relaxed">
-                  הצטרף כמשתמש רשום ושדרג ל-Pro כדי לגלות את כל הפרומפטים
-                </p>
-                <div className="flex items-center gap-3 mt-2">
-                  <a
-                    href="/login"
-                    className="px-6 py-2.5 rounded-lg border border-(--glass-border) text-(--text-primary) text-sm font-medium hover:bg-black/5 dark:bg-white/10 transition-colors"
-                  >
-                    התחבר
-                  </a>
-                  <a
-                    href="/pricing"
-                    className="px-6 py-2.5 rounded-lg text-sm font-semibold text-black transition-all shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
-                    style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
-                  >
-                    שדרג ל-Pro
-                  </a>
-                </div>
-              </div>
-            </div>
-          )}
       </div>
 
       {/* Pagination */}
