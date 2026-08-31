@@ -21,9 +21,10 @@ export const revalidate = 3600;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 /** The catalogue index should show real prompts, not just category doors
- *  (U3.1: it previously displayed zero prompts). Recently-used is the live
- *  popularity signal the table actually carries. */
-async function getPopularPrompts(): Promise<
+ *  (U3.1: it previously displayed zero prompts). The table has no usage
+ *  signal yet (last_used_at is null on every row), so "newest" is the
+ *  honest strip until real popularity data exists. */
+async function getFreshPrompts(): Promise<
   Array<{ id: string; title: string; use_case: string | null; category_id: string | null }>
 > {
   try {
@@ -31,8 +32,7 @@ async function getPopularPrompts(): Promise<
       .from("public_library_prompts")
       .select("id, title, use_case, category_id")
       .eq("is_active", true)
-      .not("last_used_at", "is", null)
-      .order("last_used_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(6);
     return data ?? [];
   } catch {
@@ -136,7 +136,7 @@ function groupSlugsByCollection() {
 export default async function PromptsIndexPage() {
   const groups = groupSlugsByCollection();
   const totalCategories = Object.keys(CATEGORY_SLUG_MAP).length;
-  const popular = await getPopularPrompts();
+  const popular = await getFreshPrompts();
 
   return (
     <>
@@ -221,7 +221,7 @@ export default async function PromptsIndexPage() {
 
           {/* Popular prompts — real content above the category doors */}
           {popular.length > 0 && (
-            <section className="mb-12 md:mb-16" aria-label="פרומפטים פופולריים">
+            <section className="mb-12 md:mb-16" aria-label="פרומפטים חדשים">
               <div className="flex items-center gap-3 mb-5 pb-4 border-b border-border">
                 <span className="text-2xl" role="img" aria-hidden="true">
                   🔥
