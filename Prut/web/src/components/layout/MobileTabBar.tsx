@@ -1,9 +1,11 @@
 "use client";
 
-import { Home, Library, BookOpen, Clock, HelpCircle } from "lucide-react";
+import { Home, Library, BookOpen, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type TabName = "home" | "library" | "personal" | "history" | "faq";
+// U3.5: four tabs. History and help live behind "עוד" — they are utilities,
+// not destinations, and five tabs crowded 360px screens.
+type TabName = "home" | "library" | "personal" | "more";
 
 interface Tab {
   name: TabName;
@@ -12,11 +14,10 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { name: "home",     label: "שפר",    icon: Home },
-  { name: "library",  label: "ספרייה",   icon: Library },
-  { name: "personal", label: "שלי",      icon: BookOpen },
-  { name: "history",  label: "היסטוריה", icon: Clock },
-  { name: "faq",      label: "עזרה",     icon: HelpCircle },
+  { name: "home", label: "שפר", icon: Home },
+  { name: "library", label: "ספרייה", icon: Library },
+  { name: "personal", label: "שלי", icon: BookOpen },
+  { name: "more", label: "עוד", icon: MoreHorizontal },
 ];
 
 interface MobileTabBarProps {
@@ -33,7 +34,7 @@ export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
         "fixed bottom-0 inset-x-0 z-40",
         "flex md:hidden",
         "bg-white/90 dark:bg-black/90 backdrop-blur-xl border-t border-border",
-        "py-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))]"
+        "py-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))]",
       )}
     >
       {TABS.map(({ name, label, icon: Icon }) => {
@@ -47,7 +48,9 @@ export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
             className={cn(
               "flex-1 flex flex-col items-center justify-center gap-0.5",
               "min-h-[44px] transition-colors duration-200 cursor-pointer",
-              isActive ? "text-amber-600 dark:text-amber-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              isActive
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
             )}
           >
             <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />

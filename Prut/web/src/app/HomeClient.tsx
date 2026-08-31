@@ -40,7 +40,7 @@ import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscover
 import { useContextAttachments } from "@/hooks/useContextAttachments";
 import { consumePendingPrompt, setPendingPrompt } from "@/lib/pending-prompt";
 import { usePromptLimits } from "@/hooks/usePromptLimits";
-import { Clock, Link2 } from "lucide-react";
+import { Clock, HelpCircle, Link2 } from "lucide-react";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
@@ -290,6 +290,8 @@ function PageContent() {
   // Sidebar & mobile FAQ state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileFaqOpen, setMobileFaqOpen] = useState(false);
+  // U3.5: the mobile "עוד" sheet holds history + help.
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   // User / Auth State
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1481,8 +1483,7 @@ function PageContent() {
       if (tab === "home") setViewMode("home");
       else if (tab === "library") handleNavLibrary();
       else if (tab === "personal") handleNavPersonal();
-      else if (tab === "history") setSidebarOpen(true);
-      else if (tab === "faq") setMobileFaqOpen(true);
+      else if (tab === "more") setMobileMoreOpen(true);
     },
     [setViewMode, handleNavLibrary, handleNavPersonal],
   );
@@ -1491,7 +1492,7 @@ function PageContent() {
 
   // U1.12: the mobile tab bar's active state reflects what the user actually
   // sees — the history drawer and FAQ panel light their own tabs up.
-  const mobileActiveTab = sidebarOpen ? "history" : mobileFaqOpen ? "faq" : viewMode;
+  const mobileActiveTab = sidebarOpen || mobileFaqOpen || mobileMoreOpen ? "more" : viewMode;
 
   const handleTopNavNavigate = useCallback(
     (view: "home" | "library" | "personal") => {
@@ -1570,6 +1571,45 @@ function PageContent() {
         onBumpHistoryLastUsed={bumpHistoryLastUsed}
       />
       <MobileFaqPanel isOpen={mobileFaqOpen} onClose={() => setMobileFaqOpen(false)} />
+      {mobileMoreOpen && (
+        <div
+          className="fixed inset-0 z-60 md:hidden"
+          onClick={() => setMobileMoreOpen(false)}
+          role="presentation"
+        >
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            dir="rtl"
+            role="menu"
+            aria-label="עוד"
+            className="absolute bottom-[64px] inset-x-3 rounded-2xl border border-(--glass-border) bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl shadow-2xl p-2 animate-in slide-in-from-bottom-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              role="menuitem"
+              onClick={() => {
+                setMobileMoreOpen(false);
+                setSidebarOpen(true);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 min-h-[48px] rounded-xl text-sm text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <Clock className="w-4 h-4 text-(--text-muted)" />
+              היסטוריה
+            </button>
+            <button
+              role="menuitem"
+              onClick={() => {
+                setMobileMoreOpen(false);
+                setMobileFaqOpen(true);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 min-h-[48px] rounded-xl text-sm text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <HelpCircle className="w-4 h-4 text-(--text-muted)" />
+              עזרה ושאלות
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 
