@@ -1,11 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Crosshair, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PersonalPrompt } from "@/lib/types";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { PromptGraphView } from "./PromptGraphView";
+// The map mode pulls in three.js and react-force-graph (~150kB gzip). It was
+// statically imported, so every visitor who opened the personal library paid
+// for it even if they never looked at relations. Loaded on demand instead.
+const PromptGraphView = dynamic(() => import("./PromptGraphView").then((m) => m.PromptGraphView), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-24 text-sm text-(--text-muted)" dir="rtl">
+      טוען את המפה...
+    </div>
+  ),
+});
 import { PalaceFocusPanel } from "./memory-palace/PalaceFocusPanel";
 
 /**

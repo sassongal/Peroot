@@ -27,13 +27,8 @@ import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { ProBadge } from "@/components/ui/ProBadge";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PROMPT_LIBRARY_COUNT, PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
-import {
-  PRO_MONTHLY_CREDITS,
-  QUOTA_FALLBACK,
-  creditsPhrase,
-  resolveDailyLimit,
-} from "@/lib/quota-policy";
+import { useQuotaPolicy } from "@/context/QuotaPolicyContext";
+import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
 
 const COMPARISON_FEATURES = [
   {
@@ -113,8 +108,7 @@ const COMPARISON_FEATURES = [
 
 export default function PricingPage() {
   // Plan copy quotes the live free allowance, never a number typed into JSX.
-  const { settings } = useSiteSettings();
-  const freeDaily = resolveDailyLimit(settings.daily_free_limit, QUOTA_FALLBACK.freeDaily);
+  const { freeDaily } = useQuotaPolicy();
   const comparisonFeatures = COMPARISON_FEATURES.map((f) =>
     typeof f.free === "string" && f.free.includes("{freeDaily}")
       ? { ...f, free: f.free.replace("{freeDaily}", String(freeDaily)) }

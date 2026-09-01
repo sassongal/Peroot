@@ -5,8 +5,7 @@ import MiniSearch from "minisearch";
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { resolveFaqItems } from "@/lib/faq-data";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
+import { useQuotaPolicy } from "@/context/QuotaPolicyContext";
 
 type FAQItem = { question: string; answer: string; category: string };
 type Message = {
@@ -21,8 +20,7 @@ const FALLBACK_MSG =
 const WELCOME_MSG = "שלום! אני כאן לעזור עם כל שאלה על Peroot. שאל/י חופשי!";
 
 export function FAQChatBot() {
-  const { settings } = useSiteSettings();
-  const freeDaily = resolveDailyLimit(settings.daily_free_limit, QUOTA_FALLBACK.freeDaily);
+  const { freeDaily } = useQuotaPolicy();
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: WELCOME_MSG },
   ]);

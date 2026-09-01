@@ -152,6 +152,8 @@ import { SentryUserProvider } from "@/components/providers/SentryUserProvider";
 import { Footer } from "@/components/layout/Footer";
 import { DeferredWidgets, DeferredCookieConsent } from "@/components/layout/DeferredWidgets";
 import { A11yWidget } from "@/components/ui/A11yWidget";
+import { getQuotaPolicy } from "@/lib/quota-server";
+import { QuotaPolicyProvider } from "@/context/QuotaPolicyContext";
 import { A11Y_BOOTSTRAP_SCRIPT } from "@/lib/a11y-prefs";
 
 export default async function RootLayout({
@@ -178,7 +180,10 @@ export default async function RootLayout({
   // In Next 16 that is `cacheComponents`, which requires migrating every
   // `export const revalidate` / `runtime` route to `"use cache"` first
   // (16 files) — a separate piece of work.
-  const dictionary = await getDictionary(locale);
+  // Public, near-static data with no request scope, so it does not opt the
+  // layout out of static rendering. Resolving it here means the quota numbers
+  // in marketing copy cost the client nothing.
+  const [dictionary, quotaPolicy] = await Promise.all([getDictionary(locale), getQuotaPolicy()]);
   const initialUser = null;
 
   return (
@@ -250,16 +255,18 @@ export default async function RootLayout({
           <ThemeProvider>
             <QueryProvider>
               <I18nProvider dictionary={dictionary} lang={locale}>
-                <GlobalContextWrapper initialUser={initialUser}>
-                  <ConfirmProvider>
-                    <ErrorBoundary name="AppRoot">
-                      <main id="main-content" className="grow min-h-[100dvh]">
-                        {children}
-                      </main>
-                    </ErrorBoundary>
-                    <Footer />
-                  </ConfirmProvider>
-                </GlobalContextWrapper>
+                <QuotaPolicyProvider value={quotaPolicy}>
+                  <GlobalContextWrapper initialUser={initialUser}>
+                    <ConfirmProvider>
+                      <ErrorBoundary name="AppRoot">
+                        <main id="main-content" className="grow min-h-[100dvh]">
+                          {children}
+                        </main>
+                      </ErrorBoundary>
+                      <Footer />
+                    </ConfirmProvider>
+                  </GlobalContextWrapper>
+                </QuotaPolicyProvider>
               </I18nProvider>
             </QueryProvider>
           </ThemeProvider>

@@ -21,8 +21,7 @@ import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 import { logger } from "@/lib/logger";
 import { CAPABILITY_CONFIGS, CapabilityMode, type IconName } from "@/lib/capability-mode";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
+import { useQuotaPolicy } from "@/context/QuotaPolicyContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -230,8 +229,7 @@ function ParticleCanvas() {
 function Scene1({ onNext }: { onNext: () => void }) {
   // The free allowance is a live setting, so the welcome screen reads it rather
   // than restating a number that goes stale the moment the owner changes it.
-  const { settings } = useSiteSettings();
-  const freeDaily = resolveDailyLimit(settings.daily_free_limit, QUOTA_FALLBACK.freeDaily);
+  const { freeDaily } = useQuotaPolicy();
   const prefersReduced = useReducedMotion();
 
   return (

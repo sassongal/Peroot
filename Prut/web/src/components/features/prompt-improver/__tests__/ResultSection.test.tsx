@@ -7,15 +7,8 @@ import { CapabilityMode } from "@/lib/capability-mode";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
-// The guest signup nudge reads the live free allowance from site_settings.
-// Stub the hook so this stays a render test and does not need a Supabase client.
-vi.mock("@/hooks/useSiteSettings", () => ({
-  useSiteSettings: () => ({
-    settings: { daily_free_limit: 2, guest_daily_limit: 1 },
-    loading: false,
-    refresh: vi.fn(),
-  }),
-}));
+// The quota policy now comes from a server-provided context with a
+// documented default, so no Supabase client is involved in this render test.
 vi.mock("@/context/I18nContext", () => ({
   useI18n: () => ({
     result_section: {

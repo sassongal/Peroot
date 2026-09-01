@@ -4,13 +4,8 @@ import Link from "next/link";
 import { AlertTriangle, Check, CreditCard, Crown, Trash2, Zap } from "lucide-react";
 import type { Subscription } from "@/hooks/useSubscription";
 import { PLANS } from "@/lib/lemonsqueezy";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
-import {
-  PRO_MONTHLY_CREDITS,
-  QUOTA_FALLBACK,
-  creditsPhrase,
-  resolveDailyLimit,
-} from "@/lib/quota-policy";
+import { useQuotaPolicy } from "@/context/QuotaPolicyContext";
+import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
 
 interface SettingsBillingSectionProps {
   billingSuccess: boolean;
@@ -25,8 +20,7 @@ export function SettingsBillingSection({
   subscription,
   portalUrl,
 }: SettingsBillingSectionProps) {
-  const { settings } = useSiteSettings();
-  const freeDaily = resolveDailyLimit(settings.daily_free_limit, QUOTA_FALLBACK.freeDaily);
+  const { freeDaily } = useQuotaPolicy();
 
   return (
     <section
