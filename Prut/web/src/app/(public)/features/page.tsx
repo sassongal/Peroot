@@ -705,7 +705,7 @@ export default function FeaturesPage() {
                 return (
                   <ScrollReveal key={m.subtitle} delay={i * 0.07} fromY={24}>
                     <div
-                      className={`relative group rounded-2xl border ${m.border} bg-linear-to-b ${m.gradient} p-6 transition-all hover:scale-[1.015] hover:shadow-lg hover:shadow-black/20`}
+                      className={`relative group rounded-2xl border ${m.border} bg-linear-to-b ${m.gradient} p-6 transition-all hover:shadow-lg hover:shadow-black/20`}
                     >
                       <div className="absolute top-4 left-4 w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-bold text-muted-foreground">
                         {i + 1}
@@ -849,7 +849,7 @@ export default function FeaturesPage() {
                 <CtaPulse>
                   <Link
                     href="/"
-                    className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-linear-to-r from-amber-500 to-yellow-500 text-black font-bold text-sm transition-all hover:scale-[1.04] active:scale-[0.98] shadow-lg shadow-amber-500/25"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold text-sm transition-all shadow-lg shadow-amber-500/25"
                   >
                     <Sparkles className="w-4 h-4" />
                     בואו ננסה!

@@ -30,8 +30,7 @@ export function UsePromptCTA({ id, title, previewText, slug }: Props) {
     <button
       type="button"
       onClick={handleClick}
-      className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-black font-bold text-sm transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98]"
-      style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
+      className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-[#080808] font-bold text-sm transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
     >
       <Zap className="w-4 h-4" />
       שדרגו פרומפט זה ב-Peroot

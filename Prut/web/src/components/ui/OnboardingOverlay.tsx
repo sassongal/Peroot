@@ -338,7 +338,7 @@ function Scene1({ onNext }: { onNext: () => void }) {
         onClick={onNext}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.96 }}
-        className="flex items-center gap-3 px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold text-lg cursor-pointer"
+        className="flex items-center gap-3 px-10 py-4 rounded-2xl bg-[#F59E0B] hover:bg-[#FBBF24] text-black font-bold text-lg cursor-pointer"
       >
         <span>בוא נתחיל</span>
         <motion.div
@@ -596,7 +596,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
               className={cn(
                 "h-[3px] rounded-full transition-all duration-500",
                 i + 1 === step
-                  ? "w-8 bg-gradient-to-r from-amber-400 to-yellow-400"
+                  ? "w-8 bg-[#F59E0B] hover:bg-[#FBBF24]"
                   : i + 1 < step
                     ? "w-4 bg-white/35"
                     : "w-4 bg-white/12",

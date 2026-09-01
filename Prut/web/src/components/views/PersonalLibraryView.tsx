@@ -101,7 +101,7 @@ function GuestGate() {
         <div className="w-full flex flex-col gap-3 pt-2">
           <Link
             href="/login"
-            className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 rounded-xl text-white font-semibold shadow-lg transition-all"
+            className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[#F59E0B] hover:bg-[#FBBF24] rounded-xl text-[#080808] font-semibold shadow-lg transition-all"
           >
             <LogIn className="w-4 h-4" />
             התחבר עכשיו

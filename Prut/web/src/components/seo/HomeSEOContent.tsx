@@ -54,7 +54,7 @@ export function HomeSEOContent() {
           <div className="flex flex-wrap gap-4 justify-center mb-16">
             <Link
               href="/#enhance"
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-linear-to-r from-amber-500 to-yellow-500 text-black font-bold text-lg hover:scale-[1.03] transition-transform"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-black font-bold text-lg transition-colors"
             >
               נסו עכשיו בחינם
             </Link>

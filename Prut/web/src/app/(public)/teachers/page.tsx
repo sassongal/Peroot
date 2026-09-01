@@ -179,7 +179,7 @@ export default function TeachersPage() {
             <div className="pt-2">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-linear-to-r from-amber-500 to-[#E17100] text-black font-bold text-lg transition-all hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-amber-500/20"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold text-lg transition-all shadow-lg shadow-amber-500/20"
               >
                 <Sparkles className="w-5 h-5" />
                 התחילו בחינם
@@ -303,7 +303,7 @@ export default function TeachersPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-linear-to-r from-amber-500 to-[#E17100] text-black font-bold transition-all hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-amber-500/20"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold transition-all shadow-lg shadow-amber-500/20"
               >
                 <GraduationCap className="w-5 h-5" />
                 כניסה לפירוט

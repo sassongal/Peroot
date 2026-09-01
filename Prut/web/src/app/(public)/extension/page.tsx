@@ -224,7 +224,7 @@ export default function ExtensionPage() {
                 return (
                   <div
                     key={f.title}
-                    className={`rounded-2xl border ${f.border} bg-linear-to-b ${f.gradient} p-6 space-y-4 hover:scale-[1.01] transition-transform`}
+                    className={`rounded-2xl border ${f.border} bg-linear-to-b ${f.gradient} p-6 space-y-4 transition-transform`}
                   >
                     <div
                       className={`w-11 h-11 rounded-xl bg-secondary border border-border flex items-center justify-center ${f.color}`}
@@ -257,7 +257,7 @@ export default function ExtensionPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
               <Link
                 href="/?notify=extension"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-linear-to-r from-amber-500 to-yellow-500 text-black font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold transition-all"
               >
                 <Chrome className="w-5 h-5" />
                 עדכנו אותי

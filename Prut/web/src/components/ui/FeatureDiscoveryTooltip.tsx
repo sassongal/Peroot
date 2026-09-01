@@ -53,14 +53,12 @@ export function FeatureDiscoveryTooltip({
       className={cn(
         "fixed bottom-20 md:bottom-8 left-4 right-4 md:left-auto md:right-8 md:max-w-sm z-50",
         "transition-all duration-500 ease-out",
-        show
-          ? "translate-y-0 opacity-100"
-          : "translate-y-8 opacity-0"
+        show ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
       )}
       role="status"
       aria-live="polite"
     >
-      <div className="relative bg-[#1a1a2e] border border-amber-500/20 rounded-2xl p-4 shadow-2xl shadow-amber-500/10">
+      <div className="relative bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 shadow-2xl shadow-amber-500/10">
         {/* Close button */}
         <button
           onClick={onDismiss}
@@ -112,7 +110,7 @@ export function FeatureDiscoveryTooltip({
                 "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer",
                 isLast
                   ? "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10"
-                  : "text-slate-400 hover:text-slate-200"
+                  : "text-slate-400 hover:text-slate-200",
               )}
             >
               {isLast ? (
@@ -135,7 +133,7 @@ export function FeatureDiscoveryTooltip({
                 key={i}
                 className={cn(
                   "w-1.5 h-1.5 rounded-full transition-colors",
-                  i === currentIndex ? "bg-amber-400" : "bg-slate-600"
+                  i === currentIndex ? "bg-amber-400" : "bg-slate-600",
                 )}
               />
             ))}

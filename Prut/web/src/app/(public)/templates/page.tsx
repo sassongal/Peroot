@@ -180,10 +180,7 @@ export default async function TemplatesPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 href="/?ref=templates"
-                className="px-8 py-3 rounded-xl text-black font-bold text-sm transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
-                style={{
-                  background: "linear-gradient(135deg, #F59E0B, #D97706)",
-                }}
+                className="px-8 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold text-sm transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
               >
                 נסו Peroot - חינם
               </Link>

@@ -373,7 +373,7 @@ export default async function BlogPostPage({ params }: Props) {
               </p>
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-linear-to-r from-amber-500 to-yellow-500 text-black font-bold hover:scale-[1.03] transition-transform"
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-black font-bold transition-colors"
               >
                 <Sparkles className="w-5 h-5" />
                 נסו עכשיו בחינם

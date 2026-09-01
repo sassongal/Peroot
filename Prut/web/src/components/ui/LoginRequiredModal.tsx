@@ -106,7 +106,7 @@ export function LoginRequiredModal({
           <div className="flex flex-col gap-3 w-full pt-4">
             <Link
               href="/login"
-              className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-linear-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 rounded-xl text-white font-semibold transition-all shadow-lg"
+              className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[#F59E0B] hover:bg-[#FBBF24] rounded-xl text-[#080808] font-semibold transition-all shadow-lg"
             >
               <LogIn className="w-5 h-5" />
               הירשם בחינם
