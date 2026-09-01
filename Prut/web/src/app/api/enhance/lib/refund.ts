@@ -7,7 +7,8 @@ export interface RefundEnhanceArgs {
   userId?: string | null;
   /** Guest id (rolling-window quota), or null when there is no guest. */
   guestId: string | null;
-  /** Refinements never charge a guest, so they are never refunded either. */
+  /** Refinement flag — kept for observability; guests are charged (and
+   *  therefore refunded) on refinements too since the guest quota-bypass fix. */
   isRefinement: boolean;
   /** Extra fields attached to the Sentry event if an authenticated refund fails. */
   context?: Record<string, unknown>;
@@ -22,9 +23,10 @@ export type RefundOutcome = "user" | "guest" | "none";
  * correctness could silently drift.
  *
  * The matrix:
- *   - authenticated user            → `refundCredit(userId)` (Sentry on failure)
- *   - guest, non-refinement         → `refundGuestCredit(guestId)`
- *   - guest refinement / admin / no id → no-op
+ *   - authenticated user → `refundCredit(userId)` (Sentry on failure)
+ *   - guest              → `refundGuestCredit(guestId)` (refinements too —
+ *     guests are charged on refinements since the quota-bypass fix)
+ *   - admin / no id      → no-op
  *
  * The Sentry-on-failure branch previously lived only in the live path; hoisting
  * it here gives every refund site the same failure visibility. It never changes
@@ -43,7 +45,8 @@ export async function refundEnhanceCredit(args: RefundEnhanceArgs): Promise<Refu
     return "user";
   }
 
-  if (guestId && !isRefinement) {
+  if (guestId) {
+    void isRefinement;
     await refundGuestCredit(guestId);
     return "guest";
   }

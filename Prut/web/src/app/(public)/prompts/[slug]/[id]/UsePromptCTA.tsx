@@ -1,6 +1,7 @@
 "use client";
 
 import { Zap } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { setPendingPrompt } from "@/lib/pending-prompt";
 import { useRouter } from "next/navigation";
 
@@ -27,13 +28,9 @@ export function UsePromptCTA({ id, title, previewText, slug }: Props) {
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-[#080808] font-bold text-sm transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
-    >
+    <Button size="lg" onClick={handleClick} className="text-sm">
       <Zap className="w-4 h-4" />
       שדרגו פרומפט זה ב-Peroot
-    </button>
+    </Button>
   );
 }

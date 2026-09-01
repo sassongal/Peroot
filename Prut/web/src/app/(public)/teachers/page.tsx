@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
@@ -177,13 +178,10 @@ export default function TeachersPage() {
             </p>
 
             <div className="pt-2">
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold text-lg transition-all shadow-lg shadow-amber-500/20"
-              >
+              <ButtonLink href="/login" size="lg">
                 <Sparkles className="w-5 h-5" />
                 התחילו בחינם
-              </Link>
+              </ButtonLink>
             </div>
           </section>
 
@@ -301,13 +299,10 @@ export default function TeachersPage() {
               כל הפרומפטים זמינים בחינם, בלי כרטיס אשראי, בלי התחייבות
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold transition-all shadow-lg shadow-amber-500/20"
-              >
+              <ButtonLink href="/login" size="lg">
                 <GraduationCap className="w-5 h-5" />
                 כניסה לפירוט
-              </Link>
+              </ButtonLink>
               <Link
                 href="/prompts/teachers"
                 className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl border border-border text-foreground font-medium hover:bg-secondary transition-colors"

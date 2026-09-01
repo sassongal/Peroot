@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ButtonLink } from "@/components/ui/Button";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { FAQ_ITEMS } from "@/lib/faq-data";
 import { softwareAppSchema, faqSchema } from "@/lib/schema";
@@ -52,12 +53,9 @@ export function HomeSEOContent() {
 
           {/* CTA buttons */}
           <div className="flex flex-wrap gap-4 justify-center mb-16">
-            <Link
-              href="/#enhance"
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-black font-bold text-lg transition-colors"
-            >
+            <ButtonLink href="/#enhance" size="lg">
               נסו עכשיו בחינם
-            </Link>
+            </ButtonLink>
             <Link
               href="/prompts"
               className="inline-flex items-center gap-2 px-8 py-3 rounded-xl border border-border text-foreground font-medium text-lg hover:bg-secondary transition-colors"

@@ -125,8 +125,6 @@ function PageContent() {
     personalView,
     setPersonalView,
     completeOnboarding,
-    filteredLibrary,
-    libraryPrompts,
     personalLibrary,
     isPersonalLoaded,
     incrementUseCount,
@@ -1336,9 +1334,17 @@ function PageContent() {
       return;
     }
     // Dedupe against what's already saved: this button once silently doubled
-    // whole libraries (no confirm, no dedupe), sitting next to an innocent
-    // "היסטוריה" folder with the same name.
-    const existingBodies = new Set(personalLibrary.map((p) => p.prompt.trim()));
+    // whole libraries (no confirm, no dedupe). The check runs against the FULL
+    // library, fetched at click time — the in-memory `personalLibrary` is only
+    // the current page slice and would let duplicates through.
+    const { data: existingRows } = await createClient()
+      .from("personal_library")
+      .select("prompt")
+      .eq("user_id", user.id)
+      .limit(2000);
+    const existingBodies = new Set(
+      (existingRows ?? []).map((r) => String((r as { prompt: string }).prompt).trim()),
+    );
     const itemsToAdd = history
       .filter((item) => !existingBodies.has(item.enhanced.trim()))
       .map((item) => ({
@@ -1363,7 +1369,7 @@ function PageContent() {
     if (!ok) return;
     await addPrompts(itemsToAdd);
     toast.success(`${itemsToAdd.length} פרומפטים יובאו מההיסטוריה`);
-  }, [user, history, addPrompts, personalLibrary, confirmDialog]);
+  }, [user, history, addPrompts, confirmDialog, showLoginRequired]);
 
   const handleOnboardingComplete = useCallback(
     async (data?: { role: string; goal: string }) => {

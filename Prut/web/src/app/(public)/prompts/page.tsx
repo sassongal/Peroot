@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 import {
@@ -303,12 +304,9 @@ export default async function PromptsIndexPage() {
               Peroot משדרגת כל פרומפט אוטומטית - מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר ב-AI.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                href="/?ref=prompts-index"
-                className="px-8 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold text-sm transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
-              >
+              <ButtonLink href="/?ref=prompts-index" size="lg">
                 נסו Peroot - חינם
-              </Link>
+              </ButtonLink>
               <Link
                 href="/pricing"
                 className="px-8 py-3 rounded-xl border border-border text-secondary-foreground text-sm font-medium hover:bg-secondary transition-colors"

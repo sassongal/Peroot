@@ -538,9 +538,14 @@ export async function POST(req: Request) {
 
     if (!isAdmin) {
       // 4. ATOMIC Credit Enforcement (after lock to eliminate TOCTOU window).
-      // GENIUS refinement/answers are absorbed — skip decrement on refinement turns.
-      if (!isRefinement) {
-        if (userId) {
+      // GENIUS refinement/answers are absorbed for REGISTERED users only.
+      // isRefinement comes from client-supplied fields (previousResult +
+      // refinementInstruction), so exempting guests from it would let anyone
+      // mint unlimited free generations by fabricating a refinement payload.
+      // A guest "refinement" therefore spends the same 1/24h window; once it
+      // is spent the register wall answers — exactly the intended funnel.
+      if (userId) {
+        if (!isRefinement) {
           const creditResult = await checkAndDecrementCredits(userId, tier, queryClient);
           if (!creditResult.allowed) {
             await releaseInflightLock();
@@ -554,27 +559,27 @@ export async function POST(req: Request) {
               { status: 403 },
             );
           }
-        } else {
-          // Guest path — Redis-backed rolling 24h
-          const resolved = await resolveGuestId(req);
-          guestId = resolved.id;
-          guestNeedsCookie = resolved.needsCookie;
-          const guestResult = await checkAndDecrementGuestCredits(guestId);
-          if (!guestResult.allowed) {
-            await releaseInflightLock();
-            releaseInflightLock = null;
-            const res = NextResponse.json(
-              {
-                error: "יש להתחבר כדי ליצור פרומפטים. ההרשמה חינמית וגישה לכל המנועים.",
-                balance: 0,
-                refresh_at: guestResult.refreshAt?.toISOString() ?? null,
-                code: "guest_quota_exhausted",
-              },
-              { status: 403 },
-            );
-            if (guestNeedsCookie) applyGuestCookie(res, guestId);
-            return res;
-          }
+        }
+      } else {
+        // Guest path — Redis-backed rolling 24h (refinements included).
+        const resolved = await resolveGuestId(req);
+        guestId = resolved.id;
+        guestNeedsCookie = resolved.needsCookie;
+        const guestResult = await checkAndDecrementGuestCredits(guestId);
+        if (!guestResult.allowed) {
+          await releaseInflightLock();
+          releaseInflightLock = null;
+          const res = NextResponse.json(
+            {
+              error: "יש להתחבר כדי ליצור פרומפטים. ההרשמה חינמית וגישה לכל המנועים.",
+              balance: 0,
+              refresh_at: guestResult.refreshAt?.toISOString() ?? null,
+              code: "guest_quota_exhausted",
+            },
+            { status: 403 },
+          );
+          if (guestNeedsCookie) applyGuestCookie(res, guestId);
+          return res;
         }
       }
     }

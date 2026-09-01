@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 import { PromptLinkTile } from "@/components/ui/PromptLinkTile";
 import { CATEGORY_LABELS } from "@/lib/constants";
@@ -59,7 +59,15 @@ export function PromptSearch() {
     [handleSearch],
   );
 
+  // Cancel the pending debounce so a cleared search can't resurrect itself.
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
   const clear = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     setQuery("");
     setResults([]);
     setSearched(false);

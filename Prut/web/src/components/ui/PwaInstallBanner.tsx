@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Button } from "@/components/ui/Button";
 import { Download, X, Share } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -93,12 +94,9 @@ export function PwaInstallBanner() {
           )}
         </div>
         {!iosMode && (
-          <button
-            onClick={handleInstall}
-            className="shrink-0 px-4 py-2 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-black text-sm font-bold transition-colors"
-          >
+          <Button onClick={handleInstall} size="sm" className="shrink-0">
             התקן
-          </button>
+          </Button>
         )}
         <button
           onClick={handleDismiss}

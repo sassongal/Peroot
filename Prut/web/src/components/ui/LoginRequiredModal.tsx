@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { ButtonLink } from "@/components/ui/Button";
 import Image from "next/image";
 import { X, LogIn } from "lucide-react";
 import Link from "next/link";
@@ -104,13 +105,10 @@ export function LoginRequiredModal({
           </div>
 
           <div className="flex flex-col gap-3 w-full pt-4">
-            <Link
-              href="/login"
-              className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[#F59E0B] hover:bg-[#FBBF24] rounded-xl text-[#080808] font-semibold transition-all shadow-lg"
-            >
+            <ButtonLink href="/login" size="lg" className="w-full">
               <LogIn className="w-5 h-5" />
               הירשם בחינם
-            </Link>
+            </ButtonLink>
             <button
               onClick={onClose}
               className="w-full py-3 px-5 text-(--text-muted) hover:text-(--text-primary) text-sm transition-colors"

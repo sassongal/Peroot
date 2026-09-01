@@ -428,7 +428,12 @@ export default function SettingsPage() {
         <div className="flex items-center gap-4 mb-8">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => {
+              // Direct entries (bookmark, shared link) have no in-app history;
+              // falling "back" would leave the site. Home is the safe target.
+              if (window.history.length <= 1) router.push("/");
+              else router.back();
+            }}
             className="cursor-pointer flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
           >
             <ChevronLeft className="w-5 h-5 group-hover:translate-x-[-4px] transition-transform" />

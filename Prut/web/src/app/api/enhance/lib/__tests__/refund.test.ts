@@ -50,15 +50,15 @@ describe("refundEnhanceCredit, the enhance-flow refund matrix", () => {
     expect(rc).not.toHaveBeenCalled();
   });
 
-  it("guest, REFINEMENT → refunds no one (guests are not charged for refinements)", async () => {
+  it("guest, REFINEMENT → refunds the guest (guests ARE charged on refinements since the quota-bypass fix)", async () => {
     const outcome = await refundEnhanceCredit({
       userId: null,
       guestId: "guest-1",
       isRefinement: true,
     });
-    expect(outcome).toBe("none");
+    expect(outcome).toBe("guest");
     expect(rc).not.toHaveBeenCalled();
-    expect(rg).not.toHaveBeenCalled();
+    expect(rg).toHaveBeenCalledWith("guest-1");
   });
 
   it("no user, no guest (e.g. admin) → refunds no one", async () => {

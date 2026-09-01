@@ -26,6 +26,8 @@ interface LibraryDataContextType {
   // Library prompts (public/shared)
   libraryPrompts: LibraryPrompt[];
   isLibraryFetching: boolean;
+  /** Ask for the public catalogue (fetched on demand, personal view only). */
+  requestLibraryPrompts: () => void;
 
   // Personal library data
   personalLibrary: PersonalPrompt[];
@@ -138,9 +140,14 @@ export function LibraryDataProvider({
   }, []);
 
   // --- Library prompts (public) ---
+  // The full catalogue (654+ full prompt bodies) is only consumed inside the
+  // personal view (favorites folder + graph edges) since U3.1 deleted the
+  // in-app LibraryView — so it downloads on demand, not on every home visit.
+  const [libraryPromptsWanted, setLibraryPromptsWanted] = useState(false);
+  const requestLibraryPrompts = useCallback(() => setLibraryPromptsWanted(true), []);
   const { data: libraryPrompts = [], isLoading: isLibraryFetching } = useQuery<LibraryPrompt[]>({
     queryKey: ["library", "prompts"],
-    enabled: deferredReady,
+    enabled: deferredReady && libraryPromptsWanted,
     queryFn: async () => {
       try {
         const pRes = await fetch(getApiPath("/api/library/prompts"));
@@ -387,6 +394,7 @@ export function LibraryDataProvider({
     () => ({
       libraryPrompts,
       isLibraryFetching,
+      requestLibraryPrompts,
       personalLibrary,
       allLocalItems,
       personalCategories,
@@ -434,6 +442,7 @@ export function LibraryDataProvider({
     [
       libraryPrompts,
       isLibraryFetching,
+      requestLibraryPrompts,
       personalLibrary,
       allLocalItems,
       personalCategories,

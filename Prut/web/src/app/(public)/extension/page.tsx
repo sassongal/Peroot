@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import { PageHeading } from "@/components/ui/PageHeading";
 import {
@@ -255,13 +256,10 @@ export default function ExtensionPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-              <Link
-                href="/?notify=extension"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold transition-all"
-              >
+              <ButtonLink href="/?notify=extension" size="lg">
                 <Chrome className="w-5 h-5" />
                 עדכנו אותי
-              </Link>
+              </ButtonLink>
               <Link
                 href="/"
                 className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl border border-border text-foreground font-medium hover:bg-secondary transition-colors"

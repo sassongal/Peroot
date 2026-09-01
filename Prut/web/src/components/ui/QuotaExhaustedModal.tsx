@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import { X, LogIn, Sparkles, Clock } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -83,13 +84,10 @@ export function QuotaExhaustedModal({
           )}
 
           <div className="flex flex-col gap-3 w-full pt-2">
-            <Link
-              href={primaryHref}
-              className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[#F59E0B] hover:bg-[#FBBF24] rounded-xl text-[#080808] font-semibold transition-all shadow-lg"
-            >
+            <ButtonLink href={primaryHref} size="lg" className="w-full">
               <PrimaryIcon className="w-5 h-5" />
               {primaryLabel}
-            </Link>
+            </ButtonLink>
             <button
               onClick={onClose}
               className="w-full py-3 px-5 text-(--text-muted) hover:text-(--text-primary) text-sm transition-colors"

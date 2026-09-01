@@ -1,6 +1,7 @@
 "use client";
 
 import { useLibraryContext } from "@/context/LibraryContext";
+import { ButtonLink } from "@/components/ui/Button";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { LogIn, BookOpen, Star, Network, History } from "lucide-react";
@@ -99,13 +100,10 @@ function GuestGate() {
         </ul>
 
         <div className="w-full flex flex-col gap-3 pt-2">
-          <Link
-            href="/login"
-            className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[#F59E0B] hover:bg-[#FBBF24] rounded-xl text-[#080808] font-semibold shadow-lg transition-all"
-          >
+          <ButtonLink href="/login" size="lg" className="w-full">
             <LogIn className="w-4 h-4" />
             התחבר עכשיו
-          </Link>
+          </ButtonLink>
           <Link
             href="/login?tab=signup"
             className="w-full flex items-center justify-center py-3 px-5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm transition-colors"

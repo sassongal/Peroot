@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Plus,
@@ -32,6 +33,7 @@ import {
 } from "./context/PersonalLibraryContext";
 
 export function PersonalLibraryHeader() {
+  const router = useRouter();
   const ctx = useLibraryContext();
   const {
     user,
@@ -161,7 +163,7 @@ export function PersonalLibraryHeader() {
 
           {/* Full library — hidden on mobile; surfaced as a chip in the mobile tabs row below */}
           <button
-            onClick={() => setViewMode("library")}
+            onClick={() => router.push("/prompts")}
             className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg border border-(--glass-border) text-(--text-secondary) hover:bg-(--glass-bg) hover:text-(--text-primary) transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <BookOpen className="w-4 h-4" />

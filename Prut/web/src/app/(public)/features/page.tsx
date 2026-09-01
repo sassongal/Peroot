@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import {
   MessageSquare,
@@ -847,13 +848,10 @@ export default function FeaturesPage() {
             <ScrollReveal fromY={20} delay={0.1}>
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <CtaPulse>
-                  <Link
-                    href="/"
-                    className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#080808] font-bold text-sm transition-all shadow-lg shadow-amber-500/25"
-                  >
+                  <ButtonLink href="/" size="lg">
                     <Sparkles className="w-4 h-4" />
                     בואו ננסה!
-                  </Link>
+                  </ButtonLink>
                 </CtaPulse>
                 <Link
                   href="/guide"

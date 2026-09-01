@@ -175,6 +175,13 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
 
   // --- View / Filter / Sort State ---
   const [viewMode, setViewMode] = useState<"home" | "library" | "personal">("home");
+
+  // The public catalogue is only consumed inside the personal view; ask the
+  // data layer for it exactly when the user goes there (U3.2 efficiency fix).
+  const requestLibraryPrompts = data.requestLibraryPrompts;
+  useEffect(() => {
+    if (viewMode === "personal") requestLibraryPrompts();
+  }, [viewMode, requestLibraryPrompts]);
   const [libraryView, setLibraryView] = useState<"all" | "favorites">("all");
   const [libraryQuery, setLibraryQuery] = useState("");
   const [personalQuery, setPersonalQuery] = useState("");

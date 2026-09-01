@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import { ArrowRight, Calendar, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -371,13 +372,10 @@ export default async function BlogPostPage({ params }: Props) {
               <p className="text-muted-foreground max-w-lg mx-auto">
                 Peroot משדרג כל פרומפט לרמה מקצועית - בעברית, בחינם, תוך שניות.
               </p>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-black font-bold transition-colors"
-              >
+              <ButtonLink href="/" size="lg">
                 <Sparkles className="w-5 h-5" />
                 נסו עכשיו בחינם
-              </Link>
+              </ButtonLink>
             </div>
           </article>
 
