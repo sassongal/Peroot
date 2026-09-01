@@ -150,7 +150,7 @@ export default async function CategoryPage({ params }: Props) {
       )}
 
       <div className="min-h-screen bg-background text-foreground" dir="rtl">
-        <div className="max-w-6xl mx-auto px-4 py-8 md:py-14">
+        <div className="max-w-5xl mx-auto px-4 py-8 md:py-14">
           {/* Breadcrumbs */}
           <nav
             aria-label="breadcrumb"

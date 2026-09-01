@@ -154,7 +154,7 @@ export default function TeachersPage() {
         className="min-h-screen bg-background text-foreground selection:bg-amber-500/30"
         dir="rtl"
       >
-        <main className="max-w-6xl mx-auto px-4 md:px-8 pb-24">
+        <main className="max-w-5xl mx-auto px-4 md:px-8 pb-24">
           {/* ── Hero ──────────────────────────────────────────────────────── */}
           <section className="py-16 md:py-24 text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-sm font-medium">

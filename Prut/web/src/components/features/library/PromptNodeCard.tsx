@@ -26,7 +26,7 @@ import type { PersonalPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { CAPABILITY_COLORS } from "./graph-utils";
 import { useLibraryContext } from "@/context/LibraryContext";
-import { useFavoritesContext } from "@/context/FavoritesContext";
+import { usePromptActions } from "./use-prompt-actions";
 import { VersionHistoryModal } from "./VersionHistoryModal";
 
 const CAPABILITY_LABELS: Record<CapabilityMode, string> = {
@@ -56,15 +56,19 @@ export function PromptNodeCard({
   onSaveTags,
   backButtonRef,
 }: PromptNodeCardProps) {
+  const { updatePrompt } = useLibraryContext();
+  // Shared action layer (U3.2) — same confirm/undo delete and toasts as the
+  // grid card, so the two surfaces can no longer drift apart.
   const {
-    togglePin,
-    movePrompts,
-    deletePrompts,
+    copyPrompt,
+    pinPrompt,
+    movePrompt,
+    duplicate,
+    toggleFavorite,
+    deleteWithUndo,
+    favoritePersonalIds,
     personalCategories,
-    updatePrompt,
-    duplicatePrompt,
-  } = useLibraryContext();
-  const { favoritePersonalIds, handleToggleFavorite } = useFavoritesContext();
+  } = usePromptActions();
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
@@ -74,7 +78,6 @@ export function PromptNodeCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [folderPickerOpen, setFolderPickerOpen] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   // Full inline edit mode
   const [editMode, setEditMode] = useState(false);
@@ -92,7 +95,6 @@ export function PromptNodeCard({
     setTagInput("");
     setMenuOpen(false);
     setMoveOpen(false);
-    setConfirmDelete(false);
     setEditMode(false);
   }, [prompt?.id]);
 
@@ -106,7 +108,6 @@ export function PromptNodeCard({
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
         setMoveOpen(false);
-        setConfirmDelete(false);
       }
     };
     document.addEventListener("mousedown", onDown);
@@ -173,67 +174,39 @@ export function PromptNodeCard({
 
   const handleCopy = useCallback(async () => {
     if (!prompt) return;
-    try {
-      await navigator.clipboard.writeText(prompt.prompt);
-      toast.success("הפרומפט הועתק ללוח");
-    } catch {
-      toast.error("העתקה נכשלה");
-    }
-  }, [prompt]);
+    await copyPrompt(prompt);
+  }, [prompt, copyPrompt]);
 
   const handleToggleFav = useCallback(async () => {
     if (!prompt) return;
-    try {
-      await handleToggleFavorite("personal", prompt.id);
-    } catch {
-      toast.error("שגיאה בעדכון מועדפים");
-    }
-  }, [prompt, handleToggleFavorite]);
+    await toggleFavorite(prompt);
+  }, [prompt, toggleFavorite]);
 
   const handlePin = useCallback(async () => {
     if (!prompt) return;
-    try {
-      await togglePin(prompt.id);
-    } catch {
-      toast.error("שגיאה בהצמדה");
-    }
-  }, [prompt, togglePin]);
+    await pinPrompt(prompt);
+  }, [prompt, pinPrompt]);
 
   const handleMove = useCallback(
     async (category: string) => {
       if (!prompt) return;
-      try {
-        await movePrompts([prompt.id], category);
-        toast.success(`הועבר ל"${category}"`);
+      if (await movePrompt(prompt, category)) {
         setMenuOpen(false);
         setMoveOpen(false);
-      } catch {
-        toast.error("העברה נכשלה");
       }
     },
-    [prompt, movePrompts],
+    [prompt, movePrompt],
   );
 
   const handleDelete = useCallback(async () => {
     if (!prompt) return;
-    try {
-      await deletePrompts([prompt.id]);
-      toast.success("הפרומפט נמחק");
-      onClose();
-    } catch {
-      toast.error("מחיקה נכשלה");
-    }
-  }, [prompt, deletePrompts, onClose]);
+    if (await deleteWithUndo(prompt)) onClose();
+  }, [prompt, deleteWithUndo, onClose]);
 
   const handleDuplicate = useCallback(async () => {
     if (!prompt) return;
-    try {
-      await duplicatePrompt(prompt);
-      toast.success("הפרומפט שוכפל");
-    } catch {
-      toast.error("שכפול נכשל");
-    }
-  }, [prompt, duplicatePrompt]);
+    await duplicate(prompt);
+  }, [prompt, duplicate]);
 
   const handleOpenEdit = useCallback(() => {
     if (!prompt) return;
@@ -364,36 +337,17 @@ export function PromptNodeCard({
                 <History className="w-3.5 h-3.5" />
                 <span className="flex-1 text-right">היסטוריית גרסאות</span>
               </button>
-              {/* Delete */}
-              {!confirmDelete ? (
-                <button
-                  onClick={() => setConfirmDelete(true)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-400 hover:bg-red-500/15 transition-colors border-t border-white/8"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span className="flex-1 text-right">מחק</span>
-                </button>
-              ) : (
-                <div className="flex items-center gap-1 px-2 py-1.5 border-t border-white/8 bg-red-500/10">
-                  <span className="flex-1 text-[11px] text-red-300 text-right px-1">
-                    למחוק לצמיתות?
-                  </span>
-                  <button
-                    onClick={handleDelete}
-                    className="p-1.5 rounded-md bg-red-500/30 text-red-200 hover:bg-red-500/50 transition-colors"
-                    aria-label="אישור מחיקה"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setConfirmDelete(false)}
-                    className="p-1.5 rounded-md text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
-                    aria-label="ביטול"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
+              {/* Delete — shared confirm+undo flow (usePromptActions) */}
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  void handleDelete();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-400 hover:bg-red-500/15 transition-colors border-t border-white/8"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="flex-1 text-right">מחק</span>
+              </button>
             </div>
           )}
         </div>

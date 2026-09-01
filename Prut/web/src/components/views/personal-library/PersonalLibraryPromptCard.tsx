@@ -38,7 +38,7 @@ import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 import { fromPersonalLibraryRow } from "@/lib/prompt-entity";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useStyleEditor } from "@/context/LibraryUIContext";
-import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { usePromptActions } from "@/components/features/library/use-prompt-actions";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { VariableFiller } from "@/components/features/variables/VariableFiller";
 import { usePresets } from "@/hooks/usePresets";
@@ -59,7 +59,8 @@ interface PersonalLibraryPromptCardProps {
 
 function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProps) {
   const ctx = useLibraryContext();
-  const confirmDialog = useConfirm();
+  // Shared action layer (U3.2) — same behavior + toasts as the graph panel.
+  const { pinPrompt, movePrompt, duplicate: duplicateShared, deleteWithUndo } = usePromptActions();
   const {
     user,
     favoritePersonalIds,
@@ -85,10 +86,6 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
     handlePersonalDrop,
     draggingPersonalId,
     dragOverPersonalId,
-    duplicatePrompt,
-    togglePin,
-    deletePrompts,
-    movePrompts,
   } = ctx;
 
   const { presets, addPreset, deletePreset } = usePresets();
@@ -204,42 +201,8 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
   // expanded-card delete button so both behave identically (the expanded button
   // previously only collapsed the card without deleting anything).
   const handleDeletePrompt = async () => {
-    if (
-      !(await confirmDialog({
-        title: "למחוק את הפרומפט?",
-        message: "אפשר לבטל מיד לאחר המחיקה.",
-        danger: true,
-        confirmLabel: "מחק",
-      }))
-    )
-      return;
-    const snapshot: Partial<PersonalPrompt> = { ...prompt };
-    delete snapshot.id;
-    delete snapshot.created_at;
-    delete snapshot.updated_at;
-    delete snapshot.use_count;
-    try {
-      await deletePrompts([prompt.id]);
-      setOpenMenuId(null);
-      toast.success("הפרומפט נמחק", {
-        action: {
-          label: "בטל",
-          onClick: async () => {
-            try {
-              await ctx.addPrompts([
-                snapshot as Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">,
-              ]);
-              toast.success("הפרומפט שוחזר");
-            } catch {
-              toast.error("השחזור נכשל, נסה שוב.");
-            }
-          },
-        },
-      });
-    } catch {
-      toast.error("המחיקה נכשלה. נסה שוב, או רענן את הדף.");
-      setOpenMenuId(null);
-    }
+    await deleteWithUndo(prompt);
+    setOpenMenuId(null);
   };
 
   return (
@@ -321,7 +284,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            togglePin(prompt.id);
+            void pinPrompt(prompt);
           }}
           title={prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
           aria-label={prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
@@ -487,12 +450,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                           key={cat}
                           onClick={async () => {
                             if (isCurrent) return;
-                            try {
-                              await movePrompts([prompt.id], cat);
-                              toast.success(`הועבר לתיקייה "${cat}"`);
-                            } catch {
-                              toast.error("ההעברה נכשלה, נסה שוב.");
-                            }
+                            await movePrompt(prompt, cat);
                             setOpenMenuId(null);
                             setShowMoveSubMenu(false);
                           }}
@@ -526,12 +484,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                                 toast.error("תיקייה בשם זה כבר קיימת");
                                 return;
                               }
-                              try {
-                                await movePrompts([prompt.id], name);
-                                toast.success(`הועבר לתיקייה "${name}"`);
-                              } catch {
-                                toast.error("ההעברה נכשלה, נסה שוב.");
-                              }
+                              await movePrompt(prompt, name);
                               setOpenMenuId(null);
                               setShowMoveSubMenu(false);
                               setShowNewMoveInlineInput(false);
@@ -554,12 +507,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                                 toast.error("תיקייה בשם זה כבר קיימת");
                                 return;
                               }
-                              try {
-                                await movePrompts([prompt.id], name);
-                                toast.success(`הועבר לתיקייה "${name}"`);
-                              } catch {
-                                toast.error("ההעברה נכשלה, נסה שוב.");
-                              }
+                              await movePrompt(prompt, name);
                               setOpenMenuId(null);
                               setShowMoveSubMenu(false);
                               setShowNewMoveInlineInput(false);
@@ -653,8 +601,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     </button>
                     <button
                       onClick={async () => {
-                        await duplicatePrompt(prompt);
-                        toast.success("פרומפט שוכפל!");
+                        await duplicateShared(prompt);
                         setOpenMenuId(null);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
@@ -677,7 +624,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     </button>
                     <button
                       onClick={() => {
-                        togglePin(prompt.id);
+                        void pinPrompt(prompt);
                         setOpenMenuId(null);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
@@ -1087,10 +1034,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                   <Wand2 className="w-3 h-3" /> עיצוב
                 </button>
                 <button
-                  onClick={async () => {
-                    await duplicatePrompt(prompt);
-                    toast.success("פרומפט שוכפל!");
-                  }}
+                  onClick={() => duplicateShared(prompt)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Plus className="w-3 h-3" /> שכפל
