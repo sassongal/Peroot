@@ -202,6 +202,19 @@ Three rules, all enforced by `src/lib/__tests__/quota-law.test.ts` (CI-blocking)
    different quotas depending on which route they hit.
 3. **`src/lib/quota-policy.ts` is the only module allowed to name a quota number.**
 
+**Credits do not accrue.** The daily allowance is a ceiling, not a wallet. An
+unused day is not banked (the rolling reset SETS the balance to the limit, it
+does not add), and no balance may exceed `public.credit_ceiling(plan_tier)`:
+free → `daily_free_limit`, pro → `pro_monthly_credits`, admin → NULL (unmetered).
+The `trg_clamp_credits_to_ceiling` trigger on `profiles` enforces the ceiling for
+every writer, so a refund, referral grant, admin grant or churn downgrade cannot
+lift a free user above 2. Do not "fix" an over-limit balance in application code;
+the trigger already owns it.
+
+Consequence to know before reviving the referral loop (master plan 3.8): a credit
+reward for a free user is clamped away. Referral needs a different reward, or the
+copy must stop promising credits.
+
 Where to read it:
 - Server components (pricing, FAQ, SEO copy): `getQuotaPolicy()` from `src/lib/quota-server.ts`
 - Client components: `useSiteSettings()` → `settings.daily_free_limit` / `.guest_daily_limit`

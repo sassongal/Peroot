@@ -33,8 +33,32 @@ export const QUOTA_FALLBACK = {
   freeDaily: 2,
 } as const;
 
-/** PRO allowance, per LemonSqueezy billing month. A plan term, not a setting. */
+/**
+ * PRO allowance, per LemonSqueezy billing month.
+ * Mirrored in `site_settings.pro_monthly_credits`, which is what
+ * `public.credit_ceiling('pro')` reads.
+ */
 export const PRO_MONTHLY_CREDITS = 150;
+
+/**
+ * Credits do NOT accrue (owner decision, 2026-09-01).
+ *
+ * A daily allowance is a ceiling, not a wallet: an unused day is not banked,
+ * and no balance may exceed its tier's ceiling. Two mechanisms, both in the
+ * database, because the balance is written from several places:
+ *
+ *   1. The rolling reset in `refresh_and_decrement_credits` SETS the balance to
+ *      the limit rather than adding to it, so ten idle days still leave one
+ *      day's quota.
+ *   2. The `trg_clamp_credits_to_ceiling` trigger on `profiles` clamps any
+ *      write above `public.credit_ceiling(plan_tier)`, whichever function did
+ *      the writing (refund, referral, admin grant, churn downgrade).
+ *
+ * Admins are unmetered: their ceiling is NULL and nothing clamps them.
+ *
+ * Migration: supabase/migrations/20260901150000_credits_no_accrual.sql
+ */
+export const CREDITS_ACCRUE = false;
 
 /** Daily limit shown for an admin: unmetered. */
 export const ADMIN_DAILY_LIMIT = -1;

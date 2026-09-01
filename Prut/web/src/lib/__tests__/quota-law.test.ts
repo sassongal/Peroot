@@ -15,6 +15,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, relative } from "path";
 import {
+  CREDITS_ACCRUE,
   QUOTA_FALLBACK,
   resolveDailyLimit,
   creditsPhrase,
@@ -102,6 +103,48 @@ describe("quota law", () => {
     const guestService = readFileSync(join(SRC, "lib", "guest-service.ts"), "utf8");
     expect(guestService).not.toMatch(/const\s+GUEST_DAILY_LIMIT\s*=\s*\d+/);
     expect(guestService).toContain("guest_daily_limit");
+  });
+});
+
+describe("no-accrual law", () => {
+  const MIGRATION = join(
+    SRC,
+    "..",
+    "supabase",
+    "migrations",
+    "20260901150000_credits_no_accrual.sql",
+  );
+
+  it("declares that credits do not accrue", () => {
+    expect(CREDITS_ACCRUE).toBe(false);
+  });
+
+  it("keeps the rolling reset a SET, never an increment", () => {
+    // `v_balance := v_balance + v_daily_limit` would turn the allowance into a
+    // wallet: ten idle days would grant ten days of quota. The reset must
+    // assign the limit outright.
+    const quotaMigration = readFileSync(
+      join(SRC, "..", "supabase", "migrations", "20260901140000_quota_law.sql"),
+      "utf8",
+    );
+    expect(quotaMigration).not.toMatch(/v_balance\s*:=\s*v_balance\s*\+/);
+  });
+
+  it("ships the ceiling trigger and the tier-aware ceiling function", () => {
+    const sql = readFileSync(MIGRATION, "utf8");
+    expect(sql).toContain("CREATE OR REPLACE FUNCTION public.credit_ceiling");
+    expect(sql).toContain("trg_clamp_credits_to_ceiling");
+    // The trigger must fire on plan_tier too: a PRO user churning to free may
+    // not touch credits_balance in the same write, and would otherwise keep a
+    // 149-credit balance on the free tier.
+    expect(sql).toMatch(/UPDATE OF credits_balance, plan_tier/);
+    // Admins stay unmetered.
+    expect(sql).toMatch(/WHEN 'admin' THEN NULL/);
+  });
+
+  it("caps the refund at the ceiling rather than adding blindly", () => {
+    const sql = readFileSync(MIGRATION, "utf8");
+    expect(sql).toContain("LEAST(credits_balance + amount, v_ceiling)");
   });
 });
 

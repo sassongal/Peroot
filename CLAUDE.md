@@ -44,6 +44,10 @@ Files showing up from the sibling subdir in `git status` are normal, not a leak.
   quota number into copy or logic, and never invent a `?? <number>` fallback:
   everything derives from `Prut/web/src/lib/quota-policy.ts`. Enforced by
   `quota-law.test.ts` in CI. Full rules in `Prut/web/CLAUDE.md`.
+- **Credits do not accrue.** The allowance is a ceiling, not a wallet: an unused
+  day is not banked, and no balance may exceed `public.credit_ceiling(plan_tier)`.
+  The `trg_clamp_credits_to_ceiling` trigger on `profiles` enforces it for every
+  writer (refund, referral, admin grant, churn downgrade). Admins are unmetered.
 - Commit convention: `type(scope): message`.
 
 ## Standing authorizations
