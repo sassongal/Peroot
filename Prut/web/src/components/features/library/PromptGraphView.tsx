@@ -750,12 +750,14 @@ export function PromptGraphView({
         className="relative flex-1 backdrop-blur-sm"
         style={{
           background: isDark
-            ? "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.10) 0%, rgba(59,130,246,0.06) 35%, rgba(2,6,23,0.55) 75%), " +
-              "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.08) 0%, transparent 70%), " +
-              "linear-gradient(180deg, rgba(2,6,23,0.55), rgba(2,6,23,0.75))"
-            : "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.07) 0%, rgba(59,130,246,0.05) 35%, rgba(241,245,249,0.90) 75%), " +
-              "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.05) 0%, transparent 70%), " +
-              "linear-gradient(180deg, rgba(248,250,252,0.85), rgba(241,245,249,0.95))",
+            ? // Obsidian ground with a single low gold hint. The previous version
+              // washed the canvas in purple and blue, which is the generic
+              // AI-SaaS gradient blob DESIGN.md explicitly rejects, and put two
+              // off-palette hues on the app's most visual surface.
+              "radial-gradient(90% 70% at 85% 100%, rgba(245,158,11,0.07) 0%, transparent 65%), " +
+              "linear-gradient(180deg, rgba(8,8,8,0.72), rgba(8,8,8,0.88))"
+            : "radial-gradient(90% 70% at 85% 100%, rgba(245,158,11,0.05) 0%, transparent 65%), " +
+              "linear-gradient(180deg, rgba(248,250,252,0.88), rgba(241,245,249,0.96))",
         }}
       >
         {showInsightOverlay && (

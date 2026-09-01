@@ -43,7 +43,7 @@ function GuestGate() {
     >
       <div className="w-full max-w-lg bg-white/95 dark:bg-zinc-950/90 border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center text-center gap-5">
         <GuestGraphPreview height={220} />
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/15 to-yellow-500/10 border border-amber-500/20 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
           <Image
             src="/images/peroot_logo_pack/logo_dark_240.png"
             alt="Peroot"
@@ -67,7 +67,7 @@ function GuestGate() {
             הספרייה האישית שלך מחכה
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-            התחבר כדי לגשת לכל הפרומפטים שלך, המועדפים, הגרף האישי וההיסטוריה.
+            התחבר כדי לגשת לכל הפרומפטים שלך, המועדפים, הקשרים ביניהם וההיסטוריה.
           </p>
         </div>
 
@@ -86,7 +86,7 @@ function GuestGate() {
             {
               Icon: Network,
               color: "text-indigo-500",
-              label: "גרף ידע, ויזואליזציה של הקשרים בין הפרומפטים",
+              label: "קשרים, לראות מה מתחבר למה בספרייה שלך",
             },
             { Icon: History, color: "text-blue-500", label: "היסטוריה, כל הפרומפטים שיצרת" },
           ].map(({ Icon, color, label }) => (

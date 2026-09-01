@@ -48,12 +48,8 @@ const byId: Record<string, DemoNode> = Object.fromEntries(DEMO_NODES.map((n) => 
 export function GuestGraphPreview({ height = 220 }: { height?: number }) {
   return (
     <div
-      className="w-full rounded-2xl overflow-hidden border border-white/10 relative"
-      style={{
-        height,
-        background:
-          "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.18) 0%, rgba(59,130,246,0.08) 45%, rgba(2,6,23,0.8) 80%)",
-      }}
+      className="w-full rounded-2xl overflow-hidden border border-(--glass-border) bg-(--glass-bg) relative"
+      style={{ height }}
       aria-hidden="true"
     >
       <svg
