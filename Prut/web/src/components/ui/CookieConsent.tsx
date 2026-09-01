@@ -70,7 +70,7 @@ export function CookieConsent() {
         </button>
         <button
           onClick={handleDecline}
-          className="shrink-0 p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+          className="shrink-0 p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
           aria-label="סגור"
         >
           <X className="w-3.5 h-3.5" />

@@ -94,7 +94,7 @@ export function Footer() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="cursor-pointer text-sm text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[36px] flex items-center"
+                  className="cursor-pointer text-sm text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] flex items-center"
                   suppressHydrationWarning
                 >
                   {isHe ? link.he : link.en}

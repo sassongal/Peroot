@@ -195,7 +195,7 @@ export function A11yWidget() {
             type="button"
             onClick={() => setOpen(false)}
             aria-label="סגור כלי נגישות"
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -282,7 +282,7 @@ export function A11yWidget() {
             כלי זה מאפשר התאמות תצוגה אישיות בלבד.{" "}
             <Link
               href="/accessibility"
-              className="underline underline-offset-2 hover:text-foreground"
+              className="inline-flex items-center min-h-[44px] underline underline-offset-2 hover:text-foreground"
               onClick={() => setOpen(false)}
             >
               הצהרת נגישות
