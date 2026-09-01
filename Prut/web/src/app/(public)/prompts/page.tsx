@@ -12,6 +12,7 @@ import { breadcrumbSchema, speakablePageSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { PromptSearch } from "@/components/features/library/PromptSearch";
+import { PromptLinkTile } from "@/components/ui/PromptLinkTile";
 import { createServiceClient } from "@/lib/supabase/service";
 import { promptPagePath } from "@/lib/category-slugs";
 
@@ -233,20 +234,7 @@ export default async function PromptsIndexPage() {
                   const href = promptPagePath(p.category_id, p.id);
                   if (!href) return null;
                   return (
-                    <Link
-                      key={p.id}
-                      href={href}
-                      className="flex flex-col gap-1.5 p-4 rounded-xl border border-border bg-secondary hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all group"
-                    >
-                      <span className="text-sm font-semibold text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">
-                        {p.title}
-                      </span>
-                      {p.use_case && (
-                        <span className="text-xs text-muted-foreground line-clamp-2 leading-snug">
-                          {p.use_case}
-                        </span>
-                      )}
-                    </Link>
+                    <PromptLinkTile key={p.id} href={href} title={p.title} useCase={p.use_case} />
                   );
                 })}
               </div>

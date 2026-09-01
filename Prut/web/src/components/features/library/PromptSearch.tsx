@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Search, X, Loader2 } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { PromptLinkTile } from "@/components/ui/PromptLinkTile";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { CATEGORY_ID_TO_SLUG } from "@/lib/category-slugs";
 import { getApiPath } from "@/lib/api-path";
@@ -48,16 +47,16 @@ export function PromptSearch() {
     }
   }, []);
 
-  // Debounce search
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+  // Debounce search — ref, not state: the previous useState-held timer made
+  // debouncedSearch a new function on every keystroke and could double-fire.
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debouncedSearch = useCallback(
     (value: string) => {
       setQuery(value);
-      if (timer) clearTimeout(timer);
-      const t = setTimeout(() => handleSearch(value), 300);
-      setTimer(t);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => handleSearch(value), 300);
     },
-    [timer, handleSearch],
+    [handleSearch],
   );
 
   const clear = () => {
@@ -113,28 +112,14 @@ export function PromptSearch() {
             {results.map((result) => {
               const categorySlug = CATEGORY_ID_TO_SLUG[result.category_id] || "general";
               const categoryLabel = CATEGORY_LABELS[result.category_id] || result.category_id;
-
               return (
-                <Link
+                <PromptLinkTile
                   key={result.id}
                   href={`/prompts/${categorySlug}/${result.id}`}
-                  className={cn(
-                    "flex flex-col gap-1.5 p-3 rounded-xl border border-border bg-secondary",
-                    "hover:bg-white/6 hover:border-amber-500/30 transition-all group",
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
-                      {categoryLabel}
-                    </span>
-                  </div>
-                  <h4 className="text-sm font-medium text-foreground group-hover:text-amber-400 transition-colors">
-                    {result.title}
-                  </h4>
-                  {result.use_case && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{result.use_case}</p>
-                  )}
-                </Link>
+                  title={result.title}
+                  useCase={result.use_case}
+                  categoryLabel={categoryLabel}
+                />
               );
             })}
           </div>

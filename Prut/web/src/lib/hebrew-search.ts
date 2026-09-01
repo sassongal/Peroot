@@ -1,9 +1,20 @@
 /**
- * Hebrew fuzzy search utility.
- * Strips common Hebrew prefixes and tries substring matching on stripped forms.
+ * Hebrew fuzzy search utility — THE one text normalizer for prompt search
+ * (U3.2). Strips niqqud and common Hebrew prefixes, then substring-matches
+ * on the stripped forms. Every prompt search (public catalogue, personal
+ * library, graph, guest localStorage) goes through these helpers so a typo
+ * or a vowelized text behaves the same everywhere.
  */
 
 const HEBREW_PREFIXES = ["ה", "ו", "ב", "ל", "מ", "ש", "כ"];
+
+// Hebrew points (niqqud + cantillation range) — stripped so "פֵּרוּט" matches "פרוט".
+const NIQQUD_RE = /[֑-ׇ]/g;
+
+/** Lowercase + strip niqqud. The shared base every matcher builds on. */
+export function normalizeHebrew(text: string): string {
+  return text.toLowerCase().replace(NIQQUD_RE, "");
+}
 
 /**
  * Strip a single Hebrew prefix from a word if present.
@@ -28,8 +39,8 @@ function stripHebrewPrefix(word: string): string[] {
 export function hebrewFuzzyMatch(text: string, query: string): boolean {
   if (!query || !text) return !query;
 
-  const normalizedText = text.toLowerCase();
-  const normalizedQuery = query.toLowerCase().trim();
+  const normalizedText = normalizeHebrew(text);
+  const normalizedQuery = normalizeHebrew(query).trim();
 
   // Direct substring match first (fast path)
   if (normalizedText.includes(normalizedQuery)) return true;
@@ -38,17 +49,18 @@ export function hebrewFuzzyMatch(text: string, query: string): boolean {
   const queryWords = normalizedQuery.split(/\s+/).filter(Boolean);
   if (queryWords.length === 0) return true;
 
-  return queryWords.every(qWord => {
+  return queryWords.every((qWord) => {
     // Try all prefix-stripped forms of the query word
     const queryForms = stripHebrewPrefix(qWord);
     // Also try stripping prefixes from text words
     const textWords = normalizedText.split(/\s+/);
 
-    return queryForms.some(qForm =>
-      normalizedText.includes(qForm) ||
-      textWords.some(tWord =>
-        stripHebrewPrefix(tWord).some(tForm => tForm.includes(qForm) || qForm.includes(tForm))
-      )
+    return queryForms.some(
+      (qForm) =>
+        normalizedText.includes(qForm) ||
+        textWords.some((tWord) =>
+          stripHebrewPrefix(tWord).some((tForm) => tForm.includes(qForm) || qForm.includes(tForm)),
+        ),
     );
   });
 }
@@ -60,8 +72,8 @@ export function hebrewFuzzyMatch(text: string, query: string): boolean {
 export function hebrewMatchScore(text: string, query: string): number {
   if (!query || !text) return query ? 0 : 1;
 
-  const normalizedText = text.toLowerCase();
-  const normalizedQuery = query.toLowerCase().trim();
+  const normalizedText = normalizeHebrew(text);
+  const normalizedQuery = normalizeHebrew(query).trim();
 
   // Exact match
   if (normalizedText === normalizedQuery) return 100;

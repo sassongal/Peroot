@@ -38,6 +38,19 @@ interface CapabilityConfig {
   optionalFields?: string[];
 }
 
+/**
+ * THE canonical engine palette (DESIGN.md, Colors > Secondary). Every surface
+ * that colors by capability mode reads from here — selector pills, platform
+ * pickers, glows. One hue per mode, never invented locally (U4.2).
+ */
+export const ENGINE_HUE: Record<CapabilityMode, string> = {
+  [CapabilityMode.STANDARD]: "#5376A4", // Engine Blue
+  [CapabilityMode.DEEP_RESEARCH]: "#456F52", // Engine Green
+  [CapabilityMode.IMAGE_GENERATION]: "#AC5050", // Engine Red
+  [CapabilityMode.AGENT_BUILDER]: "#FDBE00", // Engine Amber
+  [CapabilityMode.VIDEO_GENERATION]: "#6468d4", // Engine Indigo
+};
+
 export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
   [CapabilityMode.STANDARD]: {
     mode: CapabilityMode.STANDARD,

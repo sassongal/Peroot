@@ -17,6 +17,7 @@ import {
   type InsightFilter,
 } from "./graph-utils";
 import { cn } from "@/lib/utils";
+import { normalizeHebrew } from "@/lib/hebrew-search";
 import { scoreInput } from "@/lib/engines/scoring/input-scorer";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -284,10 +285,7 @@ export function PromptGraphView({
   }, [prompts]);
 
   // Strip Hebrew niqqud + lowercase for case/niqqud-insensitive search.
-  const normalize = useCallback(
-    (s: string) => (s ?? "").toLowerCase().replace(/[\u05B0-\u05C7]/g, ""),
-    [],
-  );
+  const normalize = useCallback((s: string) => normalizeHebrew(s ?? ""), []);
 
   // IDs of prompts matching the search + filters. `null` = no filter active.
   const matchedIds = useMemo<Set<string> | null>(() => {

@@ -252,51 +252,54 @@ export const InputSection = memo<InputSectionProps>(
                 </button>
               </div>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {recentPersonalPrompts.slice(0, 3).map((prompt) => (
-                  <button
-                    key={prompt.id}
-                    onClick={() => {
+                {[
+                  ...recentPersonalPrompts.slice(0, 3).map((prompt) => ({
+                    key: prompt.id,
+                    title: prompt.title,
+                    subtitle: prompt.use_case ?? "",
+                    pill: prompt.personal_category || "כללי",
+                    personal: true,
+                    onClick: () => {
                       onUsePrompt(prompt);
                       incrementUseCount(prompt.id);
-                    }}
-                    className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/15 dark:border-amber-500/10 bg-amber-500/4 dark:bg-amber-500/2 hover:bg-amber-500/8 dark:hover:bg-amber-500/6 transition-all cursor-pointer text-start group"
-                    dir="rtl"
-                  >
-                    <p
-                      className="text-sm text-(--text-secondary) font-medium truncate"
-                      title={prompt.title}
-                    >
-                      {prompt.title}
-                    </p>
-                    <p
-                      className="text-xs text-(--text-muted) mt-1 truncate"
-                      title={prompt.use_case}
-                    >
-                      {prompt.use_case}
-                    </p>
-                    <span className="inline-block text-xs px-2 py-0.5 mt-2 rounded-full bg-amber-500/10 text-amber-600/70 dark:text-amber-400/70 border border-amber-500/10">
-                      {prompt.personal_category || "כללי"}
-                    </span>
-                  </button>
-                ))}
-                {history.slice(0, 3).map((item, i) => (
+                    },
+                  })),
+                  ...history.slice(0, 3).map((item, i) => ({
+                    key: `h-${i}`,
+                    title: item.title || item.original.slice(0, 40),
+                    subtitle: item.original.slice(0, 60),
+                    pill: item.category || "כללי",
+                    personal: false,
+                    onClick: () => onRestore(item),
+                  })),
+                ].map((card) => (
                   <button
-                    key={`h-${i}`}
-                    onClick={() => onRestore(item)}
-                    className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-(--glass-border) bg-(--glass-bg) hover:bg-black/6 dark:hover:bg-white/6 transition-all cursor-pointer text-start group"
+                    key={card.key}
+                    onClick={card.onClick}
+                    className={
+                      card.personal
+                        ? "shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/15 dark:border-amber-500/10 bg-amber-500/4 dark:bg-amber-500/2 hover:bg-amber-500/8 dark:hover:bg-amber-500/6 transition-all cursor-pointer text-start group"
+                        : "shrink-0 w-48 md:w-64 p-3 rounded-xl border border-(--glass-border) bg-(--glass-bg) hover:bg-black/6 dark:hover:bg-white/6 transition-all cursor-pointer text-start group"
+                    }
                     dir="rtl"
                   >
                     <p
                       className="text-sm text-(--text-secondary) font-medium truncate"
-                      title={item.title || item.original}
+                      title={card.title}
                     >
-                      {item.title || item.original.slice(0, 40)}
+                      {card.title}
                     </p>
-                    <p className="text-xs text-(--text-muted) mt-1 truncate" title={item.original}>
-                      {item.original.slice(0, 60)}
+                    <p className="text-xs text-(--text-muted) mt-1 truncate" title={card.subtitle}>
+                      {card.subtitle}
                     </p>
-                    <span className="inline-block text-xs px-2 py-0.5 mt-2 rounded-full bg-(--glass-bg) text-(--text-muted) border border-(--glass-border)">
-                      {item.category || "כללי"}
+                    <span
+                      className={
+                        card.personal
+                          ? "inline-block text-xs px-2 py-0.5 mt-2 rounded-full bg-amber-500/10 text-amber-600/70 dark:text-amber-400/70 border border-amber-500/10"
+                          : "inline-block text-xs px-2 py-0.5 mt-2 rounded-full bg-(--glass-bg) text-(--text-muted) border border-(--glass-border)"
+                      }
+                    >
+                      {card.pill}
                     </span>
                   </button>
                 ))}

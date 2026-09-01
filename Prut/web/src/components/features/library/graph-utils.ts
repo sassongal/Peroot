@@ -156,7 +156,7 @@ export function tokenize(text: string): string[] {
   // Latin letters + digits. Strip Hebrew niqqud (\u05B0-\u05C7) first.
   return text
     .toLowerCase()
-    .replace(/[\u05B0-\u05C7]/g, "")
+    .replace(/[֑-ׇ]/g, "") // shared niqqud range (see lib/hebrew-search normalizeHebrew)
     .split(/[^\u0590-\u05FFa-z0-9]+/i)
     .filter((t) => t.length >= 3 && !STOPWORDS.has(t));
 }

@@ -1,4 +1,5 @@
-import { PersonalPrompt } from '@/lib/types';
+import { hebrewFuzzyMatch } from "@/lib/hebrew-search";
+import { PersonalPrompt } from "@/lib/types";
 
 export interface GuestFilterState {
   activeFolder: string | null;
@@ -22,58 +23,67 @@ export function applyGuestFiltersAndSort(
   let filtered = [...prompts];
 
   // Handle virtual folders
-  if (filters.activeFolder === 'pinned') {
-    filtered = filtered.filter(p => p.is_pinned);
-  } else if (filters.activeFolder === 'templates') {
-    filtered = filtered.filter(p => p.is_template === true);
-  } else if (filters.activeFolder === 'favorites') {
+  if (filters.activeFolder === "pinned") {
+    filtered = filtered.filter((p) => p.is_pinned);
+  } else if (filters.activeFolder === "templates") {
+    filtered = filtered.filter((p) => p.is_template === true);
+  } else if (filters.activeFolder === "favorites") {
     // Guest favorites are handled externally (localStorage Set in the view component)
     // This is a no-op: filtering happens in the view
-  } else if (filters.activeFolder && filters.activeFolder !== 'all') {
-    filtered = filtered.filter(p => p.personal_category === filters.activeFolder);
+  } else if (filters.activeFolder && filters.activeFolder !== "all") {
+    filtered = filtered.filter((p) => p.personal_category === filters.activeFolder);
   }
   // null / "all" → no folder filter
 
   if (filters.capabilityFilter) {
-    filtered = filtered.filter(p => p.capability_mode === filters.capabilityFilter);
+    filtered = filtered.filter((p) => p.capability_mode === filters.capabilityFilter);
   }
 
   if (filters.searchQuery) {
-    const q = filters.searchQuery.toLowerCase();
-    filtered = filtered.filter(p =>
-      p.title.toLowerCase().includes(q) ||
-      p.prompt.toLowerCase().includes(q) ||
-      (p.use_case ?? '').toLowerCase().includes(q)
+    // Same Hebrew-aware matcher authed users get (U3.2): a guest with a
+    // prefixed or vowelized query no longer sees 0 results while a signed-in
+    // user sees matches.
+    const q = filters.searchQuery;
+    filtered = filtered.filter((p) =>
+      hebrewFuzzyMatch([p.title, p.prompt, p.use_case ?? ""].join(" "), q),
     );
   }
 
   switch (sort.sortBy) {
-    case 'title':
+    case "title":
       filtered.sort((a, b) => a.title.localeCompare(b.title));
       break;
-    case 'usage':
+    case "usage":
       filtered.sort((a, b) => (b.use_count ?? 0) - (a.use_count ?? 0));
       break;
-    case 'custom':
+    case "custom":
       filtered.sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
       break;
-    case 'last_used':
+    case "last_used":
       filtered.sort((a, b) => {
-        const aT = typeof a.last_used_at === 'number'
-          ? a.last_used_at
-          : (a.last_used_at ? new Date(a.last_used_at).getTime() : 0);
-        const bT = typeof b.last_used_at === 'number'
-          ? b.last_used_at
-          : (b.last_used_at ? new Date(b.last_used_at).getTime() : 0);
+        const aT =
+          typeof a.last_used_at === "number"
+            ? a.last_used_at
+            : a.last_used_at
+              ? new Date(a.last_used_at).getTime()
+              : 0;
+        const bT =
+          typeof b.last_used_at === "number"
+            ? b.last_used_at
+            : b.last_used_at
+              ? new Date(b.last_used_at).getTime()
+              : 0;
         return bT - aT;
       });
       break;
-    case 'performance':
-    case 'recent':
+    case "performance":
+    case "recent":
     default:
       filtered.sort((a, b) => {
-        const aT = typeof a.updated_at === 'number' ? a.updated_at : new Date(a.updated_at).getTime();
-        const bT = typeof b.updated_at === 'number' ? b.updated_at : new Date(b.updated_at).getTime();
+        const aT =
+          typeof a.updated_at === "number" ? a.updated_at : new Date(a.updated_at).getTime();
+        const bT =
+          typeof b.updated_at === "number" ? b.updated_at : new Date(b.updated_at).getTime();
         return bT - aT;
       });
       break;

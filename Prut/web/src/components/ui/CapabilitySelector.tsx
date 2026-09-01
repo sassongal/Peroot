@@ -1,6 +1,6 @@
 "use client";
 
-import { CapabilityMode, CAPABILITY_CONFIGS } from "@/lib/capability-mode";
+import { CapabilityMode, CAPABILITY_CONFIGS, ENGINE_HUE } from "@/lib/capability-mode";
 import { cn } from "@/lib/utils";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
@@ -30,8 +30,8 @@ const MODE_STYLES: Record<CapabilityMode, ModeStyle> = {
     deskGradTo: "rgba(83,118,164,0.06)",
     deskBorderColor: "rgba(83,118,164,0.55)",
     deskGlow: "0 8px 30px rgba(83,118,164,0.25)",
-    topbarColor: "#5376A4",
-    blobColor: "#5376A4",
+    topbarColor: ENGINE_HUE[CapabilityMode.STANDARD],
+    blobColor: ENGINE_HUE[CapabilityMode.STANDARD],
   },
   [CapabilityMode.DEEP_RESEARCH]: {
     pillBg: "rgba(69,111,82,0.35)",
@@ -41,8 +41,8 @@ const MODE_STYLES: Record<CapabilityMode, ModeStyle> = {
     deskGradTo: "rgba(69,111,82,0.07)",
     deskBorderColor: "rgba(69,111,82,0.6)",
     deskGlow: "0 8px 32px rgba(69,111,82,0.28)",
-    topbarColor: "#456F52",
-    blobColor: "#456F52",
+    topbarColor: ENGINE_HUE[CapabilityMode.DEEP_RESEARCH],
+    blobColor: ENGINE_HUE[CapabilityMode.DEEP_RESEARCH],
   },
   [CapabilityMode.IMAGE_GENERATION]: {
     pillBg: "rgba(172,80,80,0.32)",
@@ -52,8 +52,8 @@ const MODE_STYLES: Record<CapabilityMode, ModeStyle> = {
     deskGradTo: "rgba(172,80,80,0.06)",
     deskBorderColor: "rgba(172,80,80,0.55)",
     deskGlow: "0 8px 30px rgba(172,80,80,0.25)",
-    topbarColor: "#AC5050",
-    blobColor: "#AC5050",
+    topbarColor: ENGINE_HUE[CapabilityMode.IMAGE_GENERATION],
+    blobColor: ENGINE_HUE[CapabilityMode.IMAGE_GENERATION],
   },
   [CapabilityMode.AGENT_BUILDER]: {
     pillBg: "rgba(253,190,0,0.24)",
@@ -63,8 +63,8 @@ const MODE_STYLES: Record<CapabilityMode, ModeStyle> = {
     deskGradTo: "rgba(253,190,0,0.04)",
     deskBorderColor: "rgba(253,190,0,0.5)",
     deskGlow: "0 8px 34px rgba(253,190,0,0.3)",
-    topbarColor: "#FDBE00",
-    blobColor: "#FDBE00",
+    topbarColor: ENGINE_HUE[CapabilityMode.AGENT_BUILDER],
+    blobColor: ENGINE_HUE[CapabilityMode.AGENT_BUILDER],
   },
   [CapabilityMode.VIDEO_GENERATION]: {
     pillBg: "rgba(100,104,212,0.3)",
@@ -74,8 +74,8 @@ const MODE_STYLES: Record<CapabilityMode, ModeStyle> = {
     deskGradTo: "rgba(100,104,212,0.06)",
     deskBorderColor: "rgba(100,104,212,0.55)",
     deskGlow: "0 8px 30px rgba(100,104,212,0.25)",
-    topbarColor: "#6468d4",
-    blobColor: "#6468d4",
+    topbarColor: ENGINE_HUE[CapabilityMode.VIDEO_GENERATION],
+    blobColor: ENGINE_HUE[CapabilityMode.VIDEO_GENERATION],
   },
 };
 

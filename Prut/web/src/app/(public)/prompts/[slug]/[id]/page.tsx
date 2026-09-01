@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PromptLinkTile } from "@/components/ui/PromptLinkTile";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
@@ -308,18 +309,12 @@ export default async function PromptPage({ params }: Props) {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {rel.map((r) => (
-                  <Link
+                  <PromptLinkTile
                     key={r.id}
                     href={`/prompts/${slug}/${r.id}`}
-                    className="rounded-xl border border-border bg-card p-4 hover:bg-secondary transition-colors cursor-pointer"
-                  >
-                    <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2 mb-1">
-                      {r.title}
-                    </p>
-                    {r.use_case && (
-                      <p className="text-xs text-muted-foreground line-clamp-2">{r.use_case}</p>
-                    )}
-                  </Link>
+                    title={r.title}
+                    useCase={r.use_case}
+                  />
                 ))}
               </div>
               <div className="mt-4">

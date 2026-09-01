@@ -7,8 +7,11 @@ import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 import { CATEGORY_OPTIONS } from "@/lib/constants";
 import { CapabilityMode, capabilitySupportsTargetModel } from "@/lib/capability-mode";
 import { CapabilitySelector } from "@/components/ui/CapabilitySelector";
-import { ImagePlatformSelector } from "./ImagePlatformSelector";
-import { VideoPlatformSelector } from "./VideoPlatformSelector";
+import { PlatformPicker } from "./PlatformPicker";
+import { IMAGE_PLATFORM_ICONS, VIDEO_PLATFORM_ICONS } from "@/components/ui/PlatformIcons";
+import { getVideoPlatform, VIDEO_PLATFORMS } from "@/lib/video-platforms";
+import { IMAGE_PLATFORMS } from "@/lib/media-platforms";
+import { ENGINE_HUE } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { cn } from "@/lib/utils";
@@ -312,14 +315,27 @@ export function PromptInput({
         />
       </div>
 
-      {/* Image Platform Selector - only visible in IMAGE_GENERATION mode */}
+      {/* Platform picker — one component for both media modes, colored by
+          the canonical engine hue (U4.2 + U4.3) */}
       {selectedCapability === CapabilityMode.IMAGE_GENERATION && (
         <div className="w-full max-w-4xl mx-auto">
-          <ImagePlatformSelector
-            selectedPlatform={imagePlatform}
-            onPlatformChange={setImagePlatform}
+          <PlatformPicker
+            label="פלטפורמת תמונה"
+            hue={ENGINE_HUE[CapabilityMode.IMAGE_GENERATION]}
+            platforms={IMAGE_PLATFORMS}
+            icons={IMAGE_PLATFORM_ICONS}
+            selected={imagePlatform}
+            onSelect={(id) => setImagePlatform(id as ImagePlatform)}
             outputFormat={imageOutputFormat}
             onOutputFormatChange={setImageOutputFormat}
+            aspectRatios={[
+              { value: "", label: "אוטומטי" },
+              { value: "1:1", label: "1:1" },
+              { value: "16:9", label: "16:9" },
+              { value: "9:16", label: "9:16" },
+              { value: "4:3", label: "4:3" },
+              { value: "3:2", label: "3:2" },
+            ]}
             aspectRatio={imageAspectRatio}
             onAspectRatioChange={setImageAspectRatio}
             disabled={isLoading}
@@ -327,12 +343,23 @@ export function PromptInput({
         </div>
       )}
 
-      {/* Video Platform Selector - only visible in VIDEO_GENERATION mode */}
       {selectedCapability === CapabilityMode.VIDEO_GENERATION && (
         <div className="w-full max-w-4xl mx-auto">
-          <VideoPlatformSelector
-            selectedPlatform={videoPlatform}
-            onPlatformChange={setVideoPlatform}
+          <PlatformPicker
+            label="פלטפורמת וידאו"
+            hue={ENGINE_HUE[CapabilityMode.VIDEO_GENERATION]}
+            platforms={VIDEO_PLATFORMS}
+            icons={VIDEO_PLATFORM_ICONS}
+            selected={videoPlatform}
+            onSelect={(id) => setVideoPlatform(id as VideoPlatform)}
+            selectedDescription={getVideoPlatform(videoPlatform)?.description}
+            aspectRatios={[
+              { value: "", label: "אוטומטי" },
+              { value: "16:9", label: "16:9" },
+              { value: "9:16", label: "9:16" },
+              { value: "1:1", label: "1:1" },
+              { value: "4:3", label: "4:3" },
+            ]}
             aspectRatio={videoAspectRatio}
             onAspectRatioChange={setVideoAspectRatio}
             disabled={isLoading}
