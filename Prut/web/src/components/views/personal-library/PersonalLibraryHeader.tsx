@@ -18,10 +18,12 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { buttonClasses } from "@/components/ui/Button";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { SearchAutosuggest } from "@/components/features/library/SearchAutosuggest";
 import { ActiveFilterChips } from "@/components/features/library/ActiveFilterChips";
+import { LibraryScopeBar } from "./LibraryScopeBar";
 import {
   usePersonalLibrarySelection,
   usePersonalLibraryFolders,
@@ -68,13 +70,13 @@ export function PersonalLibraryHeader() {
   const [showGraphHint, setShowGraphHint] = useLocalStorage("peroot:lib-graph-hint", true);
 
   return (
-    <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-(--glass-border) mb-4 sticky top-0 z-20 md:static bg-[#0A0A0F]/90 md:bg-black/40 backdrop-blur-md md:backdrop-blur-none overflow-x-hidden">
+    <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-(--glass-border) mb-4 sticky top-0 z-20 md:static bg-(--surface-rail) md:bg-(--glass-bg) backdrop-blur-md md:backdrop-blur-none overflow-x-hidden">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
           {/* Mobile sidebar toggle */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-2 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="md:hidden p-2 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             aria-label="פתח תפריט"
           >
             <Menu className="w-4 h-4" />
@@ -172,24 +174,22 @@ export function PersonalLibraryHeader() {
           {/* New prompt button */}
           <button
             onClick={() => setViewMode("home")}
-            className="group flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none shrink-0"
+            className={buttonClasses("primary", "md", "shrink-0")}
             aria-label="פרומפט חדש"
           >
-            <div className="relative w-4 h-4 md:w-5 md:h-5">
-              <Sparkles className="absolute inset-0 w-full h-full text-yellow-600" />
-              <Plus
-                className="absolute inset-0 w-full h-full text-black translate-x-0.5 translate-y-0.5"
-                strokeWidth={2.5}
-              />
-            </div>
-            <span className="text-sm font-semibold text-black hidden sm:inline">חדש</span>
-            <span className="text-sm font-semibold text-black hidden lg:inline">פרומפט חדש</span>
+            <Plus className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
+            <span className="text-sm font-semibold hidden sm:inline">חדש</span>
           </button>
         </div>
       </div>
 
+      {/* Mobile scope controls. The desktop equivalents live in the sidebar and
+          the header toggle; this is the same set for narrow screens, replacing
+          the bottom bar that the global tab bar was covering. */}
+      <LibraryScopeBar />
+
       {!user && (
-        <div className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2.5 text-xs text-(--text-secondary) leading-relaxed">
+        <div className="mt-3 mb-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2.5 text-xs text-(--text-secondary) leading-relaxed">
           <span className="font-medium text-amber-800 dark:text-amber-200">מצב אורח: </span>
           הפרומפטים האישיים נשמרים במכשיר זה בלבד; פריטים ישנים עלולים להיעלם אחרי כשבוע.{" "}
           <Link
@@ -203,7 +203,7 @@ export function PersonalLibraryHeader() {
       )}
 
       {user && effectiveFolder === "favorites" && localSearch.trim() !== "" && (
-        <div className="mb-3 flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-[11px] text-(--text-muted)">
+        <div className="mb-3 flex items-start gap-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) px-3 py-2 text-[11px] text-(--text-muted)">
           <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500" aria-hidden />
           <span>
             בתיקיית מועדפים החיפוש הוא לפי התאמת טקסט (לא חיפוש &quot;דמיון&quot; כמו ב&quot;כל
@@ -274,7 +274,7 @@ export function PersonalLibraryHeader() {
                 className={cn(
                   "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   selectionMode
-                    ? "bg-blue-600 border-blue-500 text-(--text-primary) shadow-lg shadow-blue-900/30"
+                    ? "bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300"
                     : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
                 )}
                 title="בחירת פריטים לפעולות מרובות (מחיקה, העברה, תיוג, ייצוא)"

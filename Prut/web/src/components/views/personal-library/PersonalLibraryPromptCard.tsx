@@ -219,18 +219,27 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
         // viewport — so it lays out correctly whether it's a full-width mobile
         // row or a narrow cell in the multi-column grid on a wide monitor.
         "group @container/plcard rounded-xl border transition-all duration-200",
-        "border-white/8 bg-white/2.5 hover:bg-white/4",
-        isDragging && "opacity-50 scale-[0.98]",
+        // Glass surface from tokens, so the card actually HAS a surface and a
+        // border in light mode (white/2.5 over a light page is nothing).
+        // Depth is a gold glow on hover, never a resting grey shadow.
+        "border-(--glass-border) bg-(--glass-bg)",
+        "hover:border-amber-500/30 hover:shadow-[0_6px_24px_rgba(245,158,11,0.10)]",
+        isDragging && "opacity-50",
         isDragOver && "border-amber-500/40 bg-amber-500/5",
-        isSelected && "border-blue-500/40 bg-blue-500/6",
-        isExpanded && "border-white/15 bg-white/4",
+        // Selection is gold like every other active state in the library.
+        isSelected && "border-amber-500/50 bg-amber-500/8",
+        isExpanded && "border-(--glass-border) bg-(--glass-bg)",
       )}
     >
       {/* Collapsed Row */}
       <div
         className={cn(
           "flex items-center gap-2 px-3 cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-          isExpanded ? "py-3 border-b border-white/8" : density === "compact" ? "py-1.5" : "py-2.5",
+          isExpanded
+            ? "py-3 border-b border-(--glass-border)"
+            : density === "compact"
+              ? "py-1.5"
+              : "py-2.5",
         )}
         onClick={toggleExpand}
         role="button"
@@ -307,60 +316,42 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
         {/* Title + Template badge + (mobile) DateBadge */}
         <div className="flex-1 min-w-0" dir="rtl">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-(--text-primary) font-medium truncate">
+            <span className="font-serif text-[15px] @md/plcard:text-base leading-snug text-(--text-primary) truncate">
               {prompt.title}
             </span>
             {prompt.is_template && (
-              <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
+              <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-(--glass-bg) text-(--text-muted) border border-(--glass-border)">
                 תבנית
               </span>
             )}
           </div>
-          {/* Mobile-only meta line — dates + category always visible on small screens.
-              Desktop uses the inline @md/plcard:flex row below. */}
-          <div className="flex @sm/plcard:hidden items-center gap-1.5 text-[10px] text-(--text-muted) mt-0.5 flex-wrap">
+          {/* ONE meta line for every width. This was three near-identical rows
+              (mobile / sm / md), which is how the same fact drifted into three
+              formats and the card grew past 1000 lines. Pieces that do not fit
+              a narrow card hide themselves; the row is not duplicated. */}
+          <div className="flex items-center gap-1.5 text-[11px] text-(--text-muted) mt-1 min-w-0">
             <CapabilityBadge
               mode={prompt.capability_mode}
               showLabel={false}
-              className="scale-90 origin-left"
+              className="@sm/plcard:hidden scale-90 origin-left shrink-0"
             />
-            <span className="opacity-30">·</span>
             <DateBadge mode="compact" entity={entity} />
-            <span className="opacity-30">·</span>
+            <span className="opacity-30" aria-hidden>
+              ·
+            </span>
             <span className="truncate">
               {prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}
             </span>
             {prompt.use_count > 0 && (
-              <>
-                <span className="opacity-30">·</span>
-                <span>{prompt.use_count}x</span>
-              </>
-            )}
-          </div>
-          {/* sm+ meta line (same as before, excluding capability badge which is in the row) */}
-          <div className="hidden @sm/plcard:flex @md/plcard:hidden items-center gap-2 text-[10px] text-(--text-muted) mt-0.5">
-            <DateBadge mode="compact" entity={entity} />
-            <span className="opacity-50">·</span>
-            <span className="truncate">
-              {prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}
-            </span>
-            {prompt.use_count > 0 && (
-              <>
-                <span className="opacity-50">·</span>
-                <span>{prompt.use_count}x</span>
-              </>
+              <span className="hidden @sm/plcard:inline shrink-0 tabular-nums">
+                <span className="opacity-30" aria-hidden>
+                  {" · "}
+                </span>
+                שומש {prompt.use_count}x
+              </span>
             )}
           </div>
         </div>
-
-        {/* Meta: use count + category + date (desktop) */}
-        <span className="hidden @md/plcard:flex items-center gap-2 text-xs text-(--text-muted) shrink-0">
-          {prompt.use_count > 0 && <span>שומש {prompt.use_count}x</span>}
-          <span className="px-1.5 py-0.5 rounded bg-(--glass-bg) text-(--text-muted)">
-            {prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}
-          </span>
-          <DateBadge mode="compact" entity={entity} />
-        </span>
 
         {/* Quick actions (collapsed) — always visible on mobile (no hover),
             hover-revealed on pointer devices. On touch (hover:none) they stay
@@ -378,7 +369,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
             }}
             title="העתק"
             aria-label="העתק פרומפט"
-            className="p-2 @md/plcard:p-1.5 rounded-lg bg-amber-500/5 text-amber-500 dark:text-amber-400 hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 flex items-center justify-center cursor-pointer"
+            className="p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-400 hover:bg-(--glass-bg) transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 flex items-center justify-center cursor-pointer"
           >
             <Copy className="w-4 h-4 @md/plcard:w-3.5 @md/plcard:h-3.5" />
           </button>
@@ -403,7 +394,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
             }}
             title="השתמש"
             aria-label="השתמש בפרומפט"
-            className="flex p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 items-center justify-center"
+            className="flex p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 items-center justify-center"
           >
             <ArrowRight className="w-4 h-4 @md/plcard:w-3.5 @md/plcard:h-3.5" />
           </button>
@@ -418,13 +409,13 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
               }}
               title="עוד"
               aria-label="פעולות נוספות"
-              className="p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 flex items-center justify-center"
+              className="p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 flex items-center justify-center"
             >
               <MoreHorizontal className="w-4 h-4 @md/plcard:w-3.5 @md/plcard:h-3.5" />
             </button>
             {isMenuOpen && (
               <div
-                className="absolute right-0 top-full mt-1 z-50 bg-[#111] border border-(--glass-border) rounded-xl shadow-2xl py-1 min-w-[180px] max-w-[calc(100vw-2rem)] animate-in fade-in slide-in-from-top-2 duration-150"
+                className="absolute right-0 top-full mt-1 z-50 bg-(--surface-panel) border border-(--glass-border) rounded-xl shadow-2xl py-1 min-w-[180px] max-w-[calc(100vw-2rem)] animate-in fade-in slide-in-from-top-2 duration-150"
                 onClick={(e) => e.stopPropagation()}
               >
                 {showMoveSubMenu ? (
@@ -436,7 +427,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         setShowNewMoveInlineInput(false);
                         setNewMoveInlineName("");
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-muted) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <ChevronRight className="w-3.5 h-3.5" /> העבר לתיקייה
                     </button>
@@ -455,7 +446,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                             setShowMoveSubMenu(false);
                           }}
                           className={cn(
-                            "w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-black/5 dark:bg-white/10",
+                            "w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-black/5 dark:hover:bg-white/10",
                             isCurrent
                               ? "text-amber-600 dark:text-amber-400 cursor-default"
                               : "text-(--text-secondary) hover:text-(--text-primary)",
@@ -522,7 +513,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                               setShowNewMoveInlineInput(false);
                               setNewMoveInlineName("");
                             }}
-                            className="flex-1 flex items-center justify-center gap-1 py-1 border border-(--glass-border) rounded text-xs text-(--text-muted) hover:bg-black/5 dark:bg-white/10"
+                            className="flex-1 flex items-center justify-center gap-1 py-1 border border-(--glass-border) rounded text-xs text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/10"
                           >
                             <X className="w-3 h-3" /> ביטול
                           </button>
@@ -531,7 +522,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     ) : (
                       <button
                         onClick={() => setShowNewMoveInlineInput(true)}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                       >
                         <Plus className="w-3.5 h-3.5" /> תיקייה חדשה
                       </button>
@@ -545,7 +536,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         onUsePrompt(prompt);
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <ArrowRight className="w-3.5 h-3.5" /> השתמש
                     </button>
@@ -554,7 +545,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         onCopyText(prompt.prompt);
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <Copy className="w-3.5 h-3.5" /> העתק
                     </button>
@@ -564,7 +555,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         toast.success("הפרומפט הועתק, אפשר להדביק ולשתף");
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <Link2 className="w-3.5 h-3.5" /> שתף
                     </button>
@@ -574,7 +565,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                           onShowConnections(prompt.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                       >
                         <Network className="w-3.5 h-3.5" /> קשרים
                       </button>
@@ -586,7 +577,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         startEditingPersonalPrompt(prompt);
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <Pencil className="w-3.5 h-3.5" /> ערוך
                     </button>
@@ -595,7 +586,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         openStyleEditor(prompt);
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <Wand2 className="w-3.5 h-3.5" /> עיצוב
                     </button>
@@ -604,7 +595,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         await duplicateShared(prompt);
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <Plus className="w-3.5 h-3.5" /> שכפל
                     </button>
@@ -616,7 +607,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         setShowNewMoveInlineInput(false);
                         setNewMoveInlineName("");
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <FolderInput className="w-3.5 h-3.5" />
                       <span className="flex-1 text-right">העבר לתיקייה</span>
@@ -627,7 +618,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         void pinPrompt(prompt);
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <Pin className="w-3.5 h-3.5" /> {prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
                     </button>
@@ -639,7 +630,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         handleToggleFavorite("personal", prompt.id);
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-start gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary) text-start"
+                      className="w-full flex items-start gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary) text-start"
                     >
                       <Star
                         className={cn(
@@ -655,7 +646,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         setSelectionMode(true);
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <Square className="w-3.5 h-3.5" /> בחר
                     </button>
@@ -666,7 +657,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         setVersionHistoryPrompt(prompt);
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <History className="w-3.5 h-3.5" /> גרסאות
                     </button>
@@ -684,7 +675,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         toast.success("יצוא הושלם");
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
                     >
                       <Download className="w-3.5 h-3.5" /> ייצוא
                     </button>
@@ -788,7 +779,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                   {prompt.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-white/8 text-(--text-secondary) border border-white/8"
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-(--glass-bg) text-(--text-secondary) border border-(--glass-border)"
                     >
                       <Tag className="w-2.5 h-2.5 me-1 opacity-50" />
                       {tag}
@@ -866,7 +857,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setStyleEditorExpanded(!styleEditorExpanded)}
-                          className="p-1.5 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                          className="p-1.5 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                           title={styleEditorExpanded ? "מזער" : "הגדל"}
                         >
                           {styleEditorExpanded ? (
@@ -880,7 +871,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                             closeStyleEditor();
                             setStyleEditorExpanded(false);
                           }}
-                          className="p-1.5 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                          className="p-1.5 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -958,7 +949,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                       value={styleDraft}
                       onChange={(e) => setStyleDraft(e.target.value)}
                       className={cn(
-                        "w-full bg-black/40 border border-(--glass-border) rounded-xl p-4 text-sm text-(--text-primary) leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors",
+                        "w-full bg-(--glass-bg) border border-(--glass-border) rounded-xl p-4 text-sm text-(--text-primary) leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors",
                         styleEditorExpanded ? "h-[50vh] resize-y" : "h-32 resize-y",
                       )}
                       placeholder="הטקסט של הפרומפט..."
@@ -1008,7 +999,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     bumpPersonalLibraryLastUsed?.(prompt.id);
                     onCopyText(prompt.prompt);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Copy className="w-3 h-3" /> העתק
                 </button>
@@ -1029,25 +1020,25 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                 />
                 <button
                   onClick={() => openStyleEditor(prompt)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Wand2 className="w-3 h-3" /> עיצוב
                 </button>
                 <button
                   onClick={() => duplicateShared(prompt)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Plus className="w-3 h-3" /> שכפל
                 </button>
                 <button
                   onClick={() => setVersionHistoryPrompt(prompt)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <History className="w-3 h-3" /> גרסאות
                 </button>
                 <button
                   onClick={() => startEditingPersonalPrompt(prompt)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Pencil className="w-3 h-3" /> ערוך
                 </button>
@@ -1060,7 +1051,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                     isFavorite
                       ? "border-yellow-300/30 text-yellow-300 bg-yellow-300/5"
-                      : "border-(--glass-border) text-(--text-secondary) hover:bg-black/5 dark:bg-white/10",
+                      : "border-(--glass-border) text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10",
                   )}
                 >
                   <Star className={cn("w-3 h-3", isFavorite && "fill-yellow-300")} /> מועדף

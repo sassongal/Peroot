@@ -305,7 +305,7 @@ export function A11yWidget() {
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400",
           hasActivePrefs
             ? "bg-amber-500 text-black hover:bg-amber-400"
-            : "bg-slate-700 text-white hover:bg-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700",
+            : "bg-slate-700 text-white hover:bg-slate-600 dark:hover:bg-slate-800 dark:hover:bg-slate-700",
         ].join(" ")}
       >
         <svg

@@ -100,7 +100,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
     <div
       className={cn(
         "flex flex-col h-full overflow-y-auto",
-        isMobile ? "p-4 bg-[#0A0A0F] min-h-screen" : "p-3",
+        isMobile ? "p-4 bg-(--surface-rail) min-h-screen" : "p-3",
       )}
       dir="rtl"
     >
@@ -109,7 +109,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
           <span className="text-sm font-semibold text-(--text-primary)">תיקיות</span>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <X className="w-4 h-4" />
           </button>
@@ -175,7 +175,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
         </span>
       </p>
 
-      <div className="h-px bg-white/8 my-2" />
+      <div className="h-px bg-(--glass-bg) my-2" />
 
       {/* Capability Filter */}
       <div className="mb-3 px-1">
@@ -191,7 +191,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
         </div>
       </div>
 
-      <div className="h-px bg-white/8 my-2" />
+      <div className="h-px bg-(--glass-bg) my-2" />
 
       {/* Real folders */}
       <div className="space-y-0.5 flex-1">
@@ -211,7 +211,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
                     dir="rtl"
                     value={renameCategoryInput}
                     onChange={(e) => setRenameCategoryInput(e.target.value)}
-                    className="flex-1 bg-black/40 border border-(--glass-border) rounded px-2 py-1 text-xs text-(--text-primary) outline-none focus:border-amber-500/50"
+                    className="flex-1 bg-(--glass-bg) border border-(--glass-border) rounded px-2 py-1 text-xs text-(--text-primary) outline-none focus:border-amber-500/50"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") saveRenameCategory();
                       if (e.key === "Escape") cancelRenameCategory();
@@ -277,7 +277,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               placeholder="שם תיקייה..."
-              className="flex-1 bg-black/40 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-(--text-primary) placeholder:text-slate-600 outline-none focus:border-amber-500/40"
+              className="flex-1 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-2.5 py-1.5 text-xs text-(--text-primary) placeholder:text-(--text-muted) outline-none focus:border-amber-500/40"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddNewFolder();
                 if (e.key === "Escape") {
@@ -306,7 +306,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
         ) : (
           <button
             onClick={() => setShowNewFolderInput(true)}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-(--text-muted) hover:text-(--text-secondary) hover:bg-(--glass-bg) transition-colors border border-dashed border-white/8 hover:border-white/15 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-(--text-muted) hover:text-(--text-secondary) hover:bg-(--glass-bg) transition-colors border border-dashed border-(--glass-border) hover:border-(--glass-border) focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <Plus className="w-3 h-3" />
             תיקייה חדשה

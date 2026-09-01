@@ -14,7 +14,6 @@ import { PersonalLibraryGrid } from "./personal-library/PersonalLibraryGrid";
 import { PersonalLibraryModals } from "./personal-library/PersonalLibraryModals";
 import { PersonalLibrarySidebar } from "./personal-library/PersonalLibrarySidebar";
 import { PromptGraphView } from "@/components/features/library/PromptGraphView";
-import { LibraryBottomNav } from "@/components/features/library/LibraryBottomNav";
 import { GuestGraphPreview } from "@/components/features/library/GuestGraphPreview";
 import { MemoryPalaceSidebar } from "@/components/features/library/memory-palace/MemoryPalaceSidebar";
 import { MemoryPalaceDrawer } from "@/components/features/library/memory-palace/MemoryPalaceDrawer";
@@ -106,7 +105,7 @@ function GuestGate() {
           </ButtonLink>
           <Link
             href="/login?tab=signup"
-            className="w-full flex items-center justify-center py-3 px-5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm transition-colors"
+            className="w-full flex items-center justify-center py-3 px-5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-(--text-primary) text-sm transition-colors"
           >
             פתח חשבון חינם
           </Link>
@@ -164,7 +163,7 @@ function PersonalLibraryLayout() {
         aria-hidden={!sidebarOpen}
         inert={!sidebarOpen}
         className={cn(
-          "fixed top-0 start-0 h-full w-72 max-w-[85vw] z-50 bg-[#0A0A0F] border-e border-(--glass-border) shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]",
+          "fixed top-0 start-0 h-full w-72 max-w-[85vw] z-50 bg-(--surface-rail) border-e border-(--glass-border) shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]",
           sidebarOpen ? "translate-x-0" : "translate-x-full",
         )}
       >
@@ -219,9 +218,6 @@ function PersonalLibraryLayout() {
 
       {/* Modals, floating bars, context menus */}
       <PersonalLibraryModals />
-
-      {/* Mobile bottom navigation */}
-      <LibraryBottomNav />
 
       {/* Memory Palace mobile drawer */}
       <MemoryPalaceDrawer

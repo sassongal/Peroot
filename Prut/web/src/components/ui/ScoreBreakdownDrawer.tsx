@@ -127,7 +127,7 @@ export function ScoreBreakdownDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             aria-label="סגור"
           >
             <X className="w-5 h-5" />

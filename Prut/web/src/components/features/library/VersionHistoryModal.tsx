@@ -85,7 +85,7 @@ export function VersionHistoryModal({
         role="dialog"
         aria-modal="true"
         aria-label="היסטוריית גרסאות"
-        className="bg-[#111] border border-(--glass-border) rounded-2xl w-full max-w-2xl max-h-[80vh] shadow-2xl mx-4 flex flex-col animate-in slide-in-from-bottom-4 duration-300"
+        className="bg-(--surface-panel) border border-(--glass-border) rounded-2xl w-full max-w-2xl max-h-[80vh] shadow-2xl mx-4 flex flex-col animate-in slide-in-from-bottom-4 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

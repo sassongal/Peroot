@@ -155,6 +155,12 @@
   --surface-overlay: rgba(0, 0, 0, 0.5);
   --accent-text: #B45309;
 
+  /* Raised surfaces. Before these existed, modals, dropdowns and the library
+     rails were hardcoded #111 / #0A0A0F / #0A0A0A with no `dark:` counterpart,
+     so they stayed near-black on a light page. Both palettes define them. */
+  --surface-panel: #ffffff;   /* modals, dropdowns, context menus, popovers */
+  --surface-rail: rgba(255, 255, 255, 0.92); /* headers, sidebars, sticky bars */
+
   /* List bullets in main content (~18px with root scale); see #main-content list rules */
   --list-item-readable-size: 1.125rem;
   /* Subtle site-wide reading bump (body + rem-based utilities) */
@@ -203,6 +209,10 @@
   --glass-border: rgba(255, 255, 255, 0.10);
   --surface-overlay: rgba(0, 0, 0, 0.8);
   --accent-text: #FBBF24;
+
+  /* Raised surfaces, dark palette. See the light block for why these exist. */
+  --surface-panel: #111114;
+  --surface-rail: rgba(10, 10, 15, 0.92);
 }
 
 @layer base {

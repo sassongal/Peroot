@@ -70,7 +70,7 @@ export function PalaceNeighborList({ nodes, links, onSelect, onNavigate }: Props
                   onSelect(n.id);
                 }
               }}
-              className="w-full text-right p-2 rounded-lg hover:bg-white/5 text-sm flex items-center justify-between gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 ring-amber-400/50"
+              className="w-full text-right p-2 rounded-lg hover:bg-(--glass-bg) text-sm flex items-center justify-between gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 ring-amber-400/50"
             >
               <span className="truncate flex-1 text-(--text-primary)">{n.prompt?.title}</span>
               <span className="text-[10px] text-(--text-muted) shrink-0">
@@ -86,7 +86,7 @@ export function PalaceNeighborList({ nodes, links, onSelect, onNavigate }: Props
             {isOpen && (
               <div
                 className={cn(
-                  "mx-1 mb-1 p-2.5 rounded-lg bg-white/4 border border-white/8",
+                  "mx-1 mb-1 p-2.5 rounded-lg bg-(--glass-bg) border border-(--glass-border)",
                   "text-xs text-(--text-secondary) space-y-2",
                 )}
               >

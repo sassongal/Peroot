@@ -48,7 +48,7 @@ export function PersonalLibraryModals() {
     <>
       {/* ── Floating Batch Actions Bar ── */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 p-2 rounded-2xl border border-(--glass-border) bg-[#0A0A0A]/95 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
+        <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 p-2 rounded-2xl border border-(--glass-border) bg-(--surface-panel)/95 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
           <div className="ps-3 pe-2 text-sm font-medium text-(--text-primary) border-e border-(--glass-border)">
             {selectedIds.size} נבחרו
           </div>
@@ -60,26 +60,26 @@ export function PersonalLibraryModals() {
           </button>
           <button
             onClick={() => setShowMoveDialog(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:bg-white/10 text-(--text-secondary) text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-(--text-secondary) text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <FolderInput className="w-4 h-4" /> <span className="hidden md:inline">העבר ל...</span>
           </button>
           <button
             onClick={() => setShowTagDialog(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:bg-white/10 text-(--text-secondary) text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-(--text-secondary) text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <Tag className="w-4 h-4" /> <span className="hidden md:inline">תגיות</span>
           </button>
           <button
             onClick={handleBatchExport}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:bg-white/10 text-(--text-secondary) text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-(--text-secondary) text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <Download className="w-4 h-4" /> <span className="hidden md:inline">ייצוא</span>
           </button>
           <div className="w-px h-5 bg-black/5 dark:bg-white/10 mx-1" />
           <button
             onClick={clearSelection}
-            className="p-1.5 hover:bg-black/5 dark:bg-white/10 rounded-full text-(--text-muted) focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-full text-(--text-muted) focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             aria-label="סגור"
           >
             <X className="w-4 h-4" />
@@ -91,7 +91,7 @@ export function PersonalLibraryModals() {
       {showMoveDialog && (
         <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div
-            className="bg-[#111] border border-(--glass-border) rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4"
+            className="bg-(--surface-panel) border border-(--glass-border) rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4"
             dir="rtl"
           >
             <h3 className="text-xl text-(--text-primary) font-serif mb-4 text-center">
@@ -106,8 +106,8 @@ export function PersonalLibraryModals() {
                 className={cn(
                   "w-full text-start px-4 py-3 rounded-xl border transition-all text-sm flex items-center justify-between focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   isCreatingNewMoveCategory
-                    ? "bg-blue-600/20 border-blue-500 text-blue-200"
-                    : "bg-(--glass-bg) border-(--glass-border) text-(--text-secondary) hover:bg-black/5 dark:bg-white/10",
+                    ? "bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300"
+                    : "bg-(--glass-bg) border-(--glass-border) text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10",
                 )}
               >
                 <span>+ קטגוריה חדשה</span>
@@ -120,7 +120,7 @@ export function PersonalLibraryModals() {
                     value={newMoveCategoryInput}
                     onChange={(e) => setNewMoveCategoryInput(e.target.value)}
                     placeholder="שם הקטגוריה..."
-                    className="w-full bg-black/40 border border-blue-500/50 rounded-lg p-3 text-(--text-primary) focus:outline-none"
+                    className="w-full bg-(--glass-bg) border border-amber-500/40 rounded-lg p-3 text-(--text-primary) focus:outline-none"
                     autoFocus
                   />
                 </div>
@@ -138,7 +138,7 @@ export function PersonalLibraryModals() {
                       "w-full text-start px-4 py-3 rounded-xl border transition-all text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                       targetMoveCategory === cat && !isCreatingNewMoveCategory
                         ? "bg-white text-black border-white"
-                        : "bg-(--glass-bg) border-(--glass-border) text-(--text-secondary) hover:bg-black/5 dark:bg-white/10",
+                        : "bg-(--glass-bg) border-(--glass-border) text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10",
                     )}
                   >
                     {cat}
@@ -172,7 +172,7 @@ export function PersonalLibraryModals() {
       {showTagDialog && (
         <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div
-            className="bg-[#111] border border-(--glass-border) rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4"
+            className="bg-(--surface-panel) border border-(--glass-border) rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4"
             dir="rtl"
           >
             <h3 className="text-xl text-(--text-primary) font-serif mb-4 text-center">
@@ -208,13 +208,13 @@ export function PersonalLibraryModals() {
       {/* ── Folder context menu ── */}
       {folderContextMenu && (
         <div
-          className="fixed z-80 bg-[#111] border border-(--glass-border) rounded-xl shadow-2xl py-1 min-w-[160px] animate-in fade-in duration-150"
+          className="fixed z-80 bg-(--surface-panel) border border-(--glass-border) rounded-xl shadow-2xl py-1 min-w-[160px] animate-in fade-in duration-150"
           style={{ top: folderContextMenu.y, left: folderContextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={() => handleFolderRename(folderContextMenu.folder)}
-            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
           >
             <Pencil className="w-3.5 h-3.5" /> שנה שם
           </button>

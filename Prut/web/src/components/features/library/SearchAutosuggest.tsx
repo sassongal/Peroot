@@ -197,7 +197,7 @@ export function SearchAutosuggest({
             onChange("");
             setShowSuggestions(false);
           }}
-          className="absolute end-3 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/10 text-(--text-muted) hover:text-(--text-primary) transition-colors"
+          className="absolute end-3 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-(--glass-bg) text-(--text-muted) hover:text-(--text-primary) transition-colors"
           aria-label="נקה חיפוש"
         >
           <X className="w-3.5 h-3.5" />
@@ -208,7 +208,7 @@ export function SearchAutosuggest({
       {listOpen && (
         <div
           id={listboxId}
-          className="absolute top-full mt-1 inset-x-0 z-50 bg-[#111] border border-(--glass-border) rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
+          className="absolute top-full mt-1 inset-x-0 z-50 bg-(--surface-panel) border border-(--glass-border) rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
           role="listbox"
           dir="rtl"
         >
@@ -230,8 +230,8 @@ export function SearchAutosuggest({
                       className={cn(
                         "w-full text-right px-3 py-2 text-sm transition-colors",
                         globalIdx === activeIndex
-                          ? "bg-white/10 text-(--text-primary)"
-                          : "text-(--text-secondary) hover:bg-white/5",
+                          ? "bg-(--glass-bg) text-(--text-primary)"
+                          : "text-(--text-secondary) hover:bg-(--glass-bg)",
                       )}
                       role="option"
                       aria-selected={globalIdx === activeIndex}
@@ -267,8 +267,8 @@ export function SearchAutosuggest({
                       className={cn(
                         "w-full text-right px-3 py-2 text-sm transition-colors truncate",
                         globalIdx === activeIndex
-                          ? "bg-white/10 text-(--text-primary)"
-                          : "text-(--text-secondary) hover:bg-white/5",
+                          ? "bg-(--glass-bg) text-(--text-primary)"
+                          : "text-(--text-secondary) hover:bg-(--glass-bg)",
                       )}
                       role="option"
                       aria-selected={globalIdx === activeIndex}

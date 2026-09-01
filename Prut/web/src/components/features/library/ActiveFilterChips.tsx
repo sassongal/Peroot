@@ -67,8 +67,8 @@ function Chip({
   color?: "default" | "purple" | "yellow" | "amber";
 }) {
   const colorClasses = {
-    default: "bg-white/5 border-[var(--glass-border)] text-[var(--text-secondary)]",
-    purple: "bg-indigo-500/10 border-indigo-500/30 text-indigo-300",
+    default: "bg-(--glass-bg) border-[var(--glass-border)] text-[var(--text-secondary)]",
+    purple: "bg-indigo-500/10 border-indigo-500/30 text-indigo-700 dark:text-indigo-300",
     yellow: "bg-yellow-500/10 border-yellow-500/30 text-yellow-300",
     amber: "bg-amber-500/10 border-amber-500/30 text-amber-300",
   };
@@ -85,7 +85,7 @@ function Chip({
         <button
           type="button"
           onClick={onRemove}
-          className="p-0.5 rounded-full hover:bg-white/10 transition-colors"
+          className="p-0.5 rounded-full hover:bg-(--glass-bg) transition-colors"
           aria-label={`הסר פילטר ${label}`}
         >
           <X className="w-3 h-3" />

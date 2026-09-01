@@ -85,7 +85,7 @@ export function TagNodePanel({
           </span>
           <button
             onClick={onClose}
-            className="p-1 -m-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors shrink-0"
+            className="p-1 -m-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-(--text-primary) transition-colors shrink-0"
             aria-label="סגור"
           >
             <X className="w-4 h-4" />

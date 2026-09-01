@@ -25,13 +25,13 @@ export function GraphInsightOverlay({
       className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 backdrop-blur-sm animate-in fade-in duration-300"
       dir="rtl"
     >
-      <div className="w-full max-w-sm mx-4 rounded-2xl border border-white/15 bg-slate-950/95 backdrop-blur-xl shadow-2xl p-6 animate-in zoom-in-95 duration-300">
+      <div className="w-full max-w-sm mx-4 rounded-2xl border border-(--glass-border) bg-(--surface-panel)/95 backdrop-blur-xl shadow-2xl p-6 animate-in zoom-in-95 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-serif text-white">✨ הספרייה שלך היום</h2>
+          <h2 className="text-lg font-serif text-(--text-primary)"> הספרייה שלך היום</h2>
           <button
             onClick={onDismiss}
-            className="p-1 -m-1 rounded hover:bg-white/10 transition-colors text-slate-400 hover:text-white cursor-pointer"
+            className="p-1 -m-1 rounded hover:bg-(--glass-bg) transition-colors text-slate-400 hover:text-(--text-primary) cursor-pointer"
             aria-label="סגור"
           >
             <X className="w-4 h-4" />
@@ -52,7 +52,7 @@ export function GraphInsightOverlay({
               <div className="text-xs text-amber-400 font-semibold mb-0.5">
                 פרומפט שכדאי לגלות מחדש
               </div>
-              <div className="text-sm text-white truncate">{dailyPick.title}</div>
+              <div className="text-sm text-(--text-primary) truncate">{dailyPick.title}</div>
             </div>
           </button>
         )}
@@ -96,7 +96,7 @@ export function GraphInsightOverlay({
         {/* Dismiss button */}
         <button
           onClick={onDismiss}
-          className="w-full mt-4 py-2.5 rounded-xl border border-white/15 text-sm text-slate-300 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
+          className="w-full mt-4 py-2.5 rounded-xl border border-(--glass-border) text-sm text-slate-300 hover:bg-(--glass-bg) hover:text-(--text-primary) transition-colors cursor-pointer"
         >
           צלול לגרף ←
         </button>
@@ -133,13 +133,13 @@ function InsightCard({
       className={cn(
         "flex items-center gap-3 px-4 py-3 rounded-xl border text-right transition-colors w-full",
         disabled
-          ? "border-white/8 bg-white/3 opacity-50 cursor-not-allowed"
-          : "border-white/12 bg-white/6 hover:bg-white/12 hover:border-white/20 cursor-pointer",
+          ? "border-(--glass-border) bg-(--glass-bg) opacity-50 cursor-not-allowed"
+          : "border-(--glass-border) bg-(--glass-bg) hover:bg-(--glass-bg) hover:border-(--glass-border) cursor-pointer",
       )}
     >
       <span className="text-lg shrink-0">{icon}</span>
       <div className="flex-1 min-w-0">
-        <span className="text-sm text-white">
+        <span className="text-sm text-(--text-primary)">
           <span className="font-bold text-amber-400">{count}</span> {label}
         </span>
       </div>

@@ -134,7 +134,7 @@ export function MemoryPalaceSidebar({
       <button
         type="button"
         onClick={handleToggle}
-        className="p-2 hover:bg-white/5 transition-colors flex items-center gap-2 text-(--text-muted) cursor-pointer"
+        className="p-2 hover:bg-(--glass-bg) transition-colors flex items-center gap-2 text-(--text-muted) cursor-pointer"
         aria-expanded={!isCollapsed}
       >
         {isCollapsed ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}

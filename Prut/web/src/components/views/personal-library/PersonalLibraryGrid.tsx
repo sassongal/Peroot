@@ -102,8 +102,8 @@ export function PersonalLibraryGrid() {
           key={i}
           className="h-12 rounded-xl border border-(--glass-border) bg-(--glass-bg) animate-pulse flex items-center gap-3 px-4"
         >
-          <div className="w-4 h-4 rounded bg-white/8 shrink-0" />
-          <div className="h-3 bg-white/8 rounded flex-1 max-w-xs" />
+          <div className="w-4 h-4 rounded bg-(--glass-bg) shrink-0" />
+          <div className="h-3 bg-(--glass-bg) rounded flex-1 max-w-xs" />
           <div className="h-2 bg-(--glass-bg) rounded w-16 ms-auto" />
         </div>
       ))}
@@ -127,7 +127,7 @@ export function PersonalLibraryGrid() {
           <button
             onClick={() => handlePageChange(usedPage - 1)}
             disabled={usedPage <= 1}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-(--glass-border) text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-(--glass-border) text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <ChevronRight className="w-3.5 h-3.5" /> הקודם
           </button>
@@ -146,7 +146,7 @@ export function PersonalLibraryGrid() {
                     "w-8 h-8 rounded-lg text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                     usedPage === p
                       ? "bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-semibold"
-                      : "text-(--text-muted) hover:bg-black/5 dark:bg-white/10 border border-transparent hover:border-(--glass-border)",
+                      : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/10 border border-transparent hover:border-(--glass-border)",
                   )}
                 >
                   {p}
@@ -158,7 +158,7 @@ export function PersonalLibraryGrid() {
           <button
             onClick={() => handlePageChange(usedPage + 1)}
             disabled={usedPage >= totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-(--glass-border) text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-(--glass-border) text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             הבא <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -172,7 +172,7 @@ export function PersonalLibraryGrid() {
       {/* Chains section (collapsible) */}
       <div
         data-chains-section
-        className="rounded-xl border border-white/8 bg-(--glass-bg) overflow-hidden"
+        className="rounded-xl border border-(--glass-border) bg-(--glass-bg) overflow-hidden"
       >
         <button
           onClick={() => setChainsExpanded(!chainsExpanded)}
@@ -224,7 +224,7 @@ export function PersonalLibraryGrid() {
 
       {/* Library favorites (when in favorites folder) */}
       {effectiveFolder === "favorites" && libraryFavorites.length > 0 && (
-        <div className="rounded-xl border border-white/8 bg-(--glass-bg) p-4 space-y-3">
+        <div className="rounded-xl border border-(--glass-border) bg-(--glass-bg) p-4 space-y-3">
           <h3 className="text-sm font-semibold text-(--text-secondary) flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-blue-400" />
             מועדפים מהספרייה הציבורית
@@ -285,7 +285,7 @@ export function PersonalLibraryGrid() {
           displayItems.length === 0 &&
           (localSearch.trim() || personalQuery.trim()) && (
             <div
-              className="mx-2 text-center py-12 rounded-xl border border-white/8 bg-(--glass-bg)"
+              className="mx-2 text-center py-12 rounded-xl border border-(--glass-border) bg-(--glass-bg)"
               dir="rtl"
             >
               <Search className="w-8 h-8 text-slate-500 mx-auto mb-3" />
@@ -333,7 +333,7 @@ export function PersonalLibraryGrid() {
           !personalQuery.trim() &&
           !selectedCapabilityFilter && (
             <div
-              className="mx-2 flex flex-col items-center gap-4 text-center py-16 rounded-xl border border-white/8 bg-(--glass-bg) px-8 animate-in fade-in duration-500"
+              className="mx-2 flex flex-col items-center gap-4 text-center py-16 rounded-xl border border-(--glass-border) bg-(--glass-bg) px-8 animate-in fade-in duration-500"
               dir="rtl"
             >
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
@@ -364,7 +364,7 @@ export function PersonalLibraryGrid() {
                   ].map((s) => (
                     <div
                       key={s.n}
-                      className="flex-1 flex items-center gap-2.5 rounded-xl border border-(--glass-border) bg-black/10 px-3 py-2.5 text-start"
+                      className="flex-1 flex items-center gap-2.5 rounded-xl border border-(--glass-border) bg-(--glass-bg) px-3 py-2.5 text-start"
                     >
                       <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-center tabular-nums">
                         {s.n}

@@ -123,7 +123,7 @@ export function MemoryPalaceDrawer({
                 type="button"
                 onClick={onClose}
                 aria-label="סגור"
-                className="p-1.5 rounded-md hover:bg-white/10 cursor-pointer"
+                className="p-1.5 rounded-md hover:bg-(--glass-bg) cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
