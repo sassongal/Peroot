@@ -4,7 +4,9 @@ import { useRef, useState, useMemo } from "react";
 import MiniSearch from "minisearch";
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FAQ_ITEMS } from "@/lib/faq-data";
+import { resolveFaqItems } from "@/lib/faq-data";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 type FAQItem = { question: string; answer: string; category: string };
 type Message = {
@@ -19,6 +21,8 @@ const FALLBACK_MSG =
 const WELCOME_MSG = "שלום! אני כאן לעזור עם כל שאלה על Peroot. שאל/י חופשי!";
 
 export function FAQChatBot() {
+  const { settings } = useSiteSettings();
+  const freeDaily = resolveDailyLimit(settings.daily_free_limit, QUOTA_FALLBACK.freeDaily);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: WELCOME_MSG },
   ]);
@@ -36,9 +40,9 @@ export function FAQChatBot() {
         prefix: true,
       },
     });
-    index.addAll(FAQ_ITEMS.map((item, i) => ({ id: i, ...item })));
+    index.addAll(resolveFaqItems(freeDaily).map((item, i) => ({ id: i, ...item })));
     return index;
-  }, []);
+  }, [freeDaily]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

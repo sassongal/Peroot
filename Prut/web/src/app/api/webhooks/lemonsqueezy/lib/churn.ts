@@ -5,6 +5,7 @@ import { churnEmail } from "@/lib/emails/reengagement-templates";
 import { buildNewsletterUnsubscribeUrl } from "@/lib/email/newsletter-unsubscribe-signing";
 import type { createServiceClient } from "@/lib/supabase/service";
 import type { SubscriptionData } from "./subscription-data";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
 
@@ -33,7 +34,10 @@ export async function handleChurnTransition(
     .from("site_settings")
     .select("daily_free_limit")
     .single();
-  const dailyFreeLimit = siteSettings?.daily_free_limit ?? 2;
+  const dailyFreeLimit = resolveDailyLimit(
+    siteSettings?.daily_free_limit,
+    QUOTA_FALLBACK.freeDaily,
+  );
 
   const { error: revokeError } = await supabase
     .from("profiles")
@@ -102,7 +106,11 @@ export async function handleChurnTransition(
   }
 
   try {
-    const template = churnEmail(subscriptionData.customer_name || "משתמש/ת", unsubscribeUrl);
+    const template = churnEmail(
+      subscriptionData.customer_name || "משתמש/ת",
+      unsubscribeUrl,
+      dailyFreeLimit,
+    );
     if (subscriptionData.customer_email) {
       await EmailService.send({
         to: subscriptionData.customer_email,

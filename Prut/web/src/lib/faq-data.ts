@@ -17,6 +17,13 @@ type FAQItem = {
  * - Secondary: "שדרוג פרומפטים", "פרומפטים ל-ChatGPT", "prompt engineering בעברית"
  * - Long-tail: "איך לכתוב פרומפט טוב", "תבניות פרומפטים", "פרומפטים לתמונות AI"
  */
+/**
+ * Answers may contain the `{freeDaily}` token, replaced at render time with the
+ * live `site_settings.daily_free_limit`. Quota numbers are never written into
+ * this file directly (project law, CLAUDE.md): the FAQ is the surface that went
+ * stale last time the allowance changed, since it is static data with no way to
+ * read the database at module scope. Call `resolveFaqItems()` before rendering.
+ */
 export const FAQ_ITEMS: FAQItem[] = [
   // --- TOP 10: Schema-eligible (FAQPage rich results) ---
   {
@@ -236,7 +243,7 @@ export const FAQ_ITEMS: FAQItem[] = [
     category: "תוסף Chrome",
     question: "האם התוסף מצריך כניסה לחשבון?",
     answer:
-      "כן. התוסף מסונכרן עם חשבון Peroot שלכם כדי לספור שימוש ולגשת לספרייה האישית. משתמשים חינמיים מקבלים את אותה מכסה כמו באתר (2 שדרוגים ביום). משתמשי Pro יכולים לשדרג ללא הגבלה.",
+      "כן. התוסף מסונכרן עם חשבון Peroot שלכם כדי לספור שימוש ולגשת לספרייה האישית. משתמשים חינמיים מקבלים את אותה מכסה כמו באתר ({freeDaily} שדרוגים ביום). משתמשי Pro יכולים לשדרג ללא הגבלה.",
   },
   {
     category: "תוסף Chrome",
@@ -285,7 +292,7 @@ export const FAQ_ITEMS: FAQItem[] = [
     category: "מחיר ותשלום",
     question: "מה ההבדל בין החשבון החינמי ל-Pro?",
     answer:
-      "חשבון חינמי: 2 שדרוגי פרומפט ליום (מתחדשים כל 24 שעות מהשימוש האחרון), גישה לכל התבניות, ספרייה אישית, ותוסף Chrome. Pro: 150 שדרוגים בחודש, עדיפות בתורי עיבוד, ושימוש בלתי מוגבל בתכונות ניסיוניות.",
+      "חשבון חינמי: {freeDaily} שדרוגי פרומפט ליום (מתחדשים כל 24 שעות מהשימוש האחרון), גישה לכל התבניות, ספרייה אישית, ותוסף Chrome. Pro: 150 שדרוגים בחודש, עדיפות בתורי עיבוד, ושימוש בלתי מוגבל בתכונות ניסיוניות.",
   },
   {
     category: "מחיר ותשלום",
@@ -308,7 +315,7 @@ export const FAQ_ITEMS: FAQItem[] = [
     category: "מחיר ותשלום",
     question: "מתי מתחדשים הקרדיטים החינמיים?",
     answer:
-      "הקרדיטים החינמיים (2 ליום) מתחדשים 24 שעות לאחר השימוש האחרון. אם ניצלתם את שניהם, הם יתחדשו 24 שעות מאותו רגע. משתמשי Pro מקבלים 150 קרדיטים בתחילת כל חודש.",
+      "הקרדיטים החינמיים ({freeDaily} ליום) מתחדשים 24 שעות לאחר השימוש האחרון. אם ניצלתם את כולם, הם יתחדשו 24 שעות מאותו רגע. משתמשי Pro מקבלים 150 קרדיטים בתחילת כל חודש.",
   },
   // --- חשבון ואבטחה ---
   {
@@ -446,3 +453,17 @@ export const FAQ_ITEMS: FAQItem[] = [
       "כן. מורים ומוסדות חינוך יכולים לפנות לגל@joya-tech.net לגישה Pro מוגדלת בתנאים מיוחדים. Peroot מותאם ליצירת חומרי לימוד, מבחנים, הסברים, ותרגילים.",
   },
 ];
+
+/**
+ * Substitute live quota values into the FAQ answers.
+ *
+ * Server components get `freeDaily` from `getQuotaPolicy()`; client components
+ * from `useSiteSettings()`. Passing the fallback is always safe.
+ */
+export function resolveFaqItems(freeDaily: number): FAQItem[] {
+  return FAQ_ITEMS.map((item) =>
+    item.answer.includes("{freeDaily}")
+      ? { ...item, answer: item.answer.replaceAll("{freeDaily}", String(freeDaily)) }
+      : item,
+  );
+}

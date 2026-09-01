@@ -169,9 +169,7 @@ Circuit breaker auto-skips providers that fail consecutively.
 - Key tables: `profiles`, `prompts`, `credit_ledger`, `prompt_favorites`, `newsletter_subscribers`
 - Atomic credit RPC: `refresh_and_decrement_credits`; refunds via `refund_credit`
 - **Quotas are data, not constants** — read `public.site_settings`, never hardcode.
-  `daily_free_limit` drives the free tier (live value **1**/day, rolling window);
-  `allow_guest_access` gates the guest register-wall (live value **true**, so guests
-  still get `GUEST_DAILY_LIMIT` = 1/day from `src/lib/guest-service.ts`).
+  See "The quota law" below. Live: guest **1**/day, registered free **2**/day.
   Pro is a LemonSqueezy monthly allowance.
 
 ---
@@ -186,11 +184,39 @@ Credit-gated user routes go through `withUser` (`src/lib/api-middleware.ts`).
 
 ---
 
+## The quota law (owner decision, 2026-09-01)
+
+**Guest 1/day · registered free 2/day.** Both are rows in `public.site_settings`
+(`guest_daily_limit`, `daily_free_limit`), not constants. Changing the allowance is
+an admin edit, never a deploy.
+
+Three rules, all enforced by `src/lib/__tests__/quota-law.test.ts` (CI-blocking):
+
+1. **No quota number in user-facing copy.** Not "2 שיפורים ביום", not "קרדיט אחד ביום".
+   Interpolate `creditsPhrase()` / `enhancementsPhrase()` from `src/lib/quota-policy.ts`
+   so the Hebrew stays grammatical when the number changes ("שיפור אחד" vs "שני שיפורים"
+   are different word forms, not a different digit).
+2. **No `?? <number>` fallback at a call site.** Use
+   `resolveDailyLimit(value, QUOTA_FALLBACK.freeDaily)`. Eight routes each invented
+   their own fallback before this, so a Supabase blip handed different users
+   different quotas depending on which route they hit.
+3. **`src/lib/quota-policy.ts` is the only module allowed to name a quota number.**
+
+Where to read it:
+- Server components (pricing, FAQ, SEO copy): `getQuotaPolicy()` from `src/lib/quota-server.ts`
+- Client components: `useSiteSettings()` → `settings.daily_free_limit` / `.guest_daily_limit`
+- Guest runtime: `getGuestDailyLimit()` from `src/lib/guest-service.ts`
+- Registered runtime: the `refresh_and_decrement_credits` RPC reads the column itself
+
+Two SQL functions cannot import the module and carry a mirrored default that must be
+kept in sync: `handle_new_user()` and `refresh_and_decrement_credits()`
+(`supabase/migrations/20260901140000_quota_law.sql`).
+
 ## Business Logic
-- **Free plan:** `site_settings.daily_free_limit` improvements/day (live: **1**)
-- **Guests:** `GUEST_DAILY_LIMIT` = 1/day, only while `site_settings.allow_guest_access` is true
-- **Pro plan:** LemonSqueezy subscription — store `Peroot` (312053), variant `Peroot Pro`
-- Never write a quota number into UI copy or logic; read it from `site_settings`
+- **Free plan:** `site_settings.daily_free_limit` improvements/day (live: **2**)
+- **Guests:** `site_settings.guest_daily_limit` (live: **1**), only while `allow_guest_access` is true
+- **Pro plan:** LemonSqueezy subscription — store `Peroot` (312053), variant `Peroot Pro`;
+  `PRO_MONTHLY_CREDITS` in `quota-policy.ts` is the single source for the 150/month figure
 - Webhook: `/api/webhooks/lemonsqueezy` — order_created / order_refunded
 - Email: Resend API (`RESEND_FROM_EMAIL`)
 - Analytics: PostHog (behavioral) + GA4 (traffic) + Clarity (heatmaps)

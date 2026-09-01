@@ -3,33 +3,49 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { pricingSchema, breadcrumbSchema, faqSchema } from "@/lib/schema";
 import { PLANS } from "@/lib/lemonsqueezy";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { getQuotaPolicy } from "@/lib/quota-server";
+import { PRO_MONTHLY_CREDITS, creditsPhrase, dailyCreditsPhrase } from "@/lib/quota-policy";
 
-export const metadata: Metadata = {
-  title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
-  description:
-    "השוו בין התוכניות של פירוט: חינם עם קרדיט אחד ביום או Pro עם 150 קרדיטים בחודש. שדרוג פרומפטים וטקסטים בעברית עם AI. יום ניסיון במתנה לתוכנית Pro.",
-  alternates: { canonical: "/pricing" },
-  openGraph: {
-    title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
-    description:
-      "השוו בין התוכניות של פירוט: חינם עם קרדיט אחד ביום או Pro עם 150 קרדיטים בחודש. שדרוג פרומפטים וטקסטים בעברית עם AI. יום ניסיון במתנה לתוכנית Pro.",
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space"}/pricing`,
-    siteName: "Peroot",
-    locale: "he_IL",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
-    description:
-      "השוו בין התוכניות של פירוט: חינם או Pro. שדרוג פרומפטים בעברית עם AI. יום ניסיון במתנה.",
-  },
-};
+// The free allowance appears eleven times on this page, in metadata, JSON-LD
+// and the crawlable copy. It used to be written out as "קרדיט אחד ביום" in each
+// of them, which is how the page ended up advertising a quota the product no
+// longer gave. Everything below now derives from the live setting.
+export async function generateMetadata(): Promise<Metadata> {
+  const { freeDaily } = await getQuotaPolicy();
+  const free = dailyCreditsPhrase(freeDaily);
+  const pro = creditsPhrase(PRO_MONTHLY_CREDITS);
+  const title = "תמחור - פירוט | שדרוג טקסטים בעברית עם AI";
+  const description = `השוו בין התוכניות של פירוט: חינם עם ${free} או Pro עם ${pro} בחודש. שדרוג פרומפטים וטקסטים בעברית עם AI. יום ניסיון במתנה לתוכנית Pro.`;
 
-export default function PricingLayout({ children }: { children: React.ReactNode }) {
+  return {
+    title,
+    description,
+    alternates: { canonical: "/pricing" },
+    openGraph: {
+      title,
+      description,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space"}/pricing`,
+      siteName: "Peroot",
+      locale: "he_IL",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description:
+        "השוו בין התוכניות של פירוט: חינם או Pro. שדרוג פרומפטים בעברית עם AI. יום ניסיון במתנה.",
+    },
+  };
+}
+
+export default async function PricingLayout({ children }: { children: React.ReactNode }) {
+  const { freeDaily } = await getQuotaPolicy();
+  const freeDailyPhrase = dailyCreditsPhrase(freeDaily);
+  const proCredits = creditsPhrase(PRO_MONTHLY_CREDITS);
+
   return (
     <>
-      <JsonLd data={pricingSchema()} />
+      <JsonLd data={pricingSchema(freeDaily)} />
       <JsonLd
         data={breadcrumbSchema([
           { name: "דף הבית", url: "/" },
@@ -41,18 +57,15 @@ export default function PricingLayout({ children }: { children: React.ReactNode 
         data={faqSchema([
           {
             question: "כמה עולה Peroot?",
-            answer:
-              "Peroot מציע תוכנית חינמית עם קרדיט אחד ביום, ותוכנית Pro עם 150 קרדיטים בחודש. יש יום ניסיון במתנה ל-Pro.",
+            answer: `Peroot מציע תוכנית חינמית עם ${freeDailyPhrase}, ותוכנית Pro עם ${proCredits} בחודש. יש יום ניסיון במתנה ל-Pro.`,
           },
           {
             question: "מה ההבדל בין חינם ל-Pro?",
-            answer:
-              "התוכנית החינמית כוללת קרדיט אחד ביום ומודלים בסיסיים. Pro כוללת 150 קרדיטים בחודש, מודלים פרימיום, שיפור איטרטיבי, וספרייה אישית ללא הגבלה.",
+            answer: `התוכנית החינמית כוללת ${freeDailyPhrase} ומודלים בסיסיים. Pro כוללת ${proCredits} בחודש, מודלים פרימיום, שיפור איטרטיבי, וספרייה אישית ללא הגבלה.`,
           },
           {
             question: "איך מערכת הקרדיטים עובדת?",
-            answer:
-              "כל שדרוג פרומפט עולה קרדיט אחד. בחינם מקבלים קרדיט אחד שמתחדש כל 24 שעות מהשימוש האחרון. ב-Pro מקבלים 150 קרדיטים שמתחדשים בתחילת כל חודש חיוב.",
+            answer: `כל שדרוג פרומפט עולה קרדיט אחד. בחינם מקבלים ${creditsPhrase(freeDaily)} שמתחדשים כל 24 שעות מהשימוש האחרון. ב-Pro מקבלים ${proCredits} שמתחדשים בתחילת כל חודש חיוב.`,
           },
           {
             question: "אפשר לבטל את המנוי?",
@@ -72,18 +85,19 @@ export default function PricingLayout({ children }: { children: React.ReactNode 
         <section>
           <h2>כמה עולה Peroot?</h2>
           <p>
-            Peroot מציע שתי תוכניות: חינם ו-Pro. התוכנית החינמית כוללת קרדיט אחד ביום שמתחדש
-            אוטומטית כל 24 שעות מהשימוש האחרון, גישה לספריית פרומפטים עם מעל 410 תבניות מקצועיות,
-            אפשרות שיתוף, ותוסף Chrome לשדרוג מהיר מכל אתר. תוכנית Pro כוללת יום ניסיון במתנה ו-150
-            קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי מתקדם, ספרייה אישית ומועדפים
-            ללא הגבלה, תוסף Chrome עם סנכרון מלא לאתר, ותמיכה בעדיפות. כל שדרוג פרומפט עולה קרדיט
-            אחד. ניתן לבטל בכל עת ללא התחייבות. התשלום מאובטח דרך Lemon Squeezy.
+            Peroot מציע שתי תוכניות: חינם ו-Pro. התוכנית החינמית כוללת {freeDailyPhrase} שמתחדשים
+            אוטומטית כל 24 שעות מהשימוש האחרון, גישה לספריית פרומפטים עם מעל {PROMPT_LIBRARY_COUNT}{" "}
+            תבניות מקצועיות, אפשרות שיתוף, ותוסף Chrome לשדרוג מהיר מכל אתר. תוכנית Pro כוללת יום
+            ניסיון במתנה ו{proCredits} בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי מתקדם,
+            ספרייה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא לאתר, ותמיכה בעדיפות. כל
+            שדרוג פרומפט עולה קרדיט אחד. ניתן לבטל בכל עת ללא התחייבות. התשלום מאובטח דרך Lemon
+            Squeezy.
           </p>
         </section>
         <section>
           <h2>תוכנית חינם</h2>
           <ul>
-            <li>קרדיט אחד ליום (מתחדש כל 24 שעות)</li>
+            <li>{creditsPhrase(freeDaily)} ליום (מתחדשים כל 24 שעות)</li>
             <li>גישה לספריית {PROMPT_LIBRARY_COUNT} פרומפטים מקצועיים</li>
             <li>שיתוף פרומפטים</li>
             <li>תוסף Chrome לשדרוג מהיר</li>
@@ -93,7 +107,7 @@ export default function PricingLayout({ children }: { children: React.ReactNode 
         <section>
           <h2>תוכנית Pro</h2>
           <ul>
-            <li>150 קרדיטים בחודש</li>
+            <li>{proCredits} בחודש</li>
             <li>גישה לכל המנועים המתקדמים</li>
             <li>שיפור איטרטיבי מתקדם</li>
             <li>ספרייה אישית + מועדפים ללא הגבלה</li>
@@ -105,9 +119,9 @@ export default function PricingLayout({ children }: { children: React.ReactNode 
         <section>
           <h2>מערכת הקרדיטים</h2>
           <p>
-            כל שדרוג פרומפט ב-Peroot עולה קרדיט אחד. משתמשי חינם מקבלים קרדיט אחד שמתחדש כל יום.
-            משתמשי Pro מקבלים 150 קרדיטים בחודש שמתחדשים עם כל חיוב. הקרדיטים תקפים גם באתר וגם
-            בתוסף Chrome.
+            כל שדרוג פרומפט ב-Peroot עולה קרדיט אחד. משתמשי חינם מקבלים {creditsPhrase(freeDaily)}{" "}
+            שמתחדשים כל יום. משתמשי Pro מקבלים {proCredits} בחודש שמתחדשים עם כל חיוב. הקרדיטים
+            תקפים גם באתר וגם בתוסף Chrome.
           </p>
         </section>
       </div>

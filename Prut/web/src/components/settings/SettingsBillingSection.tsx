@@ -4,6 +4,13 @@ import Link from "next/link";
 import { AlertTriangle, Check, CreditCard, Crown, Trash2, Zap } from "lucide-react";
 import type { Subscription } from "@/hooks/useSubscription";
 import { PLANS } from "@/lib/lemonsqueezy";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import {
+  PRO_MONTHLY_CREDITS,
+  QUOTA_FALLBACK,
+  creditsPhrase,
+  resolveDailyLimit,
+} from "@/lib/quota-policy";
 
 interface SettingsBillingSectionProps {
   billingSuccess: boolean;
@@ -18,6 +25,9 @@ export function SettingsBillingSection({
   subscription,
   portalUrl,
 }: SettingsBillingSectionProps) {
+  const { settings } = useSiteSettings();
+  const freeDaily = resolveDailyLimit(settings.daily_free_limit, QUOTA_FALLBACK.freeDaily);
+
   return (
     <section
       className="space-y-6 animate-in fade-in duration-300"
@@ -56,7 +66,7 @@ export function SettingsBillingSection({
               <p className="text-xs text-slate-500">
                 {isPro
                   ? `סטטוס: פעיל${subscription.renews_at ? ` · מתחדש ב-${new Date(subscription.renews_at).toLocaleDateString("he-IL")}` : ""}`
-                  : "קרדיט אחד ביום"}
+                  : `${creditsPhrase(freeDaily)} ביום`}
               </p>
             </div>
           </div>
@@ -110,7 +120,7 @@ export function SettingsBillingSection({
           <ul className="space-y-2 text-sm text-slate-300">
             <li className="flex items-center gap-2">
               <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              150 קרדיטים בחודש
+              {creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש
             </li>
             <li className="flex items-center gap-2">
               <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />

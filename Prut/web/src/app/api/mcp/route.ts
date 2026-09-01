@@ -325,7 +325,7 @@ const PROMPT_BUILDERS: Record<
   },
   help: {
     build: () =>
-      "הצג למשתמש סיכום קצר בעברית של יכולות Peroot Connect: פקודות, enhance (שדרוג), image/video/research/agent (מודים), save (שמירה), find (חיפוש), quota (מכסה). כלים נוספים, תבניות מהספרייה הציבורית (search_public_library + fill_template), זיכרון אישי (remember_fact/list_facts), שכני Memory Palace (related_prompts), שרשראות (list_chains/get_chain), ומשוב (rate_prompt). הסבר ששדרוג צורך קרדיט אחד מהמכסה (חינמי: 1 ליום, PRO: 150 לחודש) ושאר הכלים חינמיים.",
+      "הצג למשתמש סיכום קצר בעברית של יכולות Peroot Connect: פקודות, enhance (שדרוג), image/video/research/agent (מודים), save (שמירה), find (חיפוש), quota (מכסה). כלים נוספים, תבניות מהספרייה הציבורית (search_public_library + fill_template), זיכרון אישי (remember_fact/list_facts), שכני Memory Palace (related_prompts), שרשראות (list_chains/get_chain), ומשוב (rate_prompt). הסבר ששדרוג צורך קרדיט אחד מהמכסה היומית של המשתמש (המספר המדויק מוחזר מהכלי quota), ושאר הכלים חינמיים.",
   },
 };
 

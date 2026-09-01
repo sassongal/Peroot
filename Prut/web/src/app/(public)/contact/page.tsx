@@ -7,6 +7,8 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { PLANS } from "@/lib/lemonsqueezy";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { getQuotaPolicy } from "@/lib/quota-server";
+import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
 
 export const metadata: Metadata = {
   title: "צור קשר עם צוות פירוט: מענה עד 24 שעות",
@@ -28,7 +30,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const { freeDaily } = await getQuotaPolicy();
   return (
     <>
       <JsonLd
@@ -101,10 +104,11 @@ export default function ContactPage() {
                   </span>
                 </summary>
                 <div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed">
-                  התוכנית החינמית כוללת קרדיט אחד ביום וגישה לספריית {PROMPT_LIBRARY_COUNT}{" "}
-                  הפרומפטים. תוכנית Pro (₪
-                  {PLANS.pro.price}/חודש) כוללת 150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור
-                  איטרטיבי, ספרייה אישית ללא הגבלה, וסנכרון מלא עם תוסף Chrome.
+                  התוכנית החינמית כוללת {creditsPhrase(freeDaily)} ביום וגישה לספריית{" "}
+                  {PROMPT_LIBRARY_COUNT} הפרומפטים. תוכנית Pro (₪
+                  {PLANS.pro.price}/חודש) כוללת {creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש, גישה לכל
+                  המנועים המתקדמים, שיפור איטרטיבי, ספרייה אישית ללא הגבלה, וסנכרון מלא עם תוסף
+                  Chrome.
                 </div>
               </details>
 

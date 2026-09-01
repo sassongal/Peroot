@@ -1,4 +1,5 @@
 import { escapeHtml, emailLayoutBranded } from "./base";
+import { QUOTA_FALLBACK, creditsPhrase } from "@/lib/quota-policy";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.peroot.space";
 
@@ -9,6 +10,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.peroot.space";
 export function churnEmail(
   name: string,
   unsubscribeUrl: string,
+  freeDaily: number = QUOTA_FALLBACK.freeDaily,
 ): { subject: string; html: string } {
   return {
     subject: "נשמח לראות אותך שוב ב-Peroot",
@@ -19,7 +21,7 @@ export function churnEmail(
       <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 20px 0;">
         <p style="font-weight: bold; margin: 0 0 8px 0;">מה שעדיין זמין לך בתוכנית החינם:</p>
         <ul style="margin: 0; padding: 0 20px; font-size: 14px;">
-          <li>קרדיט אחד ליום (מתחדש כל 24 שעות)</li>
+          <li>${creditsPhrase(freeDaily)} ליום (מתחדשים כל 24 שעות)</li>
           <li>גישה לספריית הפרומפטים</li>
           <li>שיתוף פרומפטים</li>
         </ul>

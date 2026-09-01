@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { createServiceClient } from "@/lib/supabase/service";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -139,7 +140,10 @@ export async function GET(request: Request) {
         .select("daily_free_limit")
         .single();
 
-      const dailyLimit = siteSettings?.daily_free_limit ?? 2;
+      const dailyLimit = resolveDailyLimit(
+        siteSettings?.daily_free_limit,
+        QUOTA_FALLBACK.freeDaily,
+      );
       const totalCredits = dailyLimit;
 
       await supabase

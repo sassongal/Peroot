@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRefreshAt } from "@/lib/services/credit-service";
 import { logger } from "@/lib/logger";
 import { withUser } from "@/lib/api-middleware";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 /**
  * GET /api/me/quota
@@ -33,7 +34,7 @@ export const GET = withUser(
 
       const profileTier = (profile?.plan_tier as "free" | "pro" | "admin") || "free";
       const tier: "free" | "pro" | "admin" = adminRole ? "admin" : profileTier;
-      const dailyLimit = settings?.daily_free_limit ?? 2;
+      const dailyLimit = resolveDailyLimit(settings?.daily_free_limit, QUOTA_FALLBACK.freeDaily);
       const refreshAt = await getRefreshAt(user.id);
 
       // Reflect the rolling-window reset in the returned balance (the actual

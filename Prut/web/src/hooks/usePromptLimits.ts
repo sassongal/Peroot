@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useSiteSettings } from "./useSiteSettings";
 import { fetchMeQuota } from "@/lib/quota-client";
 import { logger } from "@/lib/logger";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 interface PromptUsage {
   count: number;
@@ -147,7 +148,7 @@ export function usePromptLimits() {
       }
       // Prefer the server balance; fall back to localStorage count.
       setCanUsePrompt(
-        guestQuota ? guestQuota.remaining > 0 : usage.count < settings.max_free_prompts,
+        guestQuota ? guestQuota.remaining > 0 : usage.count < settings.guest_daily_limit,
       );
     }
   }, [
@@ -157,7 +158,7 @@ export function usePromptLimits() {
     quota,
     guestQuota,
     settings.allow_guest_access,
-    settings.max_free_prompts,
+    settings.guest_daily_limit,
     usage.count,
   ]);
 
@@ -197,7 +198,7 @@ export function usePromptLimits() {
   function getRemainingPrompts(): number {
     if (user) return quota?.credits_balance ?? 0;
     if (guestQuota) return Math.max(0, guestQuota.remaining);
-    return Math.max(0, settings.max_free_prompts - usage.count);
+    return Math.max(0, settings.guest_daily_limit - usage.count);
   }
 
   function getRequiredAction(): "login" | "upgrade" | null {
@@ -207,7 +208,7 @@ export function usePromptLimits() {
     }
     if (!user && !settings.allow_guest_access) return "login";
     if (!user && guestQuota) return guestQuota.remaining < 1 ? "login" : null;
-    if (!user && usage.count >= settings.max_free_prompts) return "login";
+    if (!user && usage.count >= settings.guest_daily_limit) return "login";
     return null;
   }
 
@@ -233,7 +234,10 @@ export function usePromptLimits() {
     if (user) {
       return {
         remaining: quota?.credits_balance ?? 0,
-        total: quota?.daily_limit ?? settings.daily_free_limit ?? 2,
+        total: resolveDailyLimit(
+          quota?.daily_limit ?? settings.daily_free_limit,
+          QUOTA_FALLBACK.freeDaily,
+        ),
         tierLabel: "חינמי",
         isUnlimited: false,
         refreshAt: quota?.refresh_at ?? null,
@@ -242,18 +246,25 @@ export function usePromptLimits() {
     return {
       remaining: guestQuota
         ? Math.max(0, guestQuota.remaining)
-        : Math.max(0, settings.max_free_prompts - usage.count),
-      total: guestQuota?.dailyLimit ?? settings.max_free_prompts,
+        : Math.max(0, settings.guest_daily_limit - usage.count),
+      total: resolveDailyLimit(
+        guestQuota?.dailyLimit ?? settings.guest_daily_limit,
+        QUOTA_FALLBACK.guestDaily,
+      ),
       tierLabel: "אורח",
       isUnlimited: false,
       refreshAt: guestQuota?.refreshAt ?? null,
     };
   }
 
+  const creditShape = getCreditDisplayShape();
+
   return {
     canUsePrompt,
     remainingPrompts: getRemainingPrompts(),
-    totalAllowed: settings.max_free_prompts,
+    // Tier-aware: this used to always report the GUEST number, so a signed-in
+    // free user saw "1/1" while actually holding the registered allowance.
+    totalAllowed: creditShape.total ?? creditShape.remaining,
     usedPrompts: usage.count,
     requiredAction: getRequiredAction(),
     incrementUsage,
@@ -263,8 +274,8 @@ export function usePromptLimits() {
     isAdmin,
     isPro,
     guestAccessAllowed: settings.allow_guest_access,
-    maxFreePrompts: settings.max_free_prompts,
-    creditDisplay: getCreditDisplayShape(),
+    maxFreePrompts: settings.guest_daily_limit,
+    creditDisplay: creditShape,
     settings,
   };
 }

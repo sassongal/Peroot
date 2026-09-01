@@ -16,38 +16,66 @@ import type { NextRequest, NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
 import { logger } from "@/lib/logger";
 import { createServiceClient } from "@/lib/supabase/service";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 // ---------------------------------------------------------------------------
-// Kill switch: site_settings.allow_guest_access, cached per instance for 60s
-// so the enhance hot path pays one DB read a minute, not one per request.
-// Fails CLOSED (guests denied): a kill switch that cannot be read must not
-// be assumed to be off.
+// Guest policy from site_settings: the kill switch (allow_guest_access) and
+// the daily allowance (guest_daily_limit), fetched together and cached per
+// instance for 60s so the enhance hot path pays one DB read a minute rather
+// than one per request.
+//
+// The switch fails CLOSED (guests denied): a kill switch that cannot be read
+// must not be assumed to be off. The limit falls back to the documented
+// policy value, which is only ever consulted when the row is unreadable.
 // ---------------------------------------------------------------------------
 
-let guestAccessCache: { value: boolean; ts: number } | null = null;
+interface GuestPolicy {
+  allowed: boolean;
+  dailyLimit: number;
+}
 
-export async function isGuestAccessAllowed(): Promise<boolean> {
-  if (guestAccessCache && Date.now() - guestAccessCache.ts < 60_000) {
-    return guestAccessCache.value;
+let guestPolicyCache: { value: GuestPolicy; ts: number } | null = null;
+
+async function guestPolicy(): Promise<GuestPolicy> {
+  if (guestPolicyCache && Date.now() - guestPolicyCache.ts < 60_000) {
+    return guestPolicyCache.value;
   }
   try {
     const { data } = await createServiceClient()
       .from("site_settings")
-      .select("allow_guest_access")
+      .select("allow_guest_access, guest_daily_limit")
       .limit(1)
       .maybeSingle();
-    // Explicit === true: a null/missing column must not read as "open".
-    const value = data?.allow_guest_access === true;
-    guestAccessCache = { value, ts: Date.now() };
+    const value: GuestPolicy = {
+      // Explicit === true: a null/missing column must not read as "open".
+      allowed: data?.allow_guest_access === true,
+      dailyLimit: resolveDailyLimit(data?.guest_daily_limit, QUOTA_FALLBACK.guestDaily),
+    };
+    guestPolicyCache = { value, ts: Date.now() };
     return value;
   } catch (e) {
-    // FAIL CLOSED. This is a kill switch: if we cannot confirm it is on, the
-    // safe answer is that guests are locked out (the pre-guest-access
-    // behavior, which costs signups and nothing else). Failing open meant a
-    // Supabase blip silently re-opened an unauthenticated LLM endpoint.
-    logger.error("[GuestService] allow_guest_access read failed, denying guests:", e);
-    return false;
+    // FAIL CLOSED on the switch: if we cannot confirm it is on, the safe
+    // answer is that guests are locked out (the pre-guest-access behavior,
+    // which costs signups and nothing else). Failing open meant a Supabase
+    // blip silently re-opened an unauthenticated LLM endpoint. Not cached, so
+    // the next request retries.
+    logger.error("[GuestService] site_settings read failed, denying guests:", e);
+    return { allowed: false, dailyLimit: QUOTA_FALLBACK.guestDaily };
   }
+}
+
+export async function isGuestAccessAllowed(): Promise<boolean> {
+  return (await guestPolicy()).allowed;
+}
+
+/** Live guest allowance per rolling window, from site_settings.guest_daily_limit. */
+export async function getGuestDailyLimit(): Promise<number> {
+  return (await guestPolicy()).dailyLimit;
+}
+
+/** Test seam: drop the cached policy so the next call re-reads. */
+export function invalidateGuestPolicyCache(): void {
+  guestPolicyCache = null;
 }
 
 const GUEST_COOKIE = "peroot_guest_id";
@@ -89,7 +117,6 @@ function decodeGuestCookieValue(raw: string): string | null {
   // useful since the id is public anyway.
   return sig === expected ? id : null;
 }
-const GUEST_DAILY_LIMIT = 1;
 const ROLLING_WINDOW_MS = 24 * 60 * 60 * 1000;
 const GUEST_KEY_TTL = 60 * 60 * 24 * 31; // 31 days
 const IP_BACKUP_TTL = 60 * 60 * 24; // 24h — enough for the rolling window
@@ -251,7 +278,7 @@ async function claimIpBackupIfUnset(request: NextRequest | Request, id: string):
 // State read/write
 // ---------------------------------------------------------------------------
 
-async function readGuestState(guestId: string): Promise<GuestState> {
+async function readGuestState(guestId: string, dailyLimit: number): Promise<GuestState> {
   try {
     // New format: hash fields { b: balance, t: last_prompt_ms }
     const hash = (await redis.hgetall(`guest:${guestId}`)) as Record<string, string> | null;
@@ -259,25 +286,25 @@ async function readGuestState(guestId: string): Promise<GuestState> {
       const b = Number(hash.b);
       const t = Number(hash.t);
       return {
-        credits_balance: Number.isFinite(b) ? b : GUEST_DAILY_LIMIT,
+        credits_balance: Number.isFinite(b) ? b : dailyLimit,
         last_prompt_at: Number.isFinite(t) && t > 0 ? new Date(t).toISOString() : null,
       };
     }
 
     // Legacy JSON fallback — tolerate existing keys from prior format.
     const raw = await redis.get<GuestState | string>(`guest:${guestId}`);
-    if (!raw) return { credits_balance: GUEST_DAILY_LIMIT, last_prompt_at: null };
+    if (!raw) return { credits_balance: dailyLimit, last_prompt_at: null };
     if (typeof raw === "string") {
       try {
         return JSON.parse(raw) as GuestState;
       } catch {
-        return { credits_balance: GUEST_DAILY_LIMIT, last_prompt_at: null };
+        return { credits_balance: dailyLimit, last_prompt_at: null };
       }
     }
     return raw;
   } catch (e) {
     logger.error("[guest-service] readGuestState failed:", e);
-    return { credits_balance: GUEST_DAILY_LIMIT, last_prompt_at: null };
+    return { credits_balance: dailyLimit, last_prompt_at: null };
   }
 }
 
@@ -324,11 +351,12 @@ return {1, b, now}
 
 export async function checkAndDecrementGuestCredits(guestId: string): Promise<GuestCheckResult> {
   const now = Date.now();
+  const dailyLimit = await getGuestDailyLimit();
   try {
     const result = (await redis.eval(
       DECREMENT_SCRIPT,
       [`guest:${guestId}`],
-      [String(now), String(ROLLING_WINDOW_MS), String(GUEST_DAILY_LIMIT), String(GUEST_KEY_TTL)],
+      [String(now), String(ROLLING_WINDOW_MS), String(dailyLimit), String(GUEST_KEY_TTL)],
     )) as [number, number, number];
 
     const [allowed, balance, lastMs] = result;
@@ -353,10 +381,10 @@ export async function checkAndDecrementGuestCredits(guestId: string): Promise<Gu
     // Non-atomic fallback (e.g. if Redis eval is unavailable): best-effort RMW.
     // NOTE: readGuestState itself fails open (returns a full balance) — that is
     // handled below, where an unconfirmed write denies the request.
-    const state = await readGuestState(guestId);
+    const state = await readGuestState(guestId, dailyLimit);
     const last = state.last_prompt_at ? new Date(state.last_prompt_at) : null;
     const shouldReset = !last || now - last.getTime() >= ROLLING_WINDOW_MS;
-    let balance = shouldReset ? GUEST_DAILY_LIMIT : state.credits_balance;
+    let balance = shouldReset ? dailyLimit : state.credits_balance;
     if (balance < 1) {
       return {
         allowed: false,
@@ -399,21 +427,24 @@ export async function checkAndDecrementGuestCredits(guestId: string): Promise<Gu
 export async function getGuestQuotaStatus(
   guestId: string,
 ): Promise<{ remaining: number; refreshAt: Date | null; dailyLimit: number }> {
-  const state = await readGuestState(guestId);
+  const dailyLimit = await getGuestDailyLimit();
+  const state = await readGuestState(guestId, dailyLimit);
   const now = Date.now();
   const last = state.last_prompt_at ? new Date(state.last_prompt_at).getTime() : null;
   const msSinceLast = last ? now - last : Infinity;
   const shouldReset = msSinceLast >= ROLLING_WINDOW_MS;
 
   if (shouldReset) {
-    return { remaining: GUEST_DAILY_LIMIT, refreshAt: null, dailyLimit: GUEST_DAILY_LIMIT };
+    return { remaining: dailyLimit, refreshAt: null, dailyLimit };
   }
 
   const refreshAt = last ? new Date(last + ROLLING_WINDOW_MS) : null;
   return {
-    remaining: state.credits_balance,
+    // A stored balance above the current limit means the owner lowered the
+    // limit mid-window; clamp so the UI never shows more than the policy.
+    remaining: Math.min(state.credits_balance, dailyLimit),
     refreshAt: state.credits_balance > 0 ? null : refreshAt,
-    dailyLimit: GUEST_DAILY_LIMIT,
+    dailyLimit,
   };
 }
 
@@ -440,10 +471,11 @@ return b
 
 export async function refundGuestCredit(guestId: string): Promise<void> {
   try {
+    const dailyLimit = await getGuestDailyLimit();
     await redis.eval(
       REFUND_SCRIPT,
       [`guest:${guestId}`],
-      [String(GUEST_DAILY_LIMIT), String(GUEST_KEY_TTL)],
+      [String(dailyLimit), String(GUEST_KEY_TTL)],
     );
   } catch (e) {
     logger.error("[guest-service] refundGuestCredit failed:", e);
@@ -452,6 +484,10 @@ export async function refundGuestCredit(guestId: string): Promise<void> {
 
 export const GUEST_CONSTANTS = {
   COOKIE_NAME: GUEST_COOKIE,
-  DAILY_LIMIT: GUEST_DAILY_LIMIT,
+  /**
+   * Only the fallback. The live allowance is site_settings.guest_daily_limit,
+   * read via getGuestDailyLimit(); never treat this as the current quota.
+   */
+  DAILY_LIMIT_FALLBACK: QUOTA_FALLBACK.guestDaily,
   ROLLING_WINDOW_MS,
 };

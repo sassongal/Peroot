@@ -11,6 +11,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { captureRouteError } from "@/lib/sentry";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -292,7 +293,7 @@ async function legacyCheckAndDecrement(
       .select("daily_free_limit")
       .single();
 
-    const dailyLimit = siteSettings?.daily_free_limit ?? 1;
+    const dailyLimit = resolveDailyLimit(siteSettings?.daily_free_limit, QUOTA_FALLBACK.freeDaily);
 
     const { data: refreshData } = await queryClient
       .from("profiles")

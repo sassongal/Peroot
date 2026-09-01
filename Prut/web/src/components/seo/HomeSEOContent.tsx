@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { FAQ_ITEMS } from "@/lib/faq-data";
+import { resolveFaqItems } from "@/lib/faq-data";
+import { getQuotaPolicy } from "@/lib/quota-server";
 import { softwareAppSchema, faqSchema } from "@/lib/schema";
 import { PROMPT_LIBRARY_COUNT, PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 
@@ -18,8 +19,9 @@ import { PROMPT_LIBRARY_COUNT, PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
  *
  * Also includes structured data (JSON-LD) for rich results.
  */
-export function HomeSEOContent() {
-  const topFAQs = FAQ_ITEMS.slice(0, 10);
+export async function HomeSEOContent() {
+  const { freeDaily } = await getQuotaPolicy();
+  const topFAQs = resolveFaqItems(freeDaily).slice(0, 10);
 
   return (
     <>

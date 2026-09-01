@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 /**
  * POST /api/auth/signup
@@ -17,7 +18,10 @@ export async function POST(req: NextRequest) {
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ error: "גוף הבקשה אינו JSON תקין", code: "invalid_json" }, { status: 400 });
+      return NextResponse.json(
+        { error: "גוף הבקשה אינו JSON תקין", code: "invalid_json" },
+        { status: 400 },
+      );
     }
 
     const { email: rawEmail, password, fullName: rawName } = body;
@@ -27,7 +31,10 @@ export async function POST(req: NextRequest) {
       typeof password !== "string" ||
       typeof rawName !== "string"
     ) {
-      return NextResponse.json({ error: "חסרים שדות חובה", code: "missing_fields" }, { status: 400 });
+      return NextResponse.json(
+        { error: "חסרים שדות חובה", code: "missing_fields" },
+        { status: 400 },
+      );
     }
 
     const email = rawEmail.toLowerCase().trim();
@@ -70,7 +77,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user) {
-      return NextResponse.json({ error: "יצירת המשתמש נכשלה", code: "user_create_failed" }, { status: 500 });
+      return NextResponse.json(
+        { error: "יצירת המשתמש נכשלה", code: "user_create_failed" },
+        { status: 500 },
+      );
     }
 
     // ── New-user setup (mirrors /auth/callback logic) ──────────────────────
@@ -81,7 +91,10 @@ export async function POST(req: NextRequest) {
         .from("site_settings")
         .select("daily_free_limit")
         .single();
-      const dailyLimit = siteSettings?.daily_free_limit ?? 2;
+      const dailyLimit = resolveDailyLimit(
+        siteSettings?.daily_free_limit,
+        QUOTA_FALLBACK.freeDaily,
+      );
 
       await service
         .from("profiles")
@@ -147,6 +160,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("[Signup] Unexpected error:", err);
-    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "שגיאת שרת פנימית", code: "internal_error" },
+      { status: 500 },
+    );
   }
 }

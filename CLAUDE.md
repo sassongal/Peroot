@@ -39,6 +39,11 @@ Files showing up from the sibling subdir in `git status` are normal, not a leak.
   `settings.json` are deliberately tracked so agents share one config, so never
   put a credential in those three.
 - **Never bypass RLS.** Service-role client only in `src/lib/supabase/service.ts` call sites.
+- **The quota law.** Guest **1/day**, registered free **2/day**, both stored in
+  `public.site_settings` (`guest_daily_limit`, `daily_free_limit`). Never write a
+  quota number into copy or logic, and never invent a `?? <number>` fallback:
+  everything derives from `Prut/web/src/lib/quota-policy.ts`. Enforced by
+  `quota-law.test.ts` in CI. Full rules in `Prut/web/CLAUDE.md`.
 - Commit convention: `type(scope): message`.
 
 ## Standing authorizations

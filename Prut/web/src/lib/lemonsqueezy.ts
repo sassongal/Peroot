@@ -1,13 +1,14 @@
 import { PROMPT_LIBRARY_COUNT } from "./constants";
+import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
 
 export const PLANS = {
   free: {
     name: "Free",
     nameHe: "חינם",
-    creditsPerDay: 1,
     trialDays: 0,
+    // The daily allowance is a live setting, not a plan term, so it is NOT
+    // listed here. Render the free bullets with freePlanFeatures() below.
     features: [
-      "קרדיט אחד ליום (מתחדש כל 24 שעות)",
       `גישה לספריית ${PROMPT_LIBRARY_COUNT} פרומפטים`,
       "שיתוף פרומפטים",
       "תוסף Chrome לשדרוג מהיר",
@@ -16,7 +17,7 @@ export const PLANS = {
   pro: {
     name: "Pro",
     nameHe: "פרו",
-    creditsPerMonth: 150,
+    creditsPerMonth: PRO_MONTHLY_CREDITS,
     price: 9.99, // ₪/month
     // ₪/year — two months free vs paying monthly (12 × 9.99 = 119.88). Shown in
     // the pricing UI ONLY when NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID_YEARLY is set;
@@ -24,7 +25,7 @@ export const PLANS = {
     priceYearly: 99.9,
     trialDays: 1,
     features: [
-      "150 קרדיטים בחודש",
+      `${PRO_MONTHLY_CREDITS} קרדיטים בחודש`,
       "גישה לכל המנועים המתקדמים",
       "שיפור איטרטיבי מתקדם",
       "ספרייה אישית + מועדפים ללא הגבלה",
@@ -33,3 +34,11 @@ export const PLANS = {
     ],
   },
 } as const;
+
+/**
+ * Free-plan bullets for the pricing UI, with the live daily allowance first.
+ * Pass the value from `useSiteSettings()` (client) or `getQuotaPolicy()` (server).
+ */
+export function freePlanFeatures(freeDaily: number): string[] {
+  return [`${creditsPhrase(freeDaily)} ליום (מתחדשים כל 24 שעות)`, ...PLANS.free.features];
+}

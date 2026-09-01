@@ -91,6 +91,8 @@ interface ResultSectionProps {
 }
 
 import { useI18n } from "@/context/I18nContext";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { QUOTA_FALLBACK, resolveDailyLimit, dailyEnhancementsPhrase } from "@/lib/quota-policy";
 
 /** Platform URLs for image/video generation tools - opens the platform so users can paste the prompt */
 const GENERATION_PLATFORM_URLS: Record<string, { name: string; url: string; color: string }> = {
@@ -142,6 +144,9 @@ export function ResultSection({
   selectedPlatform,
 }: ResultSectionProps) {
   const t = useI18n();
+  // The signup nudge quotes the live free allowance, never a baked-in number.
+  const { settings } = useSiteSettings();
+  const freeDaily = resolveDailyLimit(settings.daily_free_limit, QUOTA_FALLBACK.freeDaily);
   // Pro users can toggle the watermark off; free users always get the watermark.
   const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
   // P3 — score breakdown drawer state. Computed lazily on click so we
@@ -438,7 +443,7 @@ export function ResultSection({
                   שמרו את הפרומפט שלכם
                 </p>
                 <p className="text-[11px] text-amber-700/70 dark:text-amber-400/70">
-                  הירשמו בחינם וקבלו 2 שיפורים ביום
+                  הירשמו בחינם וקבלו {dailyEnhancementsPhrase(freeDaily)}
                 </p>
               </div>
               <Link

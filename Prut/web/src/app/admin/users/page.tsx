@@ -25,6 +25,7 @@ import Link from "next/link";
 import { useI18n } from "@/context/I18nContext";
 import { logger } from "@/lib/logger";
 import { UserCreditsBlock } from "@/components/admin/UserCreditsBlock";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 interface User {
   id: string;
@@ -632,7 +633,7 @@ export default function UsersPage() {
                         <UserCreditsBlock
                           tier={user.role === "admin" ? "admin" : user.plan_tier}
                           balance={user.credits_balance}
-                          dailyLimit={user.daily_limit ?? 2}
+                          dailyLimit={resolveDailyLimit(user.daily_limit, QUOTA_FALLBACK.freeDaily)}
                           refreshAt={user.refresh_at ?? null}
                           lastSpendAt={user.last_spend_at ?? null}
                           usageLast7Days={user.usage_last_7_days ?? []}

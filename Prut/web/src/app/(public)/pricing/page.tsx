@@ -20,19 +20,27 @@ import {
 import Link from "next/link";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
-import { PLANS } from "@/lib/lemonsqueezy";
+import { PLANS, freePlanFeatures } from "@/lib/lemonsqueezy";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { ProBadge } from "@/components/ui/ProBadge";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PROMPT_LIBRARY_COUNT, PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import {
+  PRO_MONTHLY_CREDITS,
+  QUOTA_FALLBACK,
+  creditsPhrase,
+  resolveDailyLimit,
+} from "@/lib/quota-policy";
 
 const COMPARISON_FEATURES = [
   {
     name: "קרדיטים",
-    free: "1 ביום",
-    pro: "150 בחודש",
+    // Filled in at render time from the live setting — see freeDaily below.
+    free: "{freeDaily} ביום",
+    pro: `${PRO_MONTHLY_CREDITS} בחודש`,
     icon: Sparkles,
   },
   {
@@ -104,6 +112,14 @@ const COMPARISON_FEATURES = [
 ];
 
 export default function PricingPage() {
+  // Plan copy quotes the live free allowance, never a number typed into JSX.
+  const { settings } = useSiteSettings();
+  const freeDaily = resolveDailyLimit(settings.daily_free_limit, QUOTA_FALLBACK.freeDaily);
+  const comparisonFeatures = COMPARISON_FEATURES.map((f) =>
+    typeof f.free === "string" && f.free.includes("{freeDaily}")
+      ? { ...f, free: f.free.replace("{freeDaily}", String(freeDaily)) }
+      : f,
+  );
   const { isPro, checkout, loading } = useSubscription();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
@@ -237,7 +253,7 @@ export default function PricingPage() {
             </div>
 
             <ul className="space-y-3 flex-1 mb-8">
-              {PLANS.free.features.map((feature, i) => (
+              {freePlanFeatures(freeDaily).map((feature, i) => (
                 <li key={i} className="flex items-center gap-3 text-sm text-foreground">
                   <Check className="w-4 h-4 text-muted-foreground shrink-0" />
                   {feature}
@@ -280,7 +296,7 @@ export default function PricingPage() {
                 </p>
               ) : (
                 <p className="text-amber-600/80 dark:text-amber-400/80 text-sm mt-2">
-                  150 קרדיטים בחודש
+                  {creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש
                 </p>
               )}
               <div className="flex items-center gap-1.5 mt-2">
@@ -340,12 +356,12 @@ export default function PricingPage() {
               </div>
             </div>
             {/* Table Rows */}
-            {COMPARISON_FEATURES.map((feature, i) => {
+            {comparisonFeatures.map((feature, i) => {
               const Icon = feature.icon;
               return (
                 <div
                   key={i}
-                  className={`grid grid-cols-[1.6fr_minmax(64px,auto)_minmax(72px,auto)] md:grid-cols-3 ${i < COMPARISON_FEATURES.length - 1 ? "border-b border-border" : ""} hover:bg-secondary transition-colors`}
+                  className={`grid grid-cols-[1.6fr_minmax(64px,auto)_minmax(72px,auto)] md:grid-cols-3 ${i < comparisonFeatures.length - 1 ? "border-b border-border" : ""} hover:bg-secondary transition-colors`}
                 >
                   <div className="p-3 md:p-4 flex items-center gap-2 md:gap-2.5 text-xs md:text-sm text-foreground leading-snug wrap-break-word">
                     <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -432,14 +448,15 @@ export default function PricingPage() {
             <div className="space-y-2">
               <h4 className="font-semibold text-foreground">תוכנית חינם</h4>
               <p className="text-muted-foreground">
-                מקבלים קרדיט אחד ליום שמתחדש אוטומטית כל 24 שעות מהשימוש האחרון. כל שדרוג פרומפט =
-                קרדיט אחד.
+                מקבלים {creditsPhrase(freeDaily)} ליום שמתחדשים אוטומטית כל 24 שעות מהשימוש האחרון.
+                כל שדרוג פרומפט = קרדיט אחד.
               </p>
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold text-amber-600 dark:text-amber-400">תוכנית Pro</h4>
               <p className="text-muted-foreground">
-                150 קרדיטים בחודש שמתחדשים עם כל חיוב. גישה למודלים פרימיום + למידת סגנון אישי.
+                {creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש שמתחדשים עם כל חיוב. גישה למודלים פרימיום
+                + למידת סגנון אישי.
               </p>
             </div>
           </div>

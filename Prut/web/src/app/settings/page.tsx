@@ -35,6 +35,7 @@ import { SettingsMemorySection } from "@/components/settings/SettingsMemorySecti
 import { SettingsConnectSection } from "@/components/settings/SettingsConnectSection";
 import { CreditsPanel } from "@/components/settings/CreditsPanel";
 import { resolveAvatarUrl, avatarFallbackUrl as uiAvatarsFallback } from "@/lib/user-avatar";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -125,7 +126,7 @@ export default function SettingsPage() {
           savedNameRef.current = loadedName.trim();
           setCredits({
             balance: profile?.credits_balance ?? 0,
-            dailyLimit: settings?.daily_free_limit ?? 2,
+            dailyLimit: resolveDailyLimit(settings?.daily_free_limit, QUOTA_FALLBACK.freeDaily),
             refreshedAt: profile?.credits_refreshed_at ?? null,
           });
 

@@ -8,6 +8,7 @@ import {
   adminLsAnomalyAlertEmail,
 } from "@/lib/emails/templates/admin-alerts";
 import { verifyCronSecret } from "@/lib/cron-auth";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 const LS_API_BASE = "https://api.lemonsqueezy.com/v1";
 const LS_ACTIVE_STATUSES = new Set(["active", "on_trial", "past_due", "paid"]);
@@ -110,7 +111,7 @@ export async function GET(req: Request) {
       .from("site_settings")
       .select("daily_free_limit, contact_email")
       .single();
-    const dailyFreeLimit = settings?.daily_free_limit ?? 2;
+    const dailyFreeLimit = resolveDailyLimit(settings?.daily_free_limit, QUOTA_FALLBACK.freeDaily);
 
     // Pro → Free: fix churned users
     for (const userId of userIdsToFix) {

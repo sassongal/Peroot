@@ -16,6 +16,22 @@ vi.mock("@/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
+// site_settings drives the guest allowance (project quota law). The service
+// client is mocked so the tests exercise the real DB-backed path rather than
+// the fail-closed fallback.
+const settingsRow = { allow_guest_access: true, guest_daily_limit: 1 };
+vi.mock("@/lib/supabase/service", () => ({
+  createServiceClient: () => ({
+    from: () => ({
+      select: () => ({
+        limit: () => ({
+          maybeSingle: async () => ({ data: settingsRow, error: null }),
+        }),
+      }),
+    }),
+  }),
+}));
+
 vi.mock("@/lib/redis", () => ({
   redis: {
     get: vi.fn(async (key: string) => {
@@ -70,6 +86,8 @@ import {
   getGuestQuotaStatus,
   encodeGuestCookieValue,
   GUEST_CONSTANTS,
+  getGuestDailyLimit,
+  invalidateGuestPolicyCache,
 } from "../guest-service";
 
 function makeRequest(headers: Record<string, string> = {}): Request {
@@ -182,9 +200,9 @@ describe("checkAndDecrementGuestCredits", () => {
 describe("getGuestQuotaStatus", () => {
   it("returns full quota for a never-seen guest", async () => {
     const s = await getGuestQuotaStatus("fresh");
-    expect(s.remaining).toBe(GUEST_CONSTANTS.DAILY_LIMIT);
+    expect(s.remaining).toBe(GUEST_CONSTANTS.DAILY_LIMIT_FALLBACK);
     expect(s.refreshAt).toBeNull();
-    expect(s.dailyLimit).toBe(GUEST_CONSTANTS.DAILY_LIMIT);
+    expect(s.dailyLimit).toBe(GUEST_CONSTANTS.DAILY_LIMIT_FALLBACK);
   });
 
   it("returns refreshAt when quota is exhausted", async () => {
@@ -200,7 +218,44 @@ describe("getGuestQuotaStatus", () => {
     const pastMs = Date.now() - (GUEST_CONSTANTS.ROLLING_WINDOW_MS + 1000);
     redisHashStore.set("guest:stale", { b: "0", t: String(pastMs) });
     const s = await getGuestQuotaStatus("stale");
-    expect(s.remaining).toBe(GUEST_CONSTANTS.DAILY_LIMIT);
+    expect(s.remaining).toBe(GUEST_CONSTANTS.DAILY_LIMIT_FALLBACK);
     expect(s.refreshAt).toBeNull();
+  });
+});
+
+describe("quota law: the guest allowance comes from site_settings", () => {
+  it("reports the live guest_daily_limit, not a compiled-in constant", async () => {
+    settingsRow.guest_daily_limit = 1;
+    invalidateGuestPolicyCache();
+    expect(await getGuestDailyLimit()).toBe(1);
+
+    // Changing the setting must change the allowance with no code change.
+    settingsRow.guest_daily_limit = 4;
+    invalidateGuestPolicyCache();
+    expect(await getGuestDailyLimit()).toBe(4);
+
+    const s = await getGuestQuotaStatus("policy-driven");
+    expect(s.dailyLimit).toBe(4);
+
+    settingsRow.guest_daily_limit = 1;
+    invalidateGuestPolicyCache();
+  });
+
+  it("falls back to the documented policy when the column is unusable", async () => {
+    settingsRow.guest_daily_limit = null as unknown as number;
+    invalidateGuestPolicyCache();
+    expect(await getGuestDailyLimit()).toBe(GUEST_CONSTANTS.DAILY_LIMIT_FALLBACK);
+
+    settingsRow.guest_daily_limit = 1;
+    invalidateGuestPolicyCache();
+  });
+
+  it("clamps a stored balance that exceeds a lowered limit", async () => {
+    settingsRow.guest_daily_limit = 1;
+    invalidateGuestPolicyCache();
+    // Balance banked while the limit was higher.
+    redisHashStore.set("guest:over", { b: "5", t: String(Date.now()) });
+    const s = await getGuestQuotaStatus("over");
+    expect(s.remaining).toBe(1);
   });
 });

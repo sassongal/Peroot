@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 import { logger } from "@/lib/logger";
 import { CAPABILITY_CONFIGS, CapabilityMode, type IconName } from "@/lib/capability-mode";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -226,6 +228,10 @@ function ParticleCanvas() {
 // ─── Scene 1 — Welcome + Capabilities ────────────────────────────────────────
 
 function Scene1({ onNext }: { onNext: () => void }) {
+  // The free allowance is a live setting, so the welcome screen reads it rather
+  // than restating a number that goes stale the moment the owner changes it.
+  const { settings } = useSiteSettings();
+  const freeDaily = resolveDailyLimit(settings.daily_free_limit, QUOTA_FALLBACK.freeDaily);
   const prefersReduced = useReducedMotion();
 
   return (
@@ -302,7 +308,12 @@ function Scene1({ onNext }: { onNext: () => void }) {
         className="flex items-center gap-5 text-center"
       >
         {[
-          { icon: Zap, value: "2", label: "שיפורים חינם ביום", color: "text-amber-400" },
+          {
+            icon: Zap,
+            value: String(freeDaily),
+            label: freeDaily === 1 ? "שיפור חינם ביום" : "שיפורים חינם ביום",
+            color: "text-amber-400",
+          },
           { icon: Users, value: "ישראלי", label: "עברית ראשית", color: "text-sky-400" },
           { icon: Star, value: "5", label: "מצבי AI", color: "text-indigo-400" },
         ].map(({ icon: Icon, value, label, color }) => (

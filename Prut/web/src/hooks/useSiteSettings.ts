@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { QUOTA_FALLBACK } from "@/lib/quota-policy";
 
 interface SiteSettings {
   id: string;
@@ -10,9 +11,13 @@ interface SiteSettings {
   site_description: string;
   contact_email: string;
   support_url: string;
+  /** @deprecated Legacy client-side guest counter. Use guest_daily_limit. */
   max_free_prompts: number;
   default_credits: number;
+  /** Registered free tier, per rolling 24h window. */
   daily_free_limit: number;
+  /** Anonymous visitor, per rolling 24h window. */
+  guest_daily_limit: number;
   registration_bonus: number;
   theme_primary_color: string;
   theme_secondary_color: string;
@@ -28,9 +33,13 @@ const defaultSettings: SiteSettings = {
   site_description: "מחולל פרומפטים מקצועי מבוסס AI",
   contact_email: "gal@joya-tech.net",
   support_url: "https://www.peroot.space/faq",
-  max_free_prompts: 1, // Guest gets 1 free trial
-  default_credits: 2, // Registration bonus credits
-  daily_free_limit: 2, // Free users get 2/day
+  // Quota numbers come from the one policy module, never written inline here:
+  // this object is what the whole client falls back to when the settings read
+  // fails, so an inline number would quietly become a second source of truth.
+  max_free_prompts: QUOTA_FALLBACK.guestDaily,
+  default_credits: QUOTA_FALLBACK.freeDaily,
+  daily_free_limit: QUOTA_FALLBACK.freeDaily,
+  guest_daily_limit: QUOTA_FALLBACK.guestDaily,
   registration_bonus: 0, // Rolling 24h window: no registration bonus (see 20260424_rolling_credits.sql)
   theme_primary_color: "#F59E0B", // Amber/Orange from site
   theme_secondary_color: "#EAB308", // Yellow from site

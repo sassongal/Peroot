@@ -3,6 +3,12 @@ import { withAdmin } from "@/lib/api-middleware";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { escapePostgrestValue } from "@/lib/sanitize";
+import {
+  ADMIN_DAILY_LIMIT,
+  PRO_MONTHLY_CREDITS,
+  QUOTA_FALLBACK,
+  resolveDailyLimit,
+} from "@/lib/quota-policy";
 
 /**
  * GET /api/admin/users
@@ -166,7 +172,10 @@ export const GET = withAdmin(async (req) => {
       if (u.last_sign_in_at) lastSignInByUser.set(u.id, u.last_sign_in_at);
     }
 
-    freeDailyLimit = (siteSettings as { daily_free_limit?: number } | null)?.daily_free_limit ?? 2;
+    freeDailyLimit = resolveDailyLimit(
+      (siteSettings as { daily_free_limit?: number } | null)?.daily_free_limit,
+      QUOTA_FALLBACK.freeDaily,
+    );
 
     for (const row of ledgerRows ?? []) {
       const uid = row.user_id as string;
@@ -234,7 +243,8 @@ export const GET = withAdmin(async (req) => {
     // Fall back to deriving from active subscription if plan_tier is stale/missing.
     const tier = role === "admin" ? "admin" : (p.plan_tier ?? (isActiveSub ? "pro" : "free"));
 
-    const daily_limit = tier === "admin" ? -1 : tier === "pro" ? 150 : freeDailyLimit;
+    const daily_limit =
+      tier === "admin" ? ADMIN_DAILY_LIMIT : tier === "pro" ? PRO_MONTHLY_CREDITS : freeDailyLimit;
     const ledger = ledgerByUser.get(p.id) ?? { lastSpend: null, daily: {} };
     const usage_last_7_days = buildSparkline(ledger.daily);
 

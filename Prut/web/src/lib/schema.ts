@@ -1,5 +1,6 @@
 import { PLANS } from "./lemonsqueezy";
 import { PROMPT_LIBRARY_COUNT, PROMPT_TEMPLATE_COUNT } from "./constants";
+import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const PRO_PRICE = String(PLANS.pro.price);
@@ -169,7 +170,7 @@ export function softwareAppSchema() {
   };
 }
 
-export function pricingSchema() {
+export function pricingSchema(freeDaily: number) {
   return {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -180,7 +181,7 @@ export function pricingSchema() {
       {
         "@type": "Product",
         name: "Peroot Free",
-        description: `תוכנית חינמית עם קרדיט אחד ביום, גישה לספריית ${PROMPT_LIBRARY_COUNT} פרומפטים, שיתוף פרומפטים ותוסף Chrome`,
+        description: `תוכנית חינמית עם ${creditsPhrase(freeDaily)} ביום, גישה לספריית ${PROMPT_LIBRARY_COUNT} פרומפטים, שיתוף פרומפטים ותוסף Chrome`,
         image: `${SITE_URL}/images/peroot_logo_pack/logo_1200.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
@@ -194,8 +195,7 @@ export function pricingSchema() {
       {
         "@type": "Product",
         name: "Peroot Pro",
-        description:
-          "150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספרייה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא, יום ניסיון במתנה",
+        description: `${creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספרייה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא, יום ניסיון במתנה`,
         image: `${SITE_URL}/images/peroot_logo_pack/logo_1200.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {

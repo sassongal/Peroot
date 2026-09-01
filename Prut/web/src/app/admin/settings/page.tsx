@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 interface SiteSettings {
   id: string;
@@ -206,7 +207,10 @@ export default function SettingsPage() {
             <InputField
               label="מגבלת קרדיטים יומית (חינמי)"
               type="number"
-              value={(settings.daily_free_limit ?? 2).toString()}
+              value={resolveDailyLimit(
+                settings.daily_free_limit,
+                QUOTA_FALLBACK.freeDaily,
+              ).toString()}
               onChange={(v: string) => updateSetting("daily_free_limit", parseInt(v))}
               description="כמות קרדיטים שמתחדשת מדי יום למשתמשים חינמיים"
               icon={Zap}

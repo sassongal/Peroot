@@ -46,8 +46,7 @@ export async function POST(request: NextRequest) {
     if (!rl.allowed) {
       return NextResponse.json(
         {
-          error:
-            "ניצלת את מכסת ההעלאות החינמית להיום (1 ביום). שדרג ל-Pro לגישה ללא הגבלה, או נסה שוב מחר.",
+          error: `ניצלת את מכסת ההעלאות החינמית להיום (${rl.limit} ביום). שדרג ל-Pro לגישה ללא הגבלה, או נסה שוב מחר.`,
         },
         { status: 429, headers: { "Retry-After": String(rl.resetIn) } },
       );
