@@ -23,6 +23,7 @@ import { ChainPresetsGallery } from "./ChainPresetsGallery";
 import { toast } from "sonner";
 import { markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { copyText } from "@/lib/clipboard";
 
 interface ChainsSectionProps {
   chains: PromptChain[];
@@ -320,8 +321,11 @@ export function ChainsSection({
                   <button
                     onClick={() => {
                       const json = onExportChain(chain);
-                      navigator.clipboard.writeText(json);
-                      toast.success("שרשרת הועתקה ללוח");
+                      void copyText(json).then((ok) =>
+                        ok
+                          ? toast.success("שרשרת הועתקה ללוח")
+                          : toast.error("ההעתקה נחסמה, סמנו והעתיקו ידנית"),
+                      );
                     }}
                     className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-secondary) transition-colors"
                     title="ייצוא"

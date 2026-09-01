@@ -23,6 +23,7 @@ import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
+import { copyText } from "@/lib/clipboard";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 
@@ -1000,7 +1001,13 @@ function PageContent() {
     async (text: string, withWatermark?: boolean) => {
       const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
       const finalText = shouldWatermark ? `${text}\n\n- נוצר עם Peroot | www.peroot.space` : text;
-      await navigator.clipboard.writeText(finalText);
+      // The product's main copy action. An unguarded rejection here skipped
+      // the copied state, the usage signal AND the analytics event, and showed
+      // the user nothing at all.
+      if (!(await copyText(finalText))) {
+        toast.error("ההעתקה נחסמה על ידי הדפדפן, סמנו והעתיקו ידנית");
+        return;
+      }
       dispatch({ type: "SET_COPIED", payload: true });
       setTimeout(() => dispatch({ type: "SET_COPIED", payload: false }), 2000);
       recordUsageSignal("copy", text);

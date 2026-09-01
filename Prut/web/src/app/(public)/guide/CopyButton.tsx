@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
+import { copyText } from "@/lib/clipboard";
 
 export function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
+    if (!(await copyText(text))) return;
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

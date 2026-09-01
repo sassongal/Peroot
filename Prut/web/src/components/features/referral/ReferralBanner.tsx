@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Gift, Check, Copy, X } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 const DISMISSED_KEY = "peroot_referral_banner_dismissed";
 
@@ -38,7 +39,10 @@ export function ReferralBanner({ isNewUser }: { isNewUser: boolean }) {
         link = `${siteUrl}/?ref=${data.code}`;
         setReferralLink(link);
       }
-      await navigator.clipboard.writeText(link);
+      if (!(await copyText(link))) {
+        toast.error("ההעתקה נחסמה, סמנו והעתיקו ידנית");
+        return;
+      }
       setCopied(true);
       toast.success("קישור ההזמנה הועתק!");
       setTimeout(() => setCopied(false), 2500);

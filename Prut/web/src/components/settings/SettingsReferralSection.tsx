@@ -2,6 +2,7 @@
 
 import { Check, Copy, Gift, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 interface ReferralInfo {
   code: string;
@@ -84,10 +85,15 @@ export function SettingsReferralSection({
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard.writeText(referral.code);
-                onReferralCopied(true);
-                setTimeout(() => onReferralCopied(false), 2000);
-                toast.success("הועתק ללוח");
+                void copyText(referral.code).then((ok) => {
+                  if (!ok) {
+                    toast.error("ההעתקה נחסמה, סמנו והעתיקו ידנית");
+                    return;
+                  }
+                  onReferralCopied(true);
+                  setTimeout(() => onReferralCopied(false), 2000);
+                  toast.success("הועתק ללוח");
+                });
               }}
               className="cursor-pointer shrink-0 p-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg transition-colors"
             >
