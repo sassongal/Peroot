@@ -16,10 +16,6 @@ export function trackPalaceOpened(opts: { viewport: Viewport; promptCount: numbe
   });
 }
 
-export function trackPalaceCollapsed(): void {
-  capture("palace_sidebar_collapsed", {});
-}
-
 export function trackPalaceDrawerOpened(opts: { promptId: string }): void {
   capture("palace_drawer_opened", {
     prompt_id: opts.promptId,

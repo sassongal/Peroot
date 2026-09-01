@@ -8,6 +8,7 @@ import { USAGE_TRACKED_EVENT } from "@/lib/usage/track-usage";
 import { MiniGraph2D } from "./MiniGraph2D";
 import { PalaceNeighborList } from "./PalaceNeighborList";
 import {
+  trackPalaceOpened,
   trackPalaceNodeClicked,
   trackPalaceNodeDoubleClicked,
   trackPalaceNavigated,
@@ -68,6 +69,17 @@ export function PalaceFocusPanel({
       window.removeEventListener(USAGE_TRACKED_EVENT, onUsageTracked);
     };
   }, []);
+
+  // palace_opened is the denominator for the Memory Palace success metric
+  // (palace_navigated_to_prompt, target >=25% of opens). The sidebar used to
+  // fire it; now that focus is a mode rather than a permanent column, the mode
+  // becoming visible is the equivalent event.
+  useEffect(() => {
+    trackPalaceOpened({
+      viewport: typeof window !== "undefined" && window.innerWidth < 768 ? "mobile" : "desktop",
+      promptCount,
+    });
+  }, [promptCount]);
 
   const effectiveCenterId = lastOpenedPromptId ?? selectedPromptId ?? prompts[0]?.id ?? null;
 
