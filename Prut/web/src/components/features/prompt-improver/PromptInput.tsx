@@ -75,6 +75,7 @@ interface PromptInputProps {
 }
 
 import { useI18n } from "@/context/I18nContext";
+import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
 
 function toastUploadError(msg: string): void {
   if (msg.includes("שדרג ל-Pro")) {
@@ -863,7 +864,8 @@ export function PromptInput({
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-amber-500 shrink-0" />
                   <span className="text-sm text-amber-700 dark:text-amber-300">
-                    קרדיט אחרון! שדרג ל-Pro בשביל 150 קרדיטים בחודש
+                    קרדיט אחרון! שדרג ל-Pro בשביל {creditsPhrase(PRO_MONTHLY_CREDITS)}
+                    בחודש
                   </span>
                 </div>
                 <Link
@@ -981,7 +983,7 @@ export function PromptInput({
                         : "text-red-400 border-red-500/20 bg-red-500/5",
                   )}
                 >
-                  {creditsRemaining} קרדיטים
+                  {creditsPhrase(creditsRemaining)}
                 </span>
               )}
             </div>
