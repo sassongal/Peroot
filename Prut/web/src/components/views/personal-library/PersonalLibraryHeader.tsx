@@ -85,7 +85,7 @@ export function PersonalLibraryHeader() {
             <h2 className="text-xl md:text-3xl font-serif text-(--text-primary)">ספרייה אישית</h2>
             <p className="text-xs text-(--text-muted) mt-0.5">
               {localViewType === "graph" ? (
-                <>מפת הקשרים של כל הספרייה</>
+                <>הקשרים בין הפרומפטים שלך</>
               ) : isFiltering ? (
                 <span className="text-amber-600 dark:text-amber-400 font-medium">
                   {usedTotalCount} תוצאות
@@ -117,7 +117,7 @@ export function PersonalLibraryHeader() {
             <button
               onClick={() => setLocalViewType("graph")}
               aria-pressed={localViewType === "graph"}
-              title="תצוגת גרף"
+              title="קשרים"
               className={cn(
                 "p-2 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                 localViewType === "graph"
@@ -225,9 +225,9 @@ export function PersonalLibraryHeader() {
               }}
               className="font-medium text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-600 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
             >
-              תצוגת הגרף
+              מסך הקשרים
             </button>{" "}
-            , היא מציגה חזותית את הקשרים בין הפרומפטים שלכם.
+            כדי לראות מה מתחבר למה בספרייה שלכם.
           </span>
           <button
             onClick={() => setShowGraphHint(false)}

@@ -13,9 +13,8 @@ import { PersonalLibraryHeader } from "./personal-library/PersonalLibraryHeader"
 import { PersonalLibraryGrid } from "./personal-library/PersonalLibraryGrid";
 import { PersonalLibraryModals } from "./personal-library/PersonalLibraryModals";
 import { PersonalLibrarySidebar } from "./personal-library/PersonalLibrarySidebar";
-import { PromptGraphView } from "@/components/features/library/PromptGraphView";
+import { RelationsView } from "@/components/features/library/RelationsView";
 import { GuestGraphPreview } from "@/components/features/library/GuestGraphPreview";
-import { MemoryPalaceSidebar } from "@/components/features/library/memory-palace/MemoryPalaceSidebar";
 import { MemoryPalaceDrawer } from "@/components/features/library/memory-palace/MemoryPalaceDrawer";
 import {
   PersonalLibraryProvider,
@@ -175,31 +174,14 @@ function PersonalLibraryLayout() {
 
       {/* Main layout: sidebar + content */}
       {localViewType === "graph" ? (
-        <ErrorBoundary name="PromptGraphView">
-          <PromptGraphView
+        <ErrorBoundary name="RelationsView">
+          <RelationsView
             prompts={corpusPrompts}
+            promptCount={libraryCount}
             favoriteIds={favoritePersonalIds}
             onUsePrompt={(p) => onUsePrompt(p)}
             isLoading={corpusLoading}
             truncatedAt={corpusTruncatedAt}
-          />
-        </ErrorBoundary>
-      ) : (
-        <div className="flex gap-4 items-start">
-          {/* Desktop Sidebar */}
-          <aside className="hidden md:flex flex-col w-[260px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-white/8 bg-black/5 dark:bg-black/30 backdrop-blur-sm">
-            <PersonalLibrarySidebar isMobile={false} />
-          </aside>
-
-          {/* Main Content */}
-          <div className="flex-1 min-w-0">
-            <PersonalLibraryGrid />
-          </div>
-
-          {/* Memory Palace sidebar (desktop only) */}
-          <MemoryPalaceSidebar
-            prompts={corpusPrompts}
-            promptCount={libraryCount}
             selectedPromptId={selectedPromptId}
             lastOpenedPromptId={lastOpenedPromptId}
             onSelectPrompt={setSelectedPromptId}
@@ -213,6 +195,18 @@ function PersonalLibraryLayout() {
               });
             }}
           />
+        </ErrorBoundary>
+      ) : (
+        <div className="flex gap-4 items-start">
+          {/* Desktop Sidebar */}
+          <aside className="hidden md:flex flex-col w-[260px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-white/8 bg-black/5 dark:bg-black/30 backdrop-blur-sm">
+            <PersonalLibrarySidebar isMobile={false} />
+          </aside>
+
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
+            <PersonalLibraryGrid />
+          </div>
         </div>
       )}
 

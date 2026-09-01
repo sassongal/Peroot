@@ -107,8 +107,8 @@ export function MemoryPalaceDrawer({
           <motion.div
             dir="rtl"
             role="dialog"
-            aria-label="Memory Palace"
-            className="fixed bottom-0 inset-x-0 z-50 bg-(--surface-1) rounded-t-3xl border-t border-(--glass-border) md:hidden"
+            aria-label="קשרים"
+            className="fixed bottom-0 inset-x-0 z-50 bg-(--surface-panel) rounded-t-3xl border-t border-(--glass-border) md:hidden"
             style={{ height: "50vh" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -118,7 +118,7 @@ export function MemoryPalaceDrawer({
             }
           >
             <div className="flex items-center justify-between p-3 border-b border-(--glass-border)">
-              <span className="text-sm font-medium">קרבה</span>
+              <span className="text-sm font-medium">קשרים</span>
               <button
                 type="button"
                 onClick={onClose}

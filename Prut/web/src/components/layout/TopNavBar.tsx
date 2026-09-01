@@ -140,16 +140,16 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
               else onNavigate("personal");
             }}
             className={cn(
-              "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:outline-none border",
+              "flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none border",
               viewMode === "personal"
-                ? "bg-indigo-500/15 text-indigo-500 dark:text-indigo-300 border-indigo-500/30"
-                : "text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-500/8 border-transparent",
+                ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                : "text-slate-500 dark:text-slate-400 hover:text-amber-700 dark:hover:text-amber-300 hover:bg-amber-500/8 border-transparent",
             )}
-            title="גרף הפרומפטים שלי"
-            aria-label="פתח גרף הספרייה האישית"
+            title="הקשרים בין הפרומפטים שלי"
+            aria-label="פתח את מסך הקשרים"
           >
             <Network className="w-4 h-4 transition-all" />
-            <span className="hidden md:inline">גרף</span>
+            <span className="hidden md:inline">קשרים</span>
           </button>
 
           <Link
