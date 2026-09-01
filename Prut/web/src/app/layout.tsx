@@ -7,8 +7,6 @@ import { GlobalContextWrapper } from "@/components/layout/GlobalContextWrapper";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, webSiteSchema } from "@/lib/schema";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 
 const varelaRound = Varela_Round({
@@ -162,22 +160,26 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = "he";
-  // Mirror the proxy.ts cookie predicate: only refresh the session for
-  // authenticated visitors. Guests have no token to refresh, so skipping the
-  // Supabase round-trip saves ~500–1000ms of TTFB on cold homepage loads.
-  const cookieStore = await cookies();
-  const hasAuthCookie = cookieStore
-    .getAll()
-    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
-  const [dictionary, initialUser] = await Promise.all([
-    getDictionary(locale),
-    hasAuthCookie
-      ? createClient()
-          .then((sb) => sb.auth.getUser())
-          .then(({ data }) => data.user)
-          .catch(() => null)
-      : Promise.resolve(null),
-  ]);
+  // NOTHING request-scoped may be read here.
+  //
+  // This layout wraps every route, so a single `cookies()` call in it opted the
+  // WHOLE APP out of static rendering: 197 of 204 routes rendered on demand,
+  // every `revalidate` was dead, and every content page served
+  // `x-vercel-cache: MISS`. Removing the read moves 50 routes to static
+  // (measured, build route table before/after), which is the difference between
+  // a CDN hit and a cold render on the pages search engines actually crawl.
+  //
+  // The user is resolved client-side instead, by AuthProvider. That costs
+  // signed-in visitors one `getUser()` round-trip; guests already paid it,
+  // since `initialUser` was null for them anyway. UserMenu renders nothing
+  // until mounted, so the visible chrome does not flip.
+  //
+  // To restore SSR auth without losing static rendering, the app needs PPR.
+  // In Next 16 that is `cacheComponents`, which requires migrating every
+  // `export const revalidate` / `runtime` route to `"use cache"` first
+  // (16 files) — a separate piece of work.
+  const dictionary = await getDictionary(locale);
+  const initialUser = null;
 
   return (
     <html
