@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { escapePostgrestValue } from "@/lib/sanitize";
 import { parseTrailer } from "@/lib/prompt-stream/trailer";
 import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -390,6 +391,7 @@ export async function connectSearchLibrary(
   const words = query
     .replace(/[%_,().]/g, " ")
     .split(/\s+/)
+    .map((w) => escapePostgrestValue(w))
     .filter(Boolean)
     .slice(0, 5);
   if (words.length === 0) return [];

@@ -11,6 +11,7 @@
  */
 
 import { randomUUID, createHash } from "crypto";
+import { isIP } from "net";
 import type { NextRequest, NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
 import { logger } from "@/lib/logger";
@@ -19,7 +20,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 // ---------------------------------------------------------------------------
 // Kill switch: site_settings.allow_guest_access, cached per instance for 60s
 // so the enhance hot path pays one DB read a minute, not one per request.
-// Fails OPEN (guests allowed) — quota still bounds them at 1/24h.
+// Fails CLOSED (guests denied): a kill switch that cannot be read must not
+// be assumed to be off.
 // ---------------------------------------------------------------------------
 
 let guestAccessCache: { value: boolean; ts: number } | null = null;
@@ -34,16 +36,59 @@ export async function isGuestAccessAllowed(): Promise<boolean> {
       .select("allow_guest_access")
       .limit(1)
       .maybeSingle();
-    const value = data?.allow_guest_access !== false;
+    // Explicit === true: a null/missing column must not read as "open".
+    const value = data?.allow_guest_access === true;
     guestAccessCache = { value, ts: Date.now() };
     return value;
   } catch (e) {
-    logger.warn("[GuestService] allow_guest_access read failed, defaulting open:", e);
-    return true;
+    // FAIL CLOSED. This is a kill switch: if we cannot confirm it is on, the
+    // safe answer is that guests are locked out (the pre-guest-access
+    // behavior, which costs signups and nothing else). Failing open meant a
+    // Supabase blip silently re-opened an unauthenticated LLM endpoint.
+    logger.error("[GuestService] allow_guest_access read failed, denying guests:", e);
+    return false;
   }
 }
 
 const GUEST_COOKIE = "peroot_guest_id";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The guest cookie is HttpOnly, which stops scripts from READING it — it does
+ * nothing to stop a caller from WRITING it. An unsigned cookie meant the
+ * quota key was client-chosen, so rotating it per request reset the balance
+ * every time and the credit system bounded nothing. The value is therefore
+ * signed: `<uuid>.<hmac>`, and an id we did not mint is refused.
+ */
+function guestSecret(): string {
+  const salt = process.env.GUEST_IP_SALT;
+  if (!salt && process.env.NODE_ENV === "production") {
+    logger.error("[guest-service] GUEST_IP_SALT missing: guest cookies are forgeable.");
+  }
+  return salt || "peroot_guest_salt_v1";
+}
+
+function signGuestId(id: string): string {
+  return createHash("sha256").update(`${guestSecret()}:sig:${id}`).digest("hex").slice(0, 24);
+}
+
+/** Cookie value for a freshly minted id. */
+export function encodeGuestCookieValue(id: string): string {
+  return `${id}.${signGuestId(id)}`;
+}
+
+/** Returns the id only when the signature verifies. */
+function decodeGuestCookieValue(raw: string): string | null {
+  const dot = raw.lastIndexOf(".");
+  if (dot <= 0) return null;
+  const id = raw.slice(0, dot);
+  const sig = raw.slice(dot + 1);
+  if (!UUID_RE.test(id)) return null;
+  const expected = signGuestId(id);
+  // Constant-time-ish: lengths are fixed, and a mismatch reveals nothing
+  // useful since the id is public anyway.
+  return sig === expected ? id : null;
+}
 const GUEST_DAILY_LIMIT = 1;
 const ROLLING_WINDOW_MS = 24 * 60 * 60 * 1000;
 const GUEST_KEY_TTL = 60 * 60 * 24 * 31; // 31 days
@@ -65,10 +110,6 @@ interface GuestCheckResult {
 // IP helpers
 // ---------------------------------------------------------------------------
 
-// Minimal sanity check — ipv4 or ipv6 shape. Rejects obviously malformed
-// values from untrusted proxy headers.
-const IP_SHAPE_RE = /^(?:\d{1,3}\.){3}\d{1,3}$|^[0-9a-f:]+$/i;
-
 function getRequestIp(request: NextRequest | Request): string | null {
   const headers = request.headers;
   // On Vercel, x-real-ip is set by the platform edge and is not forwarded
@@ -77,12 +118,17 @@ function getRequestIp(request: NextRequest | Request): string | null {
   const real = headers.get("x-real-ip");
   if (real) {
     const trimmed = real.trim();
-    if (IP_SHAPE_RE.test(trimmed)) return trimmed;
+    if (isIP(trimmed)) return trimmed;
   }
+  // The RIGHTMOST x-forwarded-for entry, not the first: proxies APPEND the
+  // true client IP, so entry [0] is whatever the caller typed. The enhance
+  // route already parses it this way; both places now agree, and both
+  // validate with net.isIP() rather than a loose shape regex (which accepted
+  // "deadbeef" and "999.999.999.999").
   const fwd = headers.get("x-forwarded-for");
   if (fwd) {
-    const first = fwd.split(",")[0]?.trim();
-    if (first && IP_SHAPE_RE.test(first)) return first;
+    const last = fwd.split(",").at(-1)?.trim();
+    if (last && isIP(last)) return last;
   }
   return null;
 }
@@ -117,9 +163,12 @@ export async function resolveGuestId(
   const cookieHeader = request.headers.get("cookie") || "";
   // Anchor on start-of-string or `; ` so `fake_peroot_guest_id=...` can't hijack.
   const cookieMatch = cookieHeader.match(new RegExp(`(?:^|;\\s*)${GUEST_COOKIE}=([^;]+)`));
-  const cookieId = cookieMatch?.[1];
-  if (cookieId && /^[a-f0-9-]{36}$/i.test(cookieId)) {
-    refreshIpBackup(request, cookieId).catch(() => {});
+  const cookieId = cookieMatch?.[1] ? decodeGuestCookieValue(cookieMatch[1]) : null;
+  if (cookieId) {
+    // Claim the IP backup only when it is unset. Overwriting it let a caller
+    // pin an already-exhausted id onto a shared egress IP (office NAT), which
+    // exhausted every other visitor behind it.
+    claimIpBackupIfUnset(request, cookieId).catch(() => {});
     return { id: cookieId, needsCookie: false };
   }
 
@@ -155,13 +204,13 @@ export async function resolveGuestId(
 
   // Fall-through: no IP available or Redis failure — fresh id, best-effort write.
   const id = randomUUID();
-  refreshIpBackup(request, id).catch(() => {});
+  claimIpBackupIfUnset(request, id).catch(() => {});
   return { id, needsCookie: true };
 }
 
 /** Write the guest id cookie on a NextResponse. */
 export function applyGuestCookie(response: NextResponse, id: string): void {
-  response.cookies.set(GUEST_COOKIE, id, {
+  response.cookies.set(GUEST_COOKIE, encodeGuestCookieValue(id), {
     path: "/",
     httpOnly: true,
     sameSite: "lax",
@@ -173,7 +222,7 @@ export function applyGuestCookie(response: NextResponse, id: string): void {
 /** Build a raw Set-Cookie header value for use on `Response` (non-Next) objects. */
 export function buildGuestCookieHeader(id: string): string {
   const parts = [
-    `${GUEST_COOKIE}=${id}`,
+    `${GUEST_COOKIE}=${encodeGuestCookieValue(id)}`,
     "Path=/",
     "HttpOnly",
     "SameSite=Lax",
@@ -183,11 +232,16 @@ export function buildGuestCookieHeader(id: string): string {
   return parts.join("; ");
 }
 
-async function refreshIpBackup(request: NextRequest | Request, id: string): Promise<void> {
+/**
+ * Claim the IP-hash backup for this id ONLY if no id is bound yet (NX).
+ * Never overwrites: an unconditional write let a caller re-point a shared
+ * egress IP at an exhausted id and starve everyone behind that NAT.
+ */
+async function claimIpBackupIfUnset(request: NextRequest | Request, id: string): Promise<void> {
   const ip = getRequestIp(request);
   if (!ip) return;
   try {
-    await redis.set(`guest:ip:${hashIp(ip)}`, id, { ex: IP_BACKUP_TTL });
+    await redis.set(`guest:ip:${hashIp(ip)}`, id, { nx: true, ex: IP_BACKUP_TTL });
   } catch (e) {
     logger.error("[guest-service] IP backup write failed:", e);
   }
@@ -297,6 +351,8 @@ export async function checkAndDecrementGuestCredits(guestId: string): Promise<Gu
   } catch (e) {
     logger.error("[guest-service] eval-based decrement failed, falling back:", e);
     // Non-atomic fallback (e.g. if Redis eval is unavailable): best-effort RMW.
+    // NOTE: readGuestState itself fails open (returns a full balance) — that is
+    // handled below, where an unconfirmed write denies the request.
     const state = await readGuestState(guestId);
     const last = state.last_prompt_at ? new Date(state.last_prompt_at) : null;
     const shouldReset = !last || now - last.getTime() >= ROLLING_WINDOW_MS;
@@ -314,7 +370,18 @@ export async function checkAndDecrementGuestCredits(guestId: string): Promise<Gu
       await redis.hset(`guest:${guestId}`, { b: balance, t: now });
       await redis.expire(`guest:${guestId}`, GUEST_KEY_TTL);
     } catch (writeErr) {
-      logger.error("[guest-service] fallback write failed:", writeErr);
+      // FAIL CLOSED for unauthenticated callers. If the spend cannot be
+      // recorded, allowing the request turns a Redis outage into an
+      // unmetered public LLM proxy: every retry reads a full balance and
+      // every write is swallowed. Registered users keep failing open, since
+      // their ledger lives in Postgres.
+      logger.error("[guest-service] fallback write failed, denying guest:", writeErr);
+      return {
+        allowed: false,
+        remaining: 0,
+        refreshAt: null,
+        error: "Guest quota unavailable",
+      };
     }
     return {
       allowed: true,

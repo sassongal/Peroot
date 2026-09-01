@@ -68,6 +68,7 @@ import {
   resolveGuestId,
   checkAndDecrementGuestCredits,
   getGuestQuotaStatus,
+  encodeGuestCookieValue,
   GUEST_CONSTANTS,
 } from "../guest-service";
 
@@ -88,13 +89,41 @@ describe("resolveGuestId", () => {
     expect(id).toMatch(/^[a-f0-9-]{36}$/i);
   });
 
-  it("reuses cookie id when present and valid", async () => {
+  it("reuses a SIGNED cookie id", async () => {
+    const uuid = "550e8400-e29b-41d4-a716-446655440000";
+    const { id, needsCookie } = await resolveGuestId(
+      makeRequest({ cookie: `peroot_guest_id=${encodeGuestCookieValue(uuid)}` }),
+    );
+    expect(id).toBe(uuid);
+    expect(needsCookie).toBe(false);
+  });
+
+  it("refuses an UNSIGNED cookie id: the quota key must be server-minted", async () => {
+    // A bare UUID is what an attacker sends when rotating identities to reset
+    // the quota on every request. It must not be honored.
     const uuid = "550e8400-e29b-41d4-a716-446655440000";
     const { id, needsCookie } = await resolveGuestId(
       makeRequest({ cookie: `peroot_guest_id=${uuid}` }),
     );
-    expect(id).toBe(uuid);
-    expect(needsCookie).toBe(false);
+    expect(id).not.toBe(uuid);
+    expect(needsCookie).toBe(true);
+  });
+
+  it("refuses a cookie whose signature does not verify", async () => {
+    const uuid = "550e8400-e29b-41d4-a716-446655440000";
+    const { id } = await resolveGuestId(
+      makeRequest({ cookie: `peroot_guest_id=${uuid}.deadbeefdeadbeefdeadbeef` }),
+    );
+    expect(id).not.toBe(uuid);
+  });
+
+  it("refuses a non-UUID id even when correctly signed for itself", async () => {
+    // The old regex accepted 36 dashes; the key namespace must stay UUIDs.
+    const bogus = "------------------------------------";
+    const { id } = await resolveGuestId(
+      makeRequest({ cookie: `peroot_guest_id=${encodeGuestCookieValue(bogus)}` }),
+    );
+    expect(id).not.toBe(bogus);
   });
 
   it("rejects malformed cookie value and issues a new id", async () => {
@@ -109,9 +138,13 @@ describe("resolveGuestId", () => {
     const backedUp = "550e8400-e29b-41d4-a716-446655440000";
     // Pre-seed the IP backup entry — key format matches hashIp() output
     const req = makeRequest({ "x-forwarded-for": "1.2.3.4" });
-    // First call seeds the IP backup via cookie path
+    // First call seeds the IP backup via the cookie path — the cookie must be
+    // SIGNED now, since an unsigned one is refused outright.
     await resolveGuestId(
-      makeRequest({ cookie: `peroot_guest_id=${backedUp}`, "x-forwarded-for": "1.2.3.4" }),
+      makeRequest({
+        cookie: `peroot_guest_id=${encodeGuestCookieValue(backedUp)}`,
+        "x-forwarded-for": "1.2.3.4",
+      }),
     );
     // Now a cookie-less request from same IP should recover the same id
     const { id, needsCookie } = await resolveGuestId(req);

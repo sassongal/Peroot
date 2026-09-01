@@ -8,9 +8,16 @@ const redis = new Redis({
 });
 
 export const rateLimiters = {
+  // The guest cookie is client-supplied, so the Redis credit key can be
+  // rotated at will — this per-IP window is the ONLY hard ceiling on
+  // unauthenticated generations. It was 5/hour (120/day) from the era when
+  // guests were rejected outright and this tier was dead code; that gave an
+  // anonymous caller 120x the throughput of a registered free user (1/day).
+  // 3 per rolling 24h leaves room for a cleared cookie or a shared office IP
+  // without funding a farm.
   guest: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(5, "1 h"),
+    limiter: Ratelimit.slidingWindow(3, "24 h"),
     prefix: "@peroot/ratelimit:guest",
   }),
   free: new Ratelimit({

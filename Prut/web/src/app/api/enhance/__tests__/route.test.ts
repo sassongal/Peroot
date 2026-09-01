@@ -1230,6 +1230,28 @@ describe("POST /api/enhance", () => {
       expect(mockGenerateStream).not.toHaveBeenCalled();
     });
 
+    it("returns 403 when a guest sends a refinement payload (token amplifier)", async () => {
+      // previousResult + answers are client-supplied and feed the most
+      // expensive shape this route can produce (50k + 100k chars in, 8192
+      // tokens out). A guest has no prior result to refine, so the payload
+      // is refused before any spend.
+      setupGuestUser();
+      setupMockStream();
+
+      const req = makeRequest({
+        prompt: "test",
+        previousResult: "x".repeat(5000),
+        refinementInstruction: "קצר יותר",
+      });
+      const res = await POST(req);
+
+      expect(res.status).toBe(403);
+      const body = await res.json();
+      expect(body.code).toBe("login_required");
+      expect(mockGenerateStream).not.toHaveBeenCalled();
+      expect(mockCheckAndDecrementGuestCredits).not.toHaveBeenCalled();
+    });
+
     it("returns 403 login_required when a guest attaches context", async () => {
       // Guests cannot use context attachments (cost floor + registration
       // incentive) — the gate fires before any credit spend.

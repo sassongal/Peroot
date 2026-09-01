@@ -3,6 +3,7 @@
 import { Copy, Check, Share2, Link } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { SendToModelBar } from "@/components/features/prompt-improver/SendToModelBar";
 import {
   ChatGPTIcon,
   ClaudeIcon,
@@ -77,31 +78,8 @@ export function SharePageClient({ prompt }: { prompt: string }) {
 
   return (
     <div className="p-4 bg-white/2 border-t border-white/5 flex flex-col gap-4">
-      {/* AI Platform buttons */}
-      <div className="flex items-center gap-2 justify-center flex-wrap">
-        <span className="text-xs text-slate-500 ms-1">פתח ב:</span>
-        <button
-          onClick={() => handleOpenIn("https://chat.openai.com/")}
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-xs transition-all cursor-pointer min-h-[44px]"
-        >
-          <ChatGPTIcon className="w-3.5 h-3.5" />
-          <span>ChatGPT</span>
-        </button>
-        <button
-          onClick={() => handleOpenIn("https://claude.ai/new")}
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-xs transition-all cursor-pointer min-h-[44px]"
-        >
-          <ClaudeIcon className="w-3.5 h-3.5" />
-          <span>Claude</span>
-        </button>
-        <button
-          onClick={() => handleOpenIn("https://gemini.google.com/")}
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-xs transition-all cursor-pointer min-h-[44px]"
-        >
-          <GeminiIcon className="w-3.5 h-3.5" />
-          <span>Gemini</span>
-        </button>
-      </div>
+      {/* שגר למודל — prefilled handoff, the same component the app uses */}
+      <SendToModelBar prompt={prompt} from="share_page" className="items-center" />
 
       {/* Share buttons */}
       <div className="flex items-center gap-2 justify-center flex-wrap">

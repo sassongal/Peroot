@@ -447,6 +447,20 @@ export async function POST(req: Request) {
       );
     }
 
+    // 1.7 Guests cannot send refinement payloads at all. A guest has no prior
+    // result to refine (the client never sends one), but the fields are
+    // client-supplied, and the refinement path is the most expensive shape
+    // this route can produce: `previousResult` is interpolated verbatim
+    // (50k chars), `answers` can add 100k more, and maxOutputTokens doubles
+    // to 8192. Left open, one anonymous POST bought ~48k tokens of our
+    // spend. Rejecting the payload closes the amplifier at the door.
+    if (isGuest && (previousResult || refinementInstruction || answers)) {
+      return NextResponse.json(
+        { error: "התחבר כדי לחדד תוצאה קיימת", code: "login_required" },
+        { status: 403 },
+      );
+    }
+
     // Aggregate image payload guard — each image ≤1.4M chars (≈1MB base64);
     // total kept under 4M to stay well within Vercel's 4.5MB body limit.
     const totalBase64Chars = (contextAttachments ?? []).reduce(
@@ -1094,9 +1108,16 @@ export async function POST(req: Request) {
             // JSON and cuts sections mid-word — the user should not be
             // charged for that. Short valid responses with finishReason
             // === 'stop' are legitimate and do NOT trigger a refund.
+            // A GUEST is never refunded for truncation: `finishReason ===
+            // "length"` is attacker-induced (ask for more output than the
+            // ceiling allows) and the caller already received the maximum
+            // length stream, so refunding it turned the single guest credit
+            // into an unlimited loop of the most expensive call shape.
+            // Truncation refunds stay for registered users, where they are a
+            // fair-billing gesture against a real ledger.
             const isTruncated = finishReasonCopy === "length";
             const shouldRefund =
-              textCopy.length === 0 || finishReasonCopy === "error" || isTruncated;
+              textCopy.length === 0 || finishReasonCopy === "error" || (isTruncated && !!userId);
             if (shouldRefund) {
               await refundEnhanceCredit({
                 userId,

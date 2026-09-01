@@ -16,7 +16,7 @@
  *   old behavior: nothing regresses, and the toast says what happened.
  */
 
-export type HandoffTarget = "chatgpt" | "claude" | "gemini";
+export type HandoffTarget = "chatgpt" | "claude" | "gemini" | "perplexity" | "grok" | "copilot";
 
 interface HandoffConfig {
   name: string;
@@ -48,7 +48,49 @@ export const HANDOFF_TARGETS: Record<HandoffTarget, HandoffConfig> = {
     baseUrl: "https://gemini.google.com/app",
     // No prefill parameter exists. Copy-then-open, honestly.
   },
+  perplexity: {
+    name: "Perplexity",
+    baseUrl: "https://www.perplexity.ai/",
+    withPrompt: (p) => `https://www.perplexity.ai/search?q=${encodeURIComponent(p)}`,
+  },
+  grok: {
+    name: "Grok",
+    baseUrl: "https://grok.com/",
+    withPrompt: (p) => `https://grok.com/?q=${encodeURIComponent(p)}`,
+  },
+  copilot: {
+    name: "Copilot",
+    baseUrl: "https://copilot.microsoft.com/",
+    withPrompt: (p) => `https://copilot.microsoft.com/?q=${encodeURIComponent(p)}`,
+  },
 };
+
+/** The order the buttons render in. */
+export const HANDOFF_ORDER: HandoffTarget[] = [
+  "chatgpt",
+  "claude",
+  "gemini",
+  "perplexity",
+  "grok",
+  "copilot",
+];
+
+/**
+ * Map the enhance flow's `target_model` (the model the prompt was tuned for)
+ * onto a handoff target, so that button can be highlighted.
+ */
+export function handoffTargetForModel(targetModel?: string | null): HandoffTarget | null {
+  switch (targetModel) {
+    case "chatgpt":
+      return "chatgpt";
+    case "claude":
+      return "claude";
+    case "gemini":
+      return "gemini";
+    default:
+      return null;
+  }
+}
 
 export interface HandoffPlan {
   /** Where to send the browser. */

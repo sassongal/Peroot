@@ -130,6 +130,15 @@ export function trackTargetModelSelect(targetModel: string, previousModel?: stri
   });
 }
 
+/**
+ * "שגר למודל" — the activation KPI. `mode` separates a real prefilled
+ * handoff from the copy-then-paste fallback, so the hit rate is measurable
+ * rather than assumed; `from` says which surface it fired from.
+ */
+export function trackSentToModel(platform: string, mode: "prefilled" | "copied", from: string) {
+  trackEvent("sent_to_model", { platform, mode, from });
+}
+
 /** Track social share button click */
 export function trackShare(platform: string, url: string) {
   trackEvent("blog_share", { platform, url });
