@@ -427,7 +427,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
               }}
               title="קשרים"
               aria-label="הצג קשרים"
-              className="hidden @sm/plcard:flex @md/plcard:hidden p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-11 min-w-11 items-center justify-center cursor-pointer"
+              className="flex @md/plcard:hidden p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-11 min-w-11 items-center justify-center cursor-pointer"
             >
               <Network className="w-4 h-4" />
             </button>
@@ -440,7 +440,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
             }}
             title="השתמש"
             aria-label="השתמש בפרומפט"
-            className="hidden @sm/plcard:flex p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 items-center justify-center"
+            className="flex p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 items-center justify-center"
           >
             <ArrowRight className="w-4 h-4 @md/plcard:w-3.5 @md/plcard:h-3.5" />
           </button>

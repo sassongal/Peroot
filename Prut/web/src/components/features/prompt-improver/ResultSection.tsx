@@ -502,7 +502,7 @@ export function ResultSection({
                         trackFeatureUse(`quick_refine_${action.id}`);
                         onQuickRefine(action.instruction);
                       }}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-800 dark:text-amber-200 hover:bg-amber-500/15 transition-colors cursor-pointer min-h-[36px]"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-800 dark:text-amber-200 hover:bg-amber-500/15 transition-colors cursor-pointer min-h-[44px]"
                     >
                       {action.label}
                     </button>

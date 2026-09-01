@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useI18n } from "@/context/I18nContext";
 
@@ -59,6 +60,9 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
   const t = useI18n();
   const isHe = t.locale === "he";
+  // The mobile tab bar exists only on the app route; give the footer room
+  // there so its last row isn't buried under the fixed bar (U5.5).
+  const onAppRoute = usePathname() === "/";
 
   return (
     <footer
@@ -69,7 +73,13 @@ export function Footer() {
       }}
       dir={isHe ? "rtl" : "ltr"}
     >
-      <div className="max-w-7xl mx-auto px-6 py-10 md:py-12">
+      <div
+        className={
+          onAppRoute
+            ? "max-w-7xl mx-auto px-6 py-10 md:py-12 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-12"
+            : "max-w-7xl mx-auto px-6 py-10 md:py-12"
+        }
+      >
         {/* Link groups */}
         <nav
           aria-label={isHe ? "ניווט תחתון" : "Footer navigation"}

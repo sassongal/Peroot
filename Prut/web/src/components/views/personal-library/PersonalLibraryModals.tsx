@@ -48,7 +48,7 @@ export function PersonalLibraryModals() {
     <>
       {/* ── Floating Batch Actions Bar ── */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 p-2 rounded-2xl border border-(--glass-border) bg-[#0A0A0A]/95 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
+        <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 p-2 rounded-2xl border border-(--glass-border) bg-[#0A0A0A]/95 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
           <div className="ps-3 pe-2 text-sm font-medium text-(--text-primary) border-e border-(--glass-border)">
             {selectedIds.size} נבחרו
           </div>

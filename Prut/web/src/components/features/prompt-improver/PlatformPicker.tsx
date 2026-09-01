@@ -126,7 +126,7 @@ export function PlatformPicker({
                 disabled={disabled}
                 onClick={() => onOutputFormatChange?.(fmt)}
                 className={cn(
-                  "px-2.5 py-1 min-h-[36px] text-[11px] font-medium transition-colors cursor-pointer",
+                  "px-2.5 py-1 min-h-[44px] text-[11px] font-medium transition-colors cursor-pointer",
                   outputFormat === fmt
                     ? "bg-(--pk-bg-strong) text-(--pk-text)"
                     : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5",
@@ -150,7 +150,7 @@ export function PlatformPicker({
                 disabled={disabled}
                 onClick={() => onAspectRatioChange(option.value)}
                 className={cn(
-                  "px-2.5 py-1 min-h-[36px] text-[11px] font-medium transition-colors cursor-pointer",
+                  "px-2.5 py-1 min-h-[44px] text-[11px] font-medium transition-colors cursor-pointer",
                   aspectRatio === option.value
                     ? "bg-(--pk-bg-strong) text-(--pk-text)"
                     : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5",
