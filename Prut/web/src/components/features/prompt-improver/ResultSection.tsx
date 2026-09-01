@@ -37,6 +37,7 @@ import { ScoreBreakdownDrawer } from "@/components/ui/ScoreBreakdownDrawer";
 import { EnhancedScorer, type EnhancedScore } from "@/lib/engines/scoring/enhanced-scorer";
 import { QUICK_REFINE_ACTIONS } from "@/lib/constants";
 import { trackFeatureUse } from "@/lib/analytics";
+import { planModelHandoff, handoffMessage, type HandoffTarget } from "@/lib/model-handoff";
 import styles from "./ResultSection.module.css";
 
 const blinkKeyframes = `
@@ -188,6 +189,24 @@ export function ResultSection({
     const shouldWatermark =
       forceWatermark !== undefined ? forceWatermark : isPro ? proWatermarkEnabled : true;
     onCopy(text, shouldWatermark);
+  };
+
+  /**
+   * שגר למודל: open the target with the prompt already in its composer.
+   * Falls back to copy-then-open when the platform has no prefill parameter
+   * or the prompt is too long for a URL — and says which happened, so a
+   * truncated prompt can never be sent silently.
+   */
+  const launchModel = (target: HandoffTarget) => {
+    const text = displayCompletion;
+    const plan = planModelHandoff(target, text);
+    trackFeatureUse(`send_to_model_${target}${plan.prefilled ? "" : "_copy"}`);
+    if (!plan.prefilled) {
+      // Copy first so the paste target is ready the moment the tab opens.
+      handleCopy(text);
+    }
+    window.open(plan.url, "_blank", "noopener,noreferrer");
+    toast.success(handoffMessage(plan));
   };
 
   return (
@@ -351,15 +370,13 @@ export function ResultSection({
                     );
                   })()}
 
-                {/* ChatGPT */}
+                {/* שגר למודל — ChatGPT and Claude open with the prompt already
+                    in the composer; Gemini has no prefill parameter, so it keeps
+                    the copy-then-open path (see lib/model-handoff). */}
                 <button
-                  onClick={() => {
-                    handleCopy(displayCompletion);
-                    window.open("https://chat.openai.com/", "_blank");
-                    toast.success(`${t.toasts.copied} - ChatGPT נפתח!`);
-                  }}
+                  onClick={() => launchModel("chatgpt")}
                   className={cn(styles.gemBtn, styles.gemGpt)}
-                  aria-label="ChatGPT"
+                  aria-label="שגר ל-ChatGPT"
                 >
                   <div className={styles.gemIcon}>
                     <ChatGPTIcon className="w-[18px] h-[18px]" />
@@ -367,15 +384,10 @@ export function ResultSection({
                   <span className={styles.gemName}>ChatGPT</span>
                 </button>
 
-                {/* Claude */}
                 <button
-                  onClick={() => {
-                    handleCopy(displayCompletion);
-                    window.open("https://claude.ai/new", "_blank");
-                    toast.success(`${t.toasts.copied} - Claude נפתח!`);
-                  }}
+                  onClick={() => launchModel("claude")}
                   className={cn(styles.gemBtn, styles.gemClaude)}
-                  aria-label="Claude"
+                  aria-label="שגר ל-Claude"
                 >
                   <div className={styles.gemIcon}>
                     <ClaudeIcon className="w-[18px] h-[18px]" />
@@ -383,15 +395,10 @@ export function ResultSection({
                   <span className={styles.gemName}>Claude</span>
                 </button>
 
-                {/* Gemini */}
                 <button
-                  onClick={() => {
-                    handleCopy(displayCompletion);
-                    window.open("https://gemini.google.com/", "_blank");
-                    toast.success(`${t.toasts.copied} - Gemini נפתח!`);
-                  }}
+                  onClick={() => launchModel("gemini")}
                   className={cn(styles.gemBtn, styles.gemGemini)}
-                  aria-label="Gemini"
+                  aria-label="שגר ל-Gemini"
                 >
                   <div className={styles.gemIcon}>
                     <GeminiIcon className="w-[18px] h-[18px]" />
