@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
@@ -34,7 +34,12 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function BlogPage() {
-  const supabase = await createClient();
+  // Cookieless on purpose. The SSR client reads cookies, which made this route
+  // dynamic and killed the `revalidate` above: /blog served
+  // x-vercel-cache: MISS on every request. Published posts are public data and
+  // the query filters `status = 'published'` explicitly, so RLS is not what was
+  // protecting anything here (same pattern as /templates).
+  const supabase = createServiceClient();
   const { data: posts, error } = await supabase
     .from("blog_posts")
     .select("slug, title, excerpt, category, read_time, published_at, thumbnail_url")

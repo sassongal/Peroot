@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import { ArrowRight, Calendar, Sparkles } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { notFound, permanentRedirect } from "next/navigation";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
@@ -72,7 +72,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (hebrewRedirect) {
     return { title: "Redirecting..." };
   }
-  const supabase = await createClient();
+  // Cookieless: see the note in ../page.tsx. Both queries below pin
+  // `status = 'published'` themselves.
+  const supabase = createServiceClient();
   const { data: post } = await supabase
     .from("blog_posts")
     .select(
@@ -224,7 +226,7 @@ export default async function BlogPostPage({ params }: Props) {
     permanentRedirect(`/blog/${hebrewRedirect}`);
   }
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { data: post } = await supabase
     .from("blog_posts")
     .select("*")
