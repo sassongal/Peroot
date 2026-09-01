@@ -219,14 +219,14 @@ export default async function PromptsIndexPage() {
             </Link>
           </div>
 
-          {/* Popular prompts — real content above the category doors */}
+          {/* Fresh prompts — real content above the category doors */}
           {popular.length > 0 && (
             <section className="mb-12 md:mb-16" aria-label="פרומפטים חדשים">
               <div className="flex items-center gap-3 mb-5 pb-4 border-b border-border">
                 <span className="text-2xl" role="img" aria-hidden="true">
-                  🔥
+                  ✨
                 </span>
-                <h2 className="text-xl md:text-2xl font-serif text-foreground">הכי בשימוש עכשיו</h2>
+                <h2 className="text-xl md:text-2xl font-serif text-foreground">חדשים בספרייה</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {popular.map((p) => {
