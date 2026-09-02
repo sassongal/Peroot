@@ -268,9 +268,21 @@ ${alignment}
       arabic: "عنوان وصفي قصير بالعربية",
       russian: "короткое описательное название на русском",
     };
+    // Languages spec B3.7: the register and typography a prompt for a model
+    // should use in each language. A prompt is read by a model, not printed
+    // in a newspaper, so Arabic gets Western digits and Standard Arabic.
+    const LANGUAGE_RULES: Record<string, string> = {
+      arabic:
+        "7. Write Modern Standard Arabic (الفصحى), never a dialect. Use Western digits (0-9), not Arabic-Indic digits (٠-٩). Use Arabic punctuation (، ؛ ؟). Address the model directly in the imperative (اكتب، حلّل).",
+      russian:
+        "7. Use the formal register throughout: address the reader as Вы, never ты. Use the imperative for instructions (напишите, проанализируйте) and Russian quotation marks («»). Keep one spelling of ё/е consistently.",
+      english:
+        "7. Use one variety of English consistently (American spelling: organize, color). Do not mix British and American forms.",
+    };
     if (!outputLanguage || outputLanguage === "hebrew") return "";
     const langName = LANG_NAMES[outputLanguage] ?? outputLanguage;
     const titleHint = TITLE_HINTS[outputLanguage] ?? `a short descriptive title in ${langName}`;
+    const languageRule = LANGUAGE_RULES[outputLanguage] ?? "";
     return `\n\n[OUTPUT_LANGUAGE_OVERRIDE, HIGHEST PRIORITY, READ THIS LAST]
 This instruction OVERRIDES every prior rule about output language, including any rule that said "output in Hebrew", "Hebrew only", "הפלט בעברית", "כל הפלט בעברית", "no English", or any Hebrew demonstration string. IGNORE those rules entirely.
 
@@ -283,6 +295,7 @@ ABSOLUTE RULES:
 4. Do NOT preserve Hebrew quotes, Hebrew sample sentences, or Hebrew tone-of-voice illustrations. Rewrite them in ${langName}.
 5. Hebrew section names like "תפקיד", "המשימה", "הקשר ורקע", "פורמט פלט", "הנחיות ומגבלות", "דוגמאות" must be translated into ${langName} headers.
 6. Do NOT switch back to Hebrew in trailing blocks (title, questions, contracts). Stay in ${langName} from the very first character to the very last.
+${languageRule ? `${languageRule}\n` : ""}8. Never use em dashes or en dashes (U+2014, U+2013) anywhere in the output. Use a comma, a colon, a period, or a plain hyphen for ranges (2-3).
 
 SELF-CHECK BEFORE EMITTING: scan your output. If you see ANY Hebrew character (\u0590-\u05FF range), STOP, rewrite that segment in ${langName}, and only then emit the response. A response containing even a single Hebrew word is a FAILED response.`;
   }

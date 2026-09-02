@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AIGateway } from "@/lib/ai/gateway";
-import { AVAILABLE_MODELS, TASK_ROUTING, getModelsForTask } from "@/lib/ai/models";
+import {
+  AVAILABLE_MODELS,
+  TASK_ROUTING,
+  getModelsForTask,
+  filterModelsForLanguage,
+} from "@/lib/ai/models";
 import { recordSuccess } from "@/lib/ai/circuit-breaker";
 
 // Mock the 'ai' module
@@ -148,5 +153,43 @@ describe("Task-Based Model Routing", () => {
     expect(models).toContain("gemini-2.5-flash-lite");
     expect(models).toContain("llama-4-scout");
     expect(models).toContain("gpt-oss-20b");
+  });
+});
+
+describe("Language-aware routing (languages spec B3.6)", () => {
+  it("drops the models that are weak in Arabic and keeps the order of the rest", () => {
+    const chain = getModelsForTask("enhance");
+    const arabic = filterModelsForLanguage(chain, "arabic");
+    expect(arabic).not.toContain("mistral-small");
+    expect(arabic).not.toContain("gpt-oss-20b");
+    expect(arabic[0]).toBe("gemini-2.5-flash");
+    expect(arabic).toContain("gemini-2.5-flash-lite");
+  });
+
+  it("leaves Hebrew, English and Russian chains untouched", () => {
+    const chain = getModelsForTask("enhance");
+    expect(filterModelsForLanguage(chain, "hebrew")).toEqual(chain);
+    expect(filterModelsForLanguage(chain, "english")).toEqual(chain);
+    expect(filterModelsForLanguage(chain, "russian")).toEqual(chain);
+    expect(filterModelsForLanguage(chain, undefined)).toEqual(chain);
+  });
+
+  it("never empties the chain: a weak answer beats no answer", () => {
+    expect(filterModelsForLanguage(["mistral-small"], "arabic")).toEqual(["mistral-small"]);
+  });
+
+  it("an Arabic request that loses Gemini falls through to Flash Lite, not Mistral", async () => {
+    mockStreamText.mockRejectedValueOnce(new Error("Rate Limited"));
+    mockStreamText.mockResolvedValueOnce({ text: "success" });
+
+    const result = await AIGateway.generateStream({
+      system: "sys",
+      prompt: "user",
+      task: "enhance",
+      outputLanguage: "arabic",
+    });
+
+    expect(result.modelId).not.toBe("mistral-small");
+    expect(result.modelId).not.toBe("gpt-oss-20b");
   });
 });

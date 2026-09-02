@@ -74,6 +74,13 @@ interface ModelConfig {
   label: string;
   contextWindow: number;
   supportsVision: boolean;
+  /**
+   * Output languages this model writes badly enough that a fallback to it
+   * would be worse than the next model in the chain. Languages spec B3.6:
+   * Mistral Small and gpt-oss-20b are weak in Arabic, so an Arabic request
+   * skips them and lands on Flash Lite or Llama 4 Scout instead.
+   */
+  weakLanguages?: readonly string[];
 }
 
 export const AVAILABLE_MODELS: Partial<Record<ModelId, ModelConfig>> = {
@@ -120,6 +127,7 @@ export const AVAILABLE_MODELS: Partial<Record<ModelId, ModelConfig>> = {
     label: "GPT-OSS 20B (Groq)",
     contextWindow: 32768,
     supportsVision: false,
+    weakLanguages: ["arabic"],
   },
   "mistral-small": {
     id: "mistral-small",
@@ -128,6 +136,7 @@ export const AVAILABLE_MODELS: Partial<Record<ModelId, ModelConfig>> = {
     label: "Mistral Small 3.1",
     contextWindow: 32000,
     supportsVision: false,
+    weakLanguages: ["arabic"],
   },
 };
 
@@ -198,6 +207,21 @@ export const TASK_ROUTING: Record<string, ModelId[]> = {
   // the cheapest Google model and handles simple JSON classification well.
   classify: ["gemini-2.5-flash-lite", "mistral-small", "llama-4-scout"],
 };
+
+/**
+ * Drop models that are weak in the requested output language (B3.6).
+ *
+ * Never empties the chain: if every model is weak, the original order is
+ * returned, because a weak answer beats no answer. Hebrew and English are
+ * fine everywhere, so they return the chain untouched.
+ */
+export function filterModelsForLanguage(models: ModelId[], outputLanguage?: string): ModelId[] {
+  if (!outputLanguage || outputLanguage === "hebrew" || outputLanguage === "english") return models;
+  const strong = models.filter(
+    (m) => !AVAILABLE_MODELS[m]?.weakLanguages?.includes(outputLanguage),
+  );
+  return strong.length > 0 ? strong : models;
+}
 
 export function getModelsForTask(task: string, userTier?: "free" | "pro" | "guest"): ModelId[] {
   // All users get the same optimized low-cost model routing (userTier reserved for future tier-based routing)

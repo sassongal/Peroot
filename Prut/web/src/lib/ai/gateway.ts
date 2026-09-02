@@ -1,5 +1,11 @@
 import { streamText, generateText, StreamTextResult } from "ai";
-import { AVAILABLE_MODELS, FALLBACK_ORDER, ModelId, getModelsForTask } from "./models";
+import {
+  AVAILABLE_MODELS,
+  FALLBACK_ORDER,
+  ModelId,
+  getModelsForTask,
+  filterModelsForLanguage,
+} from "./models";
 import { isProviderAvailable, recordSuccess, recordFailure } from "./circuit-breaker";
 import { acquireSlot, releaseSlot } from "./concurrency";
 import { logger } from "@/lib/logger";
@@ -20,6 +26,11 @@ export interface GatewayParams {
    * model is already first in the chain, no-op.
    */
   preferredModel?: string;
+  /**
+   * The language the output must be written in. Models that are weak in it
+   * are dropped from the fallback chain (see filterModelsForLanguage).
+   */
+  outputLanguage?: string;
   /**
    * Estimated total input token count (prompt + system + context injections).
    * When set, models whose context window cannot fit this input are dropped
@@ -274,12 +285,13 @@ export class AIGateway {
             ...baseModels.filter((m) => m !== params.preferredModel),
           ]
         : baseModels;
-    const models = params.estimatedInputTokens
+    const sizedChain = params.estimatedInputTokens
       ? (filterModelsForEstimatedInput(
           [...preferredChain],
           params.estimatedInputTokens,
         ) as ModelId[])
       : preferredChain;
+    const models = filterModelsForLanguage(sizedChain, params.outputLanguage);
 
     // Filter to vision-capable models when image attachments are present.
     // If no vision-capable model survives the circuit-breaker filter, throw
@@ -410,12 +422,13 @@ export class AIGateway {
             ...baseModels2.filter((m) => m !== params.preferredModel),
           ]
         : baseModels2;
-    const models = params.estimatedInputTokens
+    const sizedChain2 = params.estimatedInputTokens
       ? (filterModelsForEstimatedInput(
           [...preferredChain2],
           params.estimatedInputTokens,
         ) as ModelId[])
       : preferredChain2;
+    const models = filterModelsForLanguage(sizedChain2, params.outputLanguage);
 
     const hasImages = !!(params.imageAttachments && params.imageAttachments.length > 0);
     const visionChain2 = hasImages

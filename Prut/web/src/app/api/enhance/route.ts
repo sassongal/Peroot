@@ -1030,6 +1030,7 @@ export async function POST(req: Request) {
       prompt: engineOutput.userPrompt,
       task: resolvedTask,
       preferredModel,
+      outputLanguage: output_language,
       estimatedInputTokens,
       // Refine lifts the ceiling from 4096 → 8192; everything else stays
       // on the task preset (undefined = use pickDefaults).

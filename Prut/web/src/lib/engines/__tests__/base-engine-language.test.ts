@@ -80,3 +80,31 @@ describe("BaseEngine language override", () => {
     );
   });
 });
+
+describe("BaseEngine language rules (languages spec B3.7)", () => {
+  it("Arabic gets Standard Arabic and Western digits", () => {
+    const out = new StandardEngine(MIN_CONFIG).generate({
+      ...BASE_INPUT,
+      outputLanguage: "arabic",
+    });
+    expect(out.systemPrompt).toContain("الفصحى");
+    expect(out.systemPrompt).toContain("Western digits");
+    expect(out.userPrompt).toContain("الفصحى");
+  });
+
+  it("Russian gets the formal register", () => {
+    const out = new StandardEngine(MIN_CONFIG).generate({
+      ...BASE_INPUT,
+      outputLanguage: "russian",
+    });
+    expect(out.systemPrompt).toContain("Вы");
+    expect(out.systemPrompt).not.toContain("الفصحى");
+  });
+
+  it("every override forbids em and en dashes, the project law", () => {
+    for (const lang of ["english", "arabic", "russian"] as const) {
+      const out = new StandardEngine(MIN_CONFIG).generate({ ...BASE_INPUT, outputLanguage: lang });
+      expect(out.systemPrompt).toContain("U+2014");
+    }
+  });
+});
