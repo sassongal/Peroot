@@ -8,6 +8,7 @@ import { CapabilityMode } from "@/lib/capability-mode";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { findSimilarPrompts } from "@/lib/prompt-similarity";
+import { autoTags } from "@/lib/library/auto-tags";
 
 interface UsePromptMutationsParams {
   supabase: ReturnType<typeof createClient>;
@@ -38,6 +39,15 @@ export function usePromptMutations({
       }
       if (!prompt.personal_category) {
         prompt = { ...prompt, personal_category: "כללי" };
+      }
+
+      // Tag a save that arrived untagged (master plan 3.6). Connect has done
+      // this since launch; the web save, which is how nearly every prompt
+      // actually enters a library, did not, so a site-built library drew a
+      // Memory Palace with no tag edges and had nothing for tag search to find.
+      // Deterministic and local, so it costs nothing and cannot fail the save.
+      if (!prompt.tags || prompt.tags.length === 0) {
+        prompt = { ...prompt, tags: autoTags(prompt.title ?? "", prompt.prompt ?? "") };
       }
 
       if (user) {

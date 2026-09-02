@@ -4,7 +4,7 @@ import { parseTrailer } from "@/lib/prompt-stream/trailer";
 import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getRefreshAt } from "@/lib/services/credit-service";
-import { extractKeywords } from "@/components/features/library/graph-utils";
+import { autoTags } from "@/lib/library/auto-tags";
 import type { PersonalPrompt } from "@/lib/types";
 import { logger } from "@/lib/logger";
 
@@ -235,10 +235,9 @@ export async function connectSavePrompt(
 
   let tags = input.tags ?? [];
   if (input.auto_tag && tags.length === 0) {
-    // Lightweight, deterministic tagging from the shared keyword extractor
-    // (same tokenizer the Memory Palace graph uses — one vocabulary).
-    const kw = extractKeywords({ title, prompt: input.prompt } as unknown as PersonalPrompt, 5);
-    tags = [...kw].slice(0, 5);
+    // Shared with the web save path, so a prompt gets the same tags whichever
+    // door it came through.
+    tags = autoTags(title, input.prompt);
   }
 
   const category = input.category ?? "כללי";

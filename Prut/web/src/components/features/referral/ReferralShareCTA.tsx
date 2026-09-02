@@ -83,7 +83,7 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
         <Gift className="w-5 h-5 shrink-0 text-amber-400" />
         <div className="flex-1 min-w-0">
           <p className="text-sm text-amber-300/90 font-medium">אהבת? שתף עם חברים</p>
-          <p className="text-[11px] text-slate-500">קבל קרדיטים בונוס על כל חבר שנרשם</p>
+          <p className="text-[11px] text-slate-500">קישור אישי, החבר נכנס ישר לפירוט</p>
         </div>
         <button
           onClick={handleCopyLink}

@@ -60,9 +60,7 @@ export function ReferralBanner({ isNewUser }: { isNewUser: boolean }) {
     >
       <Gift className="w-5 h-5 shrink-0 text-amber-400" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-amber-300">
-          הזמן חברים וקבל 5 קרדיטים על כל חבר שנרשם!
-        </p>
+        <p className="text-sm font-medium text-amber-300">הזמן חברים לפירוט בקישור אישי אחד</p>
       </div>
       <button
         onClick={handleCopyLink}

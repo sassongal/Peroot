@@ -348,12 +348,16 @@ function PageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Show celebratory toast when a referral bonus was redeemed at signup
+  // Confirm a referral that was redeemed at signup.
+  //
+  // This used to name the granted amount. It cannot: the credit ceiling
+  // (trg_clamp_credits_to_ceiling) clamps a free account to its daily
+  // allowance, so the number in the cookie is what the RPC tried to add, not
+  // what the user has. Announcing it made the first thing a new user read a
+  // number their balance did not show.
   useEffect(() => {
-    const match = document.cookie.match(/(?:^|;\s*)referral_bonus=(\d+)/);
-    if (match) {
-      const bonus = match[1];
-      toast.success(`קיבלת ${bonus} קרדיטים בונוס! 🎉`);
+    if (/(?:^|;\s*)referral_bonus=/.test(document.cookie)) {
+      toast.success("ההזמנה נקלטה, ברוכים הבאים לפירוט! 🎉");
       document.cookie = "referral_bonus=; path=/; max-age=0";
     }
   }, []);

@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { PersonalPrompt } from "@/lib/types";
 import { logger } from "@/lib/logger";
-import { escapePostgrestValue } from "@/lib/sanitize";
+import { escapePostgrestValue, escapePostgrestArrayValue } from "@/lib/sanitize";
 import { rowToPrompt, readOrderMap } from "@/lib/library/row-mapper";
 
 interface UseLibraryFetchParams {
@@ -136,9 +136,21 @@ export function useLibraryFetch({
         }
         if (opts.searchQuery) {
           const safeSearch = escapePostgrestValue(opts.searchQuery);
-          query = query.or(
-            `title.ilike.%${safeSearch}%,prompt.ilike.%${safeSearch}%,use_case.ilike.%${safeSearch}%`,
-          );
+          // The client filter (LibraryUIContext) also searches tags and the
+          // category, so a paged server search that skipped them returned
+          // fewer results than the same query on a small library: the same
+          // words, two different answers, depending on how much you had saved.
+          // Tags are a text[], where PostgREST can only test containment, so
+          // this matches a whole tag rather than part of one.
+          const safeTag = escapePostgrestArrayValue(opts.searchQuery);
+          const clauses = [
+            `title.ilike.%${safeSearch}%`,
+            `prompt.ilike.%${safeSearch}%`,
+            `use_case.ilike.%${safeSearch}%`,
+            `personal_category.ilike.%${safeSearch}%`,
+          ];
+          if (safeTag) clauses.push(`tags.cs.{"${safeTag}"}`);
+          query = query.or(clauses.join(","));
         }
 
         // Pinned items always float to top — this MUST be the primary sort, so

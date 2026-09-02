@@ -4,6 +4,20 @@ import { Check, Copy, Gift, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
 
+const SITE_URL = "https://www.peroot.space";
+
+/**
+ * The share message carries the full deep link, not the bare code.
+ *
+ * It used to send the code and the homepage separately, so the recipient had
+ * to notice a code, sign up, find Settings and paste it. `?ref=` is captured by
+ * the proxy into a cookie and redeemed automatically at signup, so the link
+ * does all of that by itself. Every abandoned step was a referral lost.
+ */
+function shareMessage(code: string): string {
+  return `הצטרף לפירוט, מחולל הפרומפטים בעברית: ${SITE_URL}/?ref=${code}`;
+}
+
 interface ReferralInfo {
   code: string;
   uses: number;
@@ -42,7 +56,7 @@ export function SettingsReferralSection({
         <h2 id="settings-referral-heading" className="text-xl font-bold">
           הזמן חברים
         </h2>
-        <p className="text-sm text-slate-400">שתף את הקוד שלך וקבלו שניכם 5 קרדיטים בונוס</p>
+        <p className="text-sm text-slate-400">שתף את הקישור שלך והבא חברים לפירוט</p>
       </header>
 
       <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
@@ -55,19 +69,19 @@ export function SettingsReferralSection({
             <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">
               1
             </span>
-            <span className="text-slate-300">שתף את הקוד שלך עם חבר</span>
+            <span className="text-slate-300">שתף את הקישור שלך עם חבר</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">
               2
             </span>
-            <span className="text-slate-300">החבר נרשם ומזין את הקוד</span>
+            <span className="text-slate-300">החבר נכנס דרך הקישור ונרשם</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">
               3
             </span>
-            <span className="text-slate-300">שניכם מקבלים 5 קרדיטים!</span>
+            <span className="text-slate-300">ההצטרפות נרשמת על שמך</span>
           </div>
         </div>
       </div>
@@ -104,11 +118,11 @@ export function SettingsReferralSection({
             <span>
               {referral.uses} / {referral.maxUses} הזמנות נוצלו
             </span>
-            <span>{referral.uses * referral.creditsPerReferral} קרדיטים הורווחו</span>
+            <span>{referral.totalReferrals} חברים הצטרפו</span>
           </div>
           <div className="flex gap-2">
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(`הצטרף ל-Peroot - מחולל פרומפטים בעברית! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://www.peroot.space`)}`}
+              href={`https://wa.me/?text=${encodeURIComponent(shareMessage(referral.code))}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm font-medium transition-colors border border-green-600/20"
@@ -118,10 +132,13 @@ export function SettingsReferralSection({
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard.writeText(
-                  `הצטרף ל-Peroot! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://www.peroot.space`,
-                );
-                toast.success("הועתק ללוח");
+                void copyText(shareMessage(referral.code)).then((ok) => {
+                  if (!ok) {
+                    toast.error("ההעתקה נחסמה, סמנו והעתיקו ידנית");
+                    return;
+                  }
+                  toast.success("הועתק ללוח");
+                });
               }}
               className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/10"
             >
