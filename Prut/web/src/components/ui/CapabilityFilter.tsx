@@ -54,15 +54,15 @@ export function CapabilityFilter({
         className={cn(
           "shrink-0 flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium border transition-all duration-200",
           value === null
-            ? "bg-white/10 text-white border-white/20 shadow-sm"
-            : "bg-transparent text-slate-400 border-transparent hover:bg-white/5 hover:text-slate-200",
+            ? "bg-(--glass-bg) text-(--text-primary) border-(--glass-border) shadow-sm"
+            : "bg-transparent text-(--text-muted) border-transparent hover:bg-(--glass-bg) hover:text-(--text-primary)",
         )}
       >
         <LayoutGrid className="w-3.5 h-3.5 md:w-4 md:h-4" />
         <span>הכל</span>
       </button>
 
-      <div className="w-px h-5 bg-white/10 shrink-0 hidden sm:block" />
+      <div className="w-px h-5 bg-(--glass-bg) shrink-0 hidden sm:block" />
 
       {modes.map((mode) => {
         const config = CAPABILITY_CONFIGS[mode];
@@ -84,7 +84,7 @@ export function CapabilityFilter({
                     "[color:color-mix(in_oklab,var(--chip-accent)_45%,black)]",
                     "dark:[color:color-mix(in_oklab,var(--chip-accent)_55%,white)]",
                   )
-                : "bg-transparent text-slate-400 border-transparent hover:text-slate-200 hover:bg-white/5",
+                : "bg-transparent text-(--text-muted) border-transparent hover:text-(--text-primary) hover:bg-(--glass-bg)",
             )}
             title={config.descriptionHe}
           >
@@ -94,7 +94,7 @@ export function CapabilityFilter({
               <span
                 className={cn(
                   "ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-black/20",
-                  isSelected ? "text-current opacity-80" : "text-slate-500",
+                  isSelected ? "text-current opacity-80" : "text-(--text-muted)",
                 )}
               >
                 {count}

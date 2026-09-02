@@ -97,7 +97,7 @@ export function DidYouKnowBanner() {
         {/* Close */}
         <button
           onClick={dismiss}
-          className="shrink-0 p-2 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-(--text-muted) hover:text-(--text-secondary) hover:bg-white/5 transition-colors"
+          className="shrink-0 p-2 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-(--text-muted) hover:text-(--text-secondary) hover:bg-(--glass-bg) transition-colors"
           aria-label={locale === "en" ? "Close" : "סגור"}
         >
           <X className="w-3.5 h-3.5" />

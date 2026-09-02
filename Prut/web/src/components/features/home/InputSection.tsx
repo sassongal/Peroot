@@ -246,7 +246,7 @@ export const InputSection = memo<InputSectionProps>(
                 </div>
                 <button
                   onClick={onNavToPersonalLibrary}
-                  className="text-xs text-slate-500 hover:text-amber-400 transition-colors"
+                  className="text-xs text-(--text-muted) hover:text-amber-500 transition-colors"
                 >
                   לכל הספרייה &larr;
                 </button>

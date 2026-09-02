@@ -64,8 +64,8 @@ export function BlogCategoryFilter({ categories, posts }: BlogCategoryFilterProp
       <div className="space-y-4">
         {filteredPosts.length === 0 && (
           <div className="text-center py-16 px-8">
-            <p className="text-lg text-slate-400 font-medium">אין מאמרים בקטגוריה זו</p>
-            <p className="text-sm text-slate-500 mt-2">נסו לבחור קטגוריה אחרת</p>
+            <p className="text-lg text-(--text-muted) font-medium">אין מאמרים בקטגוריה זו</p>
+            <p className="text-sm text-(--text-muted) mt-2">נסו לבחור קטגוריה אחרת</p>
           </div>
         )}
         {filteredPosts.map((post) => (
@@ -78,11 +78,11 @@ export function BlogCategoryFilter({ categories, posts }: BlogCategoryFilterProp
               <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">
                 {post.category}
               </span>
-              <div className="flex items-center gap-1 text-[10px] text-slate-500">
+              <div className="flex items-center gap-1 text-[10px] text-(--text-muted)">
                 <Calendar className="w-3 h-3" />
                 <span>{post.published_at ? formatDateHe(post.published_at) : ""}</span>
               </div>
-              <span className="text-[10px] text-slate-600">{post.read_time}</span>
+              <span className="text-[10px] text-(--text-muted)">{post.read_time}</span>
             </div>
             <div className="mb-4">
               <BlogHeroImage

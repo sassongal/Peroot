@@ -169,7 +169,7 @@ export function SettingsConnectSection() {
           <Plug className="w-5 h-5 text-amber-400" />
           Peroot Connect
         </h2>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-(--text-muted)">
           חבר את Peroot לסוכן ה-AI שלך, Claude, Cursor או כל כלי אחר, ושדרג פרומפטים מכל מקום.
           השדרוגים נספרים מהמכסה הרגילה שלך.
         </p>
@@ -185,7 +185,7 @@ export function SettingsConnectSection() {
           <div className="flex items-center gap-3">
             <code
               dir="ltr"
-              className="flex-1 px-4 py-3 bg-black/40 rounded-lg border border-amber-500/20 font-mono text-sm text-amber-200 break-all select-all"
+              className="flex-1 px-4 py-3 bg-(--glass-bg) rounded-lg border border-amber-500/20 font-mono text-sm text-amber-200 break-all select-all"
             >
               {freshKey}
             </code>
@@ -212,8 +212,8 @@ export function SettingsConnectSection() {
       )}
 
       {/* Create */}
-      <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
-        <h3 className="font-semibold text-white text-sm">יצירת מפתח חדש</h3>
+      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+        <h3 className="font-semibold text-(--text-primary) text-sm">יצירת מפתח חדש</h3>
         <div className="flex gap-2">
           <input
             type="text"
@@ -221,7 +221,7 @@ export function SettingsConnectSection() {
             onChange={(e) => setNewName(e.target.value)}
             placeholder='שם למפתח (למשל "Claude Desktop")'
             maxLength={60}
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50 transition-colors"
+            className="flex-1 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-3 py-2.5 text-(--text-primary) text-sm placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/50 transition-colors"
           />
           <button
             type="button"
@@ -232,14 +232,14 @@ export function SettingsConnectSection() {
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "צור מפתח"}
           </button>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-(--text-muted)">
           מומלץ מפתח נפרד לכל כלי, כך אפשר לבטל אחד בלי לשבור את השאר.
         </p>
       </div>
 
       {/* Keys list */}
-      <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
-        <h3 className="font-semibold text-white text-sm flex items-center gap-2">
+      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+        <h3 className="font-semibold text-(--text-primary) text-sm flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-amber-400" />
           המפתחות שלך
         </h3>
@@ -248,17 +248,17 @@ export function SettingsConnectSection() {
             <Loader2 className="w-5 h-5 text-amber-500 animate-spin" />
           </div>
         ) : keys.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-4">אין מפתחות פעילים עדיין</p>
+          <p className="text-sm text-(--text-muted) text-center py-4">אין מפתחות פעילים עדיין</p>
         ) : (
           <ul className="space-y-2">
             {keys.map((k) => (
               <li
                 key={k.id}
-                className="flex items-center gap-3 p-3 bg-black/20 rounded-lg border border-white/5"
+                className="flex items-center gap-3 p-3 bg-(--glass-bg) rounded-lg border border-(--glass-border)"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-white font-medium truncate">{k.name}</div>
-                  <div className="text-xs text-slate-500 font-mono" dir="ltr">
+                  <div className="text-sm text-(--text-primary) font-medium truncate">{k.name}</div>
+                  <div className="text-xs text-(--text-muted) font-mono" dir="ltr">
                     {k.key_prefix}••••{" "}
                     {k.last_used_at
                       ? `· שימוש אחרון ${formatDateHe(k.last_used_at)}`
@@ -285,8 +285,8 @@ export function SettingsConnectSection() {
       </div>
 
       {/* Setup snippets */}
-      <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
-        <h3 className="font-semibold text-white text-sm flex items-center gap-2">
+      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+        <h3 className="font-semibold text-(--text-primary) text-sm flex items-center gap-2">
           <Terminal className="w-4 h-4 text-amber-400" />
           חיבור לכלי שלך
         </h3>
@@ -305,7 +305,7 @@ export function SettingsConnectSection() {
               className={`cursor-pointer px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 snippetTab === id
                   ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                  : "bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10"
+                  : "bg-(--glass-bg) text-(--text-muted) border border-(--glass-border) hover:bg-(--glass-bg)"
               }`}
             >
               {label}
@@ -315,7 +315,7 @@ export function SettingsConnectSection() {
         <div className="relative">
           <pre
             dir="ltr"
-            className="p-4 bg-black/40 rounded-lg border border-white/10 font-mono text-xs text-slate-300 overflow-x-auto whitespace-pre"
+            className="p-4 bg-(--glass-bg) rounded-lg border border-(--glass-border) font-mono text-xs text-(--text-secondary) overflow-x-auto whitespace-pre"
           >
             {snippetFor(snippetTab, freshKey ?? "")}
           </pre>
@@ -324,7 +324,7 @@ export function SettingsConnectSection() {
             onClick={() =>
               copyText(snippetFor(snippetTab, freshKey ?? ""), `snippet-${snippetTab}`)
             }
-            className="cursor-pointer absolute top-2 left-2 p-2 bg-white/5 hover:bg-white/10 text-slate-400 rounded-lg transition-colors"
+            className="cursor-pointer absolute top-2 left-2 p-2 bg-(--glass-bg) hover:bg-(--glass-bg) text-(--text-muted) rounded-lg transition-colors"
             aria-label="העתק הגדרות"
           >
             {copied === `snippet-${snippetTab}` ? (
@@ -335,7 +335,7 @@ export function SettingsConnectSection() {
           </button>
         </div>
         {snippetTab === "claude" && (
-          <p className="text-xs text-slate-500" dir="rtl">
+          <p className="text-xs text-(--text-muted)" dir="rtl">
             הדבק ב-<code dir="ltr">claude_desktop_config.json</code> והפעל מחדש את Claude Desktop.
             אחר כך הקלד <code dir="ltr">/peroot:enhance</code> בשיחה.
           </p>
@@ -353,8 +353,8 @@ export function SettingsConnectSection() {
       </div>
 
       {/* API endpoints — copyable */}
-      <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
-        <h3 className="font-semibold text-white text-sm flex items-center gap-2">
+      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+        <h3 className="font-semibold text-(--text-primary) text-sm flex items-center gap-2">
           <ExternalLink className="w-4 h-4 text-amber-400" />
           כתובות ה-API
         </h3>
@@ -368,18 +368,21 @@ export function SettingsConnectSection() {
           ).map(([label, url]) => (
             <li
               key={url}
-              className="flex items-center gap-3 p-3 bg-black/20 rounded-lg border border-white/5"
+              className="flex items-center gap-3 p-3 bg-(--glass-bg) rounded-lg border border-(--glass-border)"
             >
               <div className="flex-1 min-w-0">
-                <div className="text-xs text-slate-400 mb-0.5">{label}</div>
-                <code dir="ltr" className="block text-xs font-mono text-slate-300 truncate">
+                <div className="text-xs text-(--text-muted) mb-0.5">{label}</div>
+                <code
+                  dir="ltr"
+                  className="block text-xs font-mono text-(--text-secondary) truncate"
+                >
                   {url}
                 </code>
               </div>
               <button
                 type="button"
                 onClick={() => copyText(url, `url-${label}`)}
-                className="cursor-pointer shrink-0 p-2 bg-white/5 hover:bg-white/10 text-slate-400 rounded-lg transition-colors"
+                className="cursor-pointer shrink-0 p-2 bg-(--glass-bg) hover:bg-(--glass-bg) text-(--text-muted) rounded-lg transition-colors"
                 aria-label={`העתק ${label}`}
               >
                 {copied === `url-${label}` ? (
@@ -391,7 +394,7 @@ export function SettingsConnectSection() {
             </li>
           ))}
         </ul>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-(--text-muted)">
           התיעוד האנושי המלא:{" "}
           <a href="/connect/docs" className="text-amber-400/80 hover:text-amber-300">
             /connect/docs

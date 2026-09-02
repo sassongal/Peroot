@@ -145,7 +145,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
                 <span
                   className={cn(
                     "text-xs tabular-nums shrink-0",
-                    isActive ? "text-amber-600/70 dark:text-amber-400/70" : "text-slate-600",
+                    isActive ? "text-amber-600/70 dark:text-amber-400/70" : "text-(--text-muted)",
                   )}
                 >
                   {count}
@@ -156,21 +156,21 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
         })}
       </div>
 
-      <p className="text-[10px] leading-snug text-slate-500 px-2 mb-2 space-y-1">
+      <p className="text-[10px] leading-snug text-(--text-muted) px-2 mb-2 space-y-1">
         <span className="block">
-          <strong className="text-slate-400 font-medium">מועדפים</strong> , קיצור לפרומפטים שסימנת
-          בכוכב (מסונכרן לחשבון אחרי התחברות).
+          <strong className="text-(--text-muted) font-medium">מועדפים</strong> , קיצור לפרומפטים
+          שסימנת בכוכב (מסונכרן לחשבון אחרי התחברות).
         </span>
         <span className="block">
-          <strong className="text-slate-400 font-medium">מוצמדים</strong> , פרומפטים שסומנו
+          <strong className="text-(--text-muted) font-medium">מוצמדים</strong> , פרומפטים שסומנו
           כמוצמדים.
         </span>
         <span className="block">
-          <strong className="text-slate-400 font-medium">תבניות</strong> , פרומפטים שמוגדרים כתבנית
-          אישית (לא דף התבניות הציבורי).
+          <strong className="text-(--text-muted) font-medium">תבניות</strong> , פרומפטים שמוגדרים
+          כתבנית אישית (לא דף התבניות הציבורי).
         </span>
         <span className="block">
-          <strong className="text-slate-400 font-medium">היסטוריה</strong> , הפרומפטים האחרונים
+          <strong className="text-(--text-muted) font-medium">היסטוריה</strong> , הפרומפטים האחרונים
           ששיפרת, לצפייה ושימוש חוזר.
         </span>
       </p>
@@ -179,7 +179,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
 
       {/* Capability Filter */}
       <div className="mb-3 px-1">
-        <span className="text-[10px] uppercase tracking-wider text-slate-600 block mb-1.5 px-2">
+        <span className="text-[10px] uppercase tracking-wider text-(--text-muted) block mb-1.5 px-2">
           מצב יכולת
         </span>
         <div className="scale-90 origin-top-right">
@@ -195,7 +195,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
 
       {/* Real folders */}
       <div className="space-y-0.5 flex-1">
-        <span className="text-[10px] uppercase tracking-wider text-slate-600 block mb-1.5 px-3">
+        <span className="text-[10px] uppercase tracking-wider text-(--text-muted) block mb-1.5 px-3">
           תיקיות
         </span>
         {realFolders.map((folder) => {
@@ -255,7 +255,9 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
                     <span
                       className={cn(
                         "text-xs tabular-nums shrink-0",
-                        isActive ? "text-amber-600/70 dark:text-amber-400/70" : "text-slate-600",
+                        isActive
+                          ? "text-amber-600/70 dark:text-amber-400/70"
+                          : "text-(--text-muted)",
                       )}
                     >
                       {count}

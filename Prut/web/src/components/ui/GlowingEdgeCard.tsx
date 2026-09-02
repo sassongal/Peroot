@@ -96,8 +96,8 @@ export function GlowingEdgeCard({
       <div className="glow-card__glow" />
       <div
         className={cn(
-          "glow-card__content relative z-10 h-full w-full overflow-hidden rounded-[inherit] border border-white/10 bg-black/40",
-          contentClassName
+          "glow-card__content relative z-10 h-full w-full overflow-hidden rounded-[inherit] border border-(--glass-border) bg-(--glass-bg)",
+          contentClassName,
         )}
       >
         {children}

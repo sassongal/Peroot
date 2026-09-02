@@ -192,7 +192,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl max-h-[80vh] overflow-y-auto bg-[#0f0f0f] border border-(--glass-border) rounded-2xl p-6 mx-4"
+        className="w-full max-w-xl max-h-[80vh] overflow-y-auto bg-(--surface-panel) border border-(--glass-border) rounded-2xl p-6 mx-4"
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -252,7 +252,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
                 {completedSteps.has(i) ? <Check className="w-3.5 h-3.5" /> : i + 1}
               </button>
               {i < chain.steps.length - 1 && (
-                <ArrowDown className="w-3 h-3 text-slate-600 mx-1 -rotate-90" />
+                <ArrowDown className="w-3 h-3 text-(--text-muted) mx-1 -rotate-90" />
               )}
             </div>
           ))}
@@ -270,7 +270,9 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
 
           {/* Output description */}
           {step.output_description && (
-            <p className="text-[11px] text-slate-500 mb-2">פלט צפוי: {step.output_description}</p>
+            <p className="text-[11px] text-(--text-muted) mb-2">
+              פלט צפוי: {step.output_description}
+            </p>
           )}
 
           {/* Variables (step 1 typically) */}
@@ -316,7 +318,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
                 setStepOutputs((prev) => ({ ...prev, [currentStep]: e.target.value }))
               }
               placeholder="הדבק כאן את התוצאה..."
-              className="w-full mt-1 h-20 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg px-3 py-2 text-xs text-(--text-secondary) placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20 resize-none"
+              className="w-full mt-1 h-20 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-3 py-2 text-xs text-(--text-secondary) placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/20 resize-none"
             />
           </div>
         )}
@@ -386,8 +388,8 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
         </div>
 
         {/* LLM quick-launchers — open the current step's resolved prompt
-            directly in ChatGPT / Claude / Gemini in a new tab. Gemini
-            lacks a deep-link prefill, so we copy and toast a hint. */}
+ directly in ChatGPT / Claude / Gemini in a new tab. Gemini
+ lacks a deep-link prefill, so we copy and toast a hint. */}
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-(--glass-border)">
           <span className="text-[10px] text-(--text-muted) uppercase tracking-wider shrink-0">
             פתח שלב זה ב:
@@ -421,9 +423,9 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
         </div>
 
         {/* Bulk launcher — open all resolved steps at once. For
-            ChatGPT/Claude this opens one tab per step (staggered to
-            avoid popup throttling). For Gemini it concatenates into
-            clipboard and opens a single tab. */}
+ ChatGPT/Claude this opens one tab per step (staggered to
+ avoid popup throttling). For Gemini it concatenates into
+ clipboard and opens a single tab. */}
         {chain.steps.length > 1 && (
           <div className="flex items-center gap-2 mt-3">
             <span className="text-[10px] text-(--text-muted) uppercase tracking-wider shrink-0">

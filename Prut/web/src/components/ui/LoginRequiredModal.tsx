@@ -79,11 +79,11 @@ export function LoginRequiredModal({
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-(--text-primary)">{title}</h2>
             <p className="text-(--text-muted) text-sm leading-relaxed">{message}</p>
-            {feature && <p className="text-xs text-slate-500 mt-2">תכונה: {feature}</p>}
+            {feature && <p className="text-xs text-(--text-muted) mt-2">תכונה: {feature}</p>}
           </div>
 
           <div className="w-full space-y-3 pt-2">
-            <p className="text-xs text-slate-500">עם חשבון חינמי תקבלו:</p>
+            <p className="text-xs text-(--text-muted)">עם חשבון חינמי תקבלו:</p>
             <ul className="text-xs text-(--text-muted) space-y-1.5 text-right">
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />

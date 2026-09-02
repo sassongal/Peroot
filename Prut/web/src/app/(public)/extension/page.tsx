@@ -135,12 +135,12 @@ export default function ExtensionPage() {
                 {/* Mock browser bar */}
                 <div className="flex items-center gap-2 pb-4 border-b border-border">
                   <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-white/10" />
-                    <div className="w-3 h-3 rounded-full bg-white/10" />
-                    <div className="w-3 h-3 rounded-full bg-white/10" />
+                    <div className="w-3 h-3 rounded-full bg-(--glass-bg)" />
+                    <div className="w-3 h-3 rounded-full bg-(--glass-bg)" />
+                    <div className="w-3 h-3 rounded-full bg-(--glass-bg)" />
                   </div>
                   <div className="flex-1 h-6 rounded-md bg-secondary mx-2 flex items-center px-3">
-                    <span className="text-xs text-slate-400">mail.google.com</span>
+                    <span className="text-xs text-(--text-muted)">mail.google.com</span>
                   </div>
                   <div className="w-7 h-7 rounded-md bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
                     <Chrome className="w-4 h-4 text-amber-400" />

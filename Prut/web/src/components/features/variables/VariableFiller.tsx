@@ -144,7 +144,7 @@ export function VariableFiller({
                           e.stopPropagation();
                           onDeletePreset(preset.id);
                         }}
-                        className="p-1 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="p-1 text-(--text-muted) hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -180,7 +180,7 @@ export function VariableFiller({
                   placeholder={getVariablePlaceholder(v)}
                   aria-label={label}
                   className={cn(
-                    "flex-1 rounded-lg px-3 py-1.5 text-sm text-(--text-secondary) placeholder:text-slate-600 focus:outline-none transition-colors border",
+                    "flex-1 rounded-lg px-3 py-1.5 text-sm text-(--text-secondary) placeholder:text-(--text-muted) focus:outline-none transition-colors border",
                     isFilled
                       ? "bg-emerald-500/4 border-emerald-500/40 focus:border-emerald-500/60"
                       : "bg-black/5 dark:bg-black/30 border-(--glass-border) focus:border-sky-500/50",
@@ -222,7 +222,7 @@ export function VariableFiller({
               value={presetName}
               onChange={(e) => setPresetName(e.target.value)}
               placeholder="שם הפריסט"
-              className="flex-1 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg px-3 py-1.5 text-sm text-(--text-secondary) placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20"
+              className="flex-1 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg px-3 py-1.5 text-sm text-(--text-secondary) placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/20"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSavePreset();
               }}

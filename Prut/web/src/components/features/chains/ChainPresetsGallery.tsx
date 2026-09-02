@@ -37,12 +37,12 @@ export function ChainPresetsGallery({ onSaveChain }: ChainPresetsGalleryProps) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Bookmark className="w-3.5 h-3.5 text-amber-400" />
-          <span className="text-xs font-medium text-slate-400">תבניות מוכנות</span>
+          <span className="text-xs font-medium text-(--text-muted)">תבניות מוכנות</span>
         </div>
         {CHAIN_PRESETS.length > 4 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="text-[11px] text-slate-500 hover:text-amber-400 transition-colors flex items-center gap-1"
+            className="text-[11px] text-(--text-muted) hover:text-amber-400 transition-colors flex items-center gap-1"
           >
             {expanded ? "הצג פחות" : `עוד ${CHAIN_PRESETS.length - 4}`}
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -55,17 +55,19 @@ export function ChainPresetsGallery({ onSaveChain }: ChainPresetsGalleryProps) {
           <button
             key={preset.chain_id}
             onClick={() => setSelectedPreset({ ...preset })}
-            className="text-start p-3 rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 hover:border-amber-500/20 transition-all group"
+            className="text-start p-3 rounded-xl border border-(--glass-border) bg-(--glass-bg) hover:bg-(--glass-bg) hover:border-amber-500/20 transition-all group"
             dir="rtl"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h4 className="text-sm font-medium text-slate-300 group-hover:text-amber-300 transition-colors truncate">
+                <h4 className="text-sm font-medium text-(--text-secondary) group-hover:text-amber-300 transition-colors truncate">
                   {preset.title}
                 </h4>
-                <p className="text-[11px] text-slate-600 mt-0.5 truncate">{preset.description}</p>
+                <p className="text-[11px] text-(--text-muted) mt-0.5 truncate">
+                  {preset.description}
+                </p>
               </div>
-              <span className="text-[10px] text-slate-600 bg-white/5 px-1.5 py-0.5 rounded-full shrink-0">
+              <span className="text-[10px] text-(--text-muted) bg-(--glass-bg) px-1.5 py-0.5 rounded-full shrink-0">
                 {preset.steps.length} שלבים
               </span>
             </div>
@@ -74,11 +76,11 @@ export function ChainPresetsGallery({ onSaveChain }: ChainPresetsGalleryProps) {
             <div className="flex items-center gap-1 mt-2 flex-wrap">
               {preset.steps.map((step, i) => (
                 <div key={i} className="flex items-center gap-1">
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-500 truncate max-w-[80px]">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-(--glass-bg) text-(--text-muted) truncate max-w-[80px]">
                     {step.title}
                   </span>
                   {i < preset.steps.length - 1 && (
-                    <span className="text-slate-700 text-[8px]">&larr;</span>
+                    <span className="text-(--text-secondary) text-[8px]">&larr;</span>
                   )}
                 </div>
               ))}
@@ -94,8 +96,8 @@ export function ChainPresetsGallery({ onSaveChain }: ChainPresetsGalleryProps) {
           onClick={() => setSelectedPreset(null)}
         >
           <div
-            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0f0f0f] border border-white/10 rounded-2xl mx-4"
-            onClick={e => e.stopPropagation()}
+            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-(--surface-panel) border border-(--glass-border) rounded-2xl mx-4"
+            onClick={(e) => e.stopPropagation()}
           >
             <ChainPreview
               chain={selectedPreset}

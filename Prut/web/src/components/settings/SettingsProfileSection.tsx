@@ -45,11 +45,11 @@ export function SettingsProfileSection({
         <h2 id="settings-profile-heading" className="text-xl font-bold">
           פרופיל
         </h2>
-        <p className="text-sm text-slate-400">פרטי החשבון שלך</p>
+        <p className="text-sm text-(--text-muted)">פרטי החשבון שלך</p>
       </header>
 
-      <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-        <div className="w-16 h-16 rounded-full bg-linear-to-br from-amber-500 to-yellow-600 overflow-hidden border-2 border-white/20">
+      <div className="flex items-center gap-4 p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border)">
+        <div className="w-16 h-16 rounded-full bg-linear-to-br from-amber-500 to-yellow-600 overflow-hidden border-2 border-(--glass-border)">
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -71,7 +71,7 @@ export function SettingsProfileSection({
               }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white">
+            <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-(--text-primary)">
               {user.email?.[0].toUpperCase()}
             </div>
           )}
@@ -85,7 +85,7 @@ export function SettingsProfileSection({
               onBlur={onSaveDisplayName}
               dir="rtl"
               placeholder="שם תצוגה"
-              className="bg-white/5 border border-white/10 focus:border-indigo-500/60 rounded-lg px-3 py-2.5 text-white font-bold text-base w-full focus:outline-none transition-colors"
+              className="bg-(--glass-bg) border border-(--glass-border) focus:border-indigo-500/60 rounded-lg px-3 py-2.5 text-(--text-primary) font-bold text-base w-full focus:outline-none transition-colors"
             />
             <button
               type="button"
@@ -102,18 +102,18 @@ export function SettingsProfileSection({
             </button>
           </div>
           {user.app_metadata?.provider === "google" && (
-            <p className="text-sm text-slate-500 mt-1">תמונת פרופיל מחשבון Google</p>
+            <p className="text-sm text-(--text-muted) mt-1">תמונת פרופיל מחשבון Google</p>
           )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-slate-400 flex items-center gap-2">
+        <p className="text-sm font-medium text-(--text-muted) flex items-center gap-2">
           <Mail className="w-4 h-4" />
           כתובת אימייל
         </p>
-        <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-          <span className="text-white">{user.email}</span>
+        <div className="flex items-center gap-3 p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border)">
+          <span className="text-(--text-primary)">{user.email}</span>
           {user.email_confirmed_at ? (
             <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
               מאומת
@@ -127,37 +127,37 @@ export function SettingsProfileSection({
       </div>
 
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+        <div className="p-3 sm:p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) text-center">
           <History className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 mx-auto mb-1.5 sm:mb-2" />
           <p className="text-xl sm:text-2xl font-bold">{historyLength}</p>
-          <p className="text-[10px] sm:text-xs text-slate-400">היסטוריה</p>
+          <p className="text-[10px] sm:text-xs text-(--text-muted)">היסטוריה</p>
         </div>
-        <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+        <div className="p-3 sm:p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) text-center">
           <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 mx-auto mb-1.5 sm:mb-2" />
           <p className="text-xl sm:text-2xl font-bold">{personalLibraryLength}</p>
-          <p className="text-[10px] sm:text-xs text-slate-400">ספרייה</p>
+          <p className="text-[10px] sm:text-xs text-(--text-muted)">ספרייה</p>
         </div>
-        <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+        <div className="p-3 sm:p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) text-center">
           <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 mx-auto mb-1.5 sm:mb-2" />
           <p className="text-xl sm:text-2xl font-bold">{favoritesLength}</p>
-          <p className="text-[10px] sm:text-xs text-slate-400">מועדפים</p>
+          <p className="text-[10px] sm:text-xs text-(--text-muted)">מועדפים</p>
         </div>
       </div>
 
       {credits && !isPro && (
-        <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-4">
+        <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-white flex items-center gap-2">
+            <h3 className="font-semibold text-(--text-primary) flex items-center gap-2">
               <Zap className="w-4 h-4 text-amber-400" />
               מצב קרדיטים
             </h3>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-(--text-muted)">
               {credits.balance} / {credits.dailyLimit} נותרו היום
             </span>
           </div>
           <div className="space-y-2">
             <div
-              className="w-full h-3 bg-white/10 rounded-full overflow-hidden"
+              className="w-full h-3 bg-(--glass-bg) rounded-full overflow-hidden"
               role="progressbar"
               aria-valuenow={credits.dailyLimit - credits.balance}
               aria-valuemin={0}
@@ -177,7 +177,7 @@ export function SettingsProfileSection({
                 }}
               />
             </div>
-            <div className="flex justify-between text-xs text-slate-500">
+            <div className="flex justify-between text-xs text-(--text-muted)">
               <span>
                 ניצולת:{" "}
                 {credits.dailyLimit > 0
@@ -212,11 +212,13 @@ export function SettingsProfileSection({
             <Crown className="w-4 h-4 text-amber-400" />
             <h3 className="font-semibold text-amber-300">מצב קרדיטים</h3>
           </div>
-          <p className="text-sm text-slate-300">שימוש ללא הגבלה - אין מגבלת קרדיטים במנוי Pro</p>
+          <p className="text-sm text-(--text-secondary)">
+            שימוש ללא הגבלה - אין מגבלת קרדיטים במנוי Pro
+          </p>
         </div>
       )}
 
-      <div className="text-sm text-slate-500 pt-4 border-t border-white/10">
+      <div className="text-sm text-(--text-muted) pt-4 border-t border-(--glass-border)">
         חשבון נוצר בתאריך:{" "}
         {new Date(user.created_at).toLocaleDateString("he-IL", {
           year: "numeric",

@@ -255,7 +255,7 @@ export function PromptNodeCard({
           <button
             ref={backButtonRef}
             onClick={onClose}
-            className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-(--text-primary) px-2 py-1 rounded-md hover:bg-(--glass-bg) transition-colors shrink-0"
+            className="flex items-center gap-1 text-[11px] text-(--text-muted) hover:text-(--text-primary) px-2 py-1 rounded-md hover:bg-(--glass-bg) transition-colors shrink-0"
             aria-label="חזרה לגרף"
           >
             <X className="w-3.5 h-3.5" />
@@ -274,7 +274,7 @@ export function PromptNodeCard({
         <div ref={menuRef} className="relative shrink-0">
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-(--text-primary) hover:bg-(--glass-bg) transition-colors"
+            className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg) transition-colors"
             aria-label="פעולות נוספות"
             aria-haspopup="menu"
             aria-expanded={menuOpen}
@@ -289,27 +289,27 @@ export function PromptNodeCard({
               {/* Move to folder */}
               <button
                 onClick={() => setMoveOpen((v) => !v)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-slate-200 hover:bg-(--glass-bg) transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-(--text-primary) hover:bg-(--glass-bg) transition-colors"
               >
                 <FolderInput className="w-3.5 h-3.5" />
                 <span className="flex-1 text-right">העבר לתיקייה</span>
-                <span className="text-slate-500 text-[10px]">{moveOpen ? "▾" : "▸"}</span>
+                <span className="text-(--text-muted) text-[10px]">{moveOpen ? "▾" : "▸"}</span>
               </button>
               {moveOpen && (
                 <div className="max-h-48 overflow-y-auto border-t border-(--glass-border) bg-black/30">
                   {personalCategories.length === 0 ? (
-                    <div className="px-5 py-2 text-[11px] text-slate-500">אין תיקיות</div>
+                    <div className="px-5 py-2 text-[11px] text-(--text-muted)">אין תיקיות</div>
                   ) : (
                     personalCategories.map((cat) => (
                       <button
                         key={cat}
                         onClick={() => handleMove(cat)}
                         disabled={cat === prompt.personal_category}
-                        className="w-full px-5 py-1.5 text-[11px] text-right text-slate-300 hover:bg-(--glass-bg) disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="w-full px-5 py-1.5 text-[11px] text-right text-(--text-secondary) hover:bg-(--glass-bg) disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
                         {cat}
                         {cat === prompt.personal_category && (
-                          <span className="text-slate-500 text-[9px] mr-2">(נוכחית)</span>
+                          <span className="text-(--text-muted) text-[9px] mr-2">(נוכחית)</span>
                         )}
                       </button>
                     ))
@@ -322,7 +322,7 @@ export function PromptNodeCard({
                   setMenuOpen(false);
                   handlePin();
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-slate-200 hover:bg-(--glass-bg) transition-colors border-t border-(--glass-border)"
+                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-(--text-primary) hover:bg-(--glass-bg) transition-colors border-t border-(--glass-border)"
               >
                 <Pin className={`w-3.5 h-3.5 ${isPinned ? "fill-current text-amber-300" : ""}`} />
                 <span className="flex-1 text-right">{isPinned ? "בטל הצמדה" : "הצמד"}</span>
@@ -333,7 +333,7 @@ export function PromptNodeCard({
                   setMenuOpen(false);
                   setShowHistory(true);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-slate-200 hover:bg-(--glass-bg) transition-colors border-t border-(--glass-border)"
+                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-(--text-primary) hover:bg-(--glass-bg) transition-colors border-t border-(--glass-border)"
               >
                 <History className="w-3.5 h-3.5" />
                 <span className="flex-1 text-right">היסטוריית גרסאות</span>
@@ -359,7 +359,7 @@ export function PromptNodeCard({
         <>
           <div className="px-4 py-3 flex-1 flex flex-col gap-3 overflow-y-auto" dir="rtl">
             <div className="flex flex-col gap-1">
-              <label className="text-[11px] text-slate-400">כותרת</label>
+              <label className="text-[11px] text-(--text-muted)">כותרת</label>
               <input
                 value={editTitleDraft}
                 onChange={(e) => setEditTitleDraft(e.target.value)}
@@ -369,21 +369,21 @@ export function PromptNodeCard({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[11px] text-slate-400">תיאור קצר</label>
+              <label className="text-[11px] text-(--text-muted)">תיאור קצר</label>
               <input
                 value={editUseCaseDraft}
                 onChange={(e) => setEditUseCaseDraft(e.target.value)}
                 placeholder="מה הפרומפט הזה עושה?"
-                className="w-full text-sm text-(--text-primary) bg-(--glass-bg) rounded-lg px-3 py-2 border border-(--glass-border) focus:outline-none focus:border-amber-400/60 transition-colors placeholder:text-slate-600"
+                className="w-full text-sm text-(--text-primary) bg-(--glass-bg) rounded-lg px-3 py-2 border border-(--glass-border) focus:outline-none focus:border-amber-400/60 transition-colors placeholder:text-(--text-muted)"
                 dir="rtl"
               />
             </div>
             <div className="flex flex-col gap-1 flex-1">
-              <label className="text-[11px] text-slate-400">תוכן הפרומפט</label>
+              <label className="text-[11px] text-(--text-muted)">תוכן הפרומפט</label>
               <textarea
                 value={editPromptDraft}
                 onChange={(e) => setEditPromptDraft(e.target.value)}
-                className="flex-1 min-h-[140px] text-sm text-slate-200 bg-(--glass-bg) rounded-lg px-3 py-2 border border-(--glass-border) focus:outline-none focus:border-amber-400/60 transition-colors resize-none leading-relaxed"
+                className="flex-1 min-h-[140px] text-sm text-(--text-primary) bg-(--glass-bg) rounded-lg px-3 py-2 border border-(--glass-border) focus:outline-none focus:border-amber-400/60 transition-colors resize-none leading-relaxed"
                 dir="rtl"
               />
             </div>
@@ -440,7 +440,7 @@ export function PromptNodeCard({
                 </button>
                 <button
                   onClick={() => setEditingTitle(false)}
-                  className="p-1 rounded text-slate-400 hover:text-(--text-primary) hover:bg-(--glass-bg)"
+                  className="p-1 rounded text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -470,7 +470,7 @@ export function PromptNodeCard({
                 </span>
               )}
               {prompt.use_count > 0 && (
-                <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-(--glass-border) text-slate-300 bg-(--glass-bg)">
+                <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-(--glass-border) text-(--text-secondary) bg-(--glass-bg)">
                   <Star className="w-3 h-3" />
                   {prompt.use_count} שימושים
                 </span>
@@ -478,20 +478,20 @@ export function PromptNodeCard({
             </div>
 
             {/* Prompt text */}
-            <p className="text-xs text-slate-300 leading-relaxed line-clamp-8 whitespace-pre-line bg-(--glass-bg) rounded-lg p-2.5">
+            <p className="text-xs text-(--text-secondary) leading-relaxed line-clamp-8 whitespace-pre-line bg-(--glass-bg) rounded-lg p-2.5">
               {prompt.prompt}
             </p>
 
             {/* Tags */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-1 flex-wrap">
-                <Tag className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <Tag className="w-3.5 h-3.5 text-(--text-muted) shrink-0" />
                 {(prompt.tags ?? []).slice(0, 15).map((tag) => (
                   <button
                     key={tag}
                     onClick={() => !savingTags && handleRemoveTag(tag)}
                     disabled={savingTags}
-                    className="group flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-(--glass-bg) text-slate-300 text-[10px] border border-(--glass-border) hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300 transition-colors"
+                    className="group flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-(--glass-bg) text-(--text-secondary) text-[10px] border border-(--glass-border) hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300 transition-colors"
                     title="הסר תגית"
                   >
                     {tag}
@@ -509,7 +509,7 @@ export function PromptNodeCard({
                   placeholder="+ תגית חדשה"
                   disabled={savingTags}
                   dir="auto"
-                  className="flex-1 text-[11px] bg-(--glass-bg) border border-(--glass-border) rounded-md px-2 py-1 text-slate-300 placeholder-slate-600 outline-none focus:border-amber-400/40 transition-colors"
+                  className="flex-1 text-[11px] bg-(--glass-bg) border border-(--glass-border) rounded-md px-2 py-1 text-(--text-secondary) placeholder-slate-600 outline-none focus:border-amber-400/40 transition-colors"
                 />
                 {tagInput.trim() && (
                   <button
@@ -542,7 +542,7 @@ export function PromptNodeCard({
             )}
 
             {/* Stats */}
-            <div className="flex items-center gap-4 text-[11px] text-slate-500 flex-wrap">
+            <div className="flex items-center gap-4 text-[11px] text-(--text-muted) flex-wrap">
               {prompt.use_count > 0 && (
                 <div className="flex items-center gap-1">
                   <BarChart2 className="w-3 h-3" />
@@ -571,12 +571,12 @@ export function PromptNodeCard({
             <div ref={folderPickerRef} className="relative">
               <button
                 onClick={() => setFolderPickerOpen((v) => !v)}
-                className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-slate-200 transition-colors group"
+                className="flex items-center gap-1.5 text-[11px] text-(--text-muted) hover:text-(--text-primary) transition-colors group"
               >
                 <FolderInput className="w-3.5 h-3.5 shrink-0" />
                 <span>
                   תיקייה:{" "}
-                  <span className="text-slate-200 group-hover:text-amber-300 transition-colors">
+                  <span className="text-(--text-primary) group-hover:text-amber-300 transition-colors">
                     {prompt.personal_category || "ללא תיקייה"}
                   </span>
                 </span>
@@ -587,7 +587,7 @@ export function PromptNodeCard({
               {folderPickerOpen && (
                 <div className="absolute top-full mt-1 right-0 w-52 rounded-xl border border-(--glass-border) bg-(--surface-panel) backdrop-blur-md shadow-2xl z-20 overflow-hidden">
                   {personalCategories.length === 0 ? (
-                    <div className="px-4 py-3 text-[11px] text-slate-500">אין תיקיות</div>
+                    <div className="px-4 py-3 text-[11px] text-(--text-muted)">אין תיקיות</div>
                   ) : (
                     personalCategories.map((cat) => (
                       <button
@@ -597,7 +597,7 @@ export function PromptNodeCard({
                           setFolderPickerOpen(false);
                         }}
                         disabled={cat === prompt.personal_category}
-                        className="w-full px-4 py-2 text-[11px] text-right text-slate-300 hover:bg-(--glass-bg) disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-between"
+                        className="w-full px-4 py-2 text-[11px] text-right text-(--text-secondary) hover:bg-(--glass-bg) disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-between"
                       >
                         {cat}
                         {cat === prompt.personal_category && (
@@ -638,7 +638,7 @@ export function PromptNodeCard({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleCopy}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] text-slate-300 hover:text-(--text-primary) border border-(--glass-border) hover:bg-(--glass-bg) transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] text-(--text-secondary) hover:text-(--text-primary) border border-(--glass-border) hover:bg-(--glass-bg) transition-colors"
                 title="העתק טקסט"
               >
                 <Copy className="w-3.5 h-3.5" />
@@ -649,7 +649,7 @@ export function PromptNodeCard({
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] border transition-colors ${
                   isFavorite
                     ? "text-amber-300 border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/15"
-                    : "text-slate-300 hover:text-(--text-primary) border-(--glass-border) hover:bg-(--glass-bg)"
+                    : "text-(--text-secondary) hover:text-(--text-primary) border-(--glass-border) hover:bg-(--glass-bg)"
                 }`}
                 title={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
                 aria-pressed={isFavorite}
@@ -662,7 +662,7 @@ export function PromptNodeCard({
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] border transition-colors ${
                   isPinned
                     ? "text-amber-300 border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/15"
-                    : "text-slate-300 hover:text-(--text-primary) border-(--glass-border) hover:bg-(--glass-bg)"
+                    : "text-(--text-secondary) hover:text-(--text-primary) border-(--glass-border) hover:bg-(--glass-bg)"
                 }`}
                 title="הצמד"
               >
@@ -671,7 +671,7 @@ export function PromptNodeCard({
               </button>
               <button
                 onClick={handleDuplicate}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] text-slate-300 hover:text-(--text-primary) border border-(--glass-border) hover:bg-(--glass-bg) transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] text-(--text-secondary) hover:text-(--text-primary) border border-(--glass-border) hover:bg-(--glass-bg) transition-colors"
                 title="שכפל פרומפט"
               >
                 <CopyPlus className="w-3.5 h-3.5" />

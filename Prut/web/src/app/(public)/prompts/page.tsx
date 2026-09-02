@@ -219,7 +219,7 @@ export default async function PromptsIndexPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
                 {totalCategories} קטגוריות
               </span>
-              <span className="text-slate-600">|</span>
+              <span className="text-(--text-muted)">|</span>
               <span className="text-muted-foreground">{PROMPT_LIBRARY_COUNT} פרומפטים</span>
             </div>
           </header>

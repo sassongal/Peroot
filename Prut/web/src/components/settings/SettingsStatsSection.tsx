@@ -24,36 +24,36 @@ export function SettingsStatsSection({ usageStats }: SettingsStatsSectionProps) 
         <h2 id="settings-stats-heading" className="text-xl font-bold">
           סטטיסטיקות שימוש
         </h2>
-        <p className="text-sm text-slate-400">מעקב אחר הפעילות שלך</p>
+        <p className="text-sm text-(--text-muted)">מעקב אחר הפעילות שלך</p>
       </header>
 
       {usageStats ? (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+            <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) text-center">
               <Sparkles className="w-5 h-5 text-amber-400 mx-auto mb-2" />
               <p className="text-2xl font-bold">{usageStats.totalEnhancements}</p>
-              <p className="text-xs text-slate-400">סה&quot;כ שיפורים</p>
+              <p className="text-xs text-(--text-muted)">סה&quot;כ שיפורים</p>
             </div>
-            <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+            <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) text-center">
               <Calendar className="w-5 h-5 text-blue-400 mx-auto mb-2" />
               <p className="text-2xl font-bold">{usageStats.thisMonth}</p>
-              <p className="text-xs text-slate-400">החודש</p>
+              <p className="text-xs text-(--text-muted)">החודש</p>
             </div>
-            <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+            <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) text-center">
               <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-2" />
               <p className="text-2xl font-bold">{usageStats.thisWeek}</p>
-              <p className="text-xs text-slate-400">השבוע</p>
+              <p className="text-xs text-(--text-muted)">השבוע</p>
             </div>
-            <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+            <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) text-center">
               <Zap className="w-5 h-5 text-orange-400 mx-auto mb-2" />
               <p className="text-2xl font-bold">{usageStats.streak}</p>
-              <p className="text-xs text-slate-400">ימים ברצף</p>
+              <p className="text-xs text-(--text-muted)">ימים ברצף</p>
             </div>
           </div>
 
-          <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
-            <h3 className="font-semibold text-white text-sm">פעילות ב-7 ימים אחרונים</h3>
+          <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+            <h3 className="font-semibold text-(--text-primary) text-sm">פעילות ב-7 ימים אחרונים</h3>
             <div
               className="flex items-end gap-2 h-24"
               role="img"
@@ -67,12 +67,12 @@ export function SettingsStatsSection({ usageStats }: SettingsStatsSectionProps) 
                 });
                 return (
                   <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
-                    <span className="text-[10px] text-slate-500">{day.count || ""}</span>
+                    <span className="text-[10px] text-(--text-muted)">{day.count || ""}</span>
                     <div
-                      className={`w-full rounded-t-md transition-all ${day.count > 0 ? "bg-amber-500/60" : "bg-white/10"}`}
+                      className={`w-full rounded-t-md transition-all ${day.count > 0 ? "bg-amber-500/60" : "bg-(--glass-bg)"}`}
                       style={{ height: `${height}%` }}
                     />
-                    <span className="text-[10px] text-slate-500">{dayName}</span>
+                    <span className="text-[10px] text-(--text-muted)">{dayName}</span>
                   </div>
                 );
               })}
@@ -80,8 +80,8 @@ export function SettingsStatsSection({ usageStats }: SettingsStatsSectionProps) 
           </div>
 
           {usageStats.topCategories.length > 0 && (
-            <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
-              <h3 className="font-semibold text-white text-sm">מצבים פופולריים</h3>
+            <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+              <h3 className="font-semibold text-(--text-primary) text-sm">מצבים פופולריים</h3>
               <div className="space-y-2">
                 {usageStats.topCategories.map((cat) => {
                   const total = usageStats.totalEnhancements || 1;
@@ -89,15 +89,15 @@ export function SettingsStatsSection({ usageStats }: SettingsStatsSectionProps) 
                   return (
                     <div key={cat.category} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-300">
+                        <span className="text-(--text-secondary)">
                           {MODE_LABELS[cat.category] || cat.category}
                         </span>
-                        <span className="text-slate-500 text-xs">
+                        <span className="text-(--text-muted) text-xs">
                           {cat.count} ({pct}%)
                         </span>
                       </div>
                       <div
-                        className="w-full h-2 bg-white/10 rounded-full overflow-hidden"
+                        className="w-full h-2 bg-(--glass-bg) rounded-full overflow-hidden"
                         role="progressbar"
                         aria-valuenow={pct}
                         aria-valuemin={0}

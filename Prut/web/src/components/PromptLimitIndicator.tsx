@@ -63,7 +63,7 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
         >
           <Zap className="w-4 h-4 text-red-400 shrink-0" />
           <span className="text-xs font-bold text-red-400">קרדיטים נגמרו</span>
-          <span className="hidden sm:inline text-[10px] font-black text-white bg-amber-500 px-2 py-0.5 rounded-full">
+          <span className="hidden sm:inline text-[10px] font-black text-black bg-amber-500 px-2 py-0.5 rounded-full">
             שדרג
           </span>
         </Link>
@@ -105,7 +105,7 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
       >
         <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
         <span className="text-xs font-bold text-amber-700 dark:text-amber-300">הירשמו בחינם</span>
-        <span className="hidden sm:inline text-[10px] font-black text-white bg-amber-500 px-2 py-0.5 rounded-full">
+        <span className="hidden sm:inline text-[10px] font-black text-black bg-amber-500 px-2 py-0.5 rounded-full">
           2/יום
         </span>
       </Link>

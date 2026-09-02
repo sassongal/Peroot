@@ -32,7 +32,7 @@ export function SettingsBillingSection({
         <h2 id="settings-billing-heading" className="text-xl font-bold">
           מנוי וחיוב
         </h2>
-        <p className="text-sm text-slate-400">נהל את המנוי והתשלום שלך</p>
+        <p className="text-sm text-(--text-muted)">נהל את המנוי והתשלום שלך</p>
       </header>
 
       {billingSuccess && (
@@ -44,7 +44,7 @@ export function SettingsBillingSection({
         </div>
       )}
 
-      <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-4">
+      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {isPro ? (
@@ -52,13 +52,15 @@ export function SettingsBillingSection({
                 <Crown className="w-5 h-5 text-amber-400" />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                <Zap className="w-5 h-5 text-slate-400" />
+              <div className="w-10 h-10 rounded-full bg-(--glass-bg) flex items-center justify-center">
+                <Zap className="w-5 h-5 text-(--text-muted)" />
               </div>
             )}
             <div>
-              <h3 className="font-bold text-white">{isPro ? "Peroot Pro" : "תוכנית חינם"}</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="font-bold text-(--text-primary)">
+                {isPro ? "Peroot Pro" : "תוכנית חינם"}
+              </h3>
+              <p className="text-xs text-(--text-muted)">
                 {isPro
                   ? `סטטוס: פעיל${subscription.renews_at ? ` · מתחדש ב-${formatDateHe(subscription.renews_at)}` : ""}`
                   : `${creditsPhrase(freeDaily)} ביום`}
@@ -112,7 +114,7 @@ export function SettingsBillingSection({
             <Zap className="w-4 h-4" />
             מה כולל Pro?
           </h3>
-          <ul className="space-y-2 text-sm text-slate-300">
+          <ul className="space-y-2 text-sm text-(--text-secondary)">
             <li className="flex items-center gap-2">
               <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               {creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש
@@ -152,12 +154,12 @@ export function SettingsBillingSection({
       )}
 
       {isPro && !subscription.ends_at && (
-        <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-2">
-          <p className="text-xs text-slate-400 font-medium flex items-center gap-2">
+        <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-2">
+          <p className="text-xs text-(--text-muted) font-medium flex items-center gap-2">
             <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             ביטול יכנס לתוקף בסוף תקופת החיוב הנוכחית
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-(--text-muted)">
             לביטול המנוי לחץ על &quot;ביטול מנוי&quot; למעלה. הגישה ל-Pro תישמר עד סוף תקופת החיוב
             הנוכחית.
           </p>
@@ -165,10 +167,10 @@ export function SettingsBillingSection({
       )}
 
       {!isPro && (
-        <div className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between gap-4">
+        <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-white">רוצה פרומפטים ללא הגבלה?</p>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-sm font-semibold text-(--text-primary)">רוצה פרומפטים ללא הגבלה?</p>
+            <p className="text-xs text-(--text-muted) mt-0.5">
               שדרג ל-Pro ב-₪{PLANS.pro.price} בלבד לחודש
             </p>
           </div>

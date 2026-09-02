@@ -56,7 +56,7 @@ export function SettingsReferralSection({
         <h2 id="settings-referral-heading" className="text-xl font-bold">
           הזמן חברים
         </h2>
-        <p className="text-sm text-slate-400">שתף את הקישור שלך והבא חברים לפירוט</p>
+        <p className="text-sm text-(--text-muted)">שתף את הקישור שלך והבא חברים לפירוט</p>
       </header>
 
       <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
@@ -69,31 +69,31 @@ export function SettingsReferralSection({
             <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">
               1
             </span>
-            <span className="text-slate-300">שתף את הקישור שלך עם חבר</span>
+            <span className="text-(--text-secondary)">שתף את הקישור שלך עם חבר</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">
               2
             </span>
-            <span className="text-slate-300">החבר נכנס דרך הקישור ונרשם</span>
+            <span className="text-(--text-secondary)">החבר נכנס דרך הקישור ונרשם</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">
               3
             </span>
-            <span className="text-slate-300">ההצטרפות נרשמת על שמך</span>
+            <span className="text-(--text-secondary)">ההצטרפות נרשמת על שמך</span>
           </div>
         </div>
       </div>
 
       {referral ? (
-        <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-4">
-          <h3 className="font-semibold text-white flex items-center gap-2">
+        <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-4">
+          <h3 className="font-semibold text-(--text-primary) flex items-center gap-2">
             <Users className="w-4 h-4 text-amber-400" />
             הקוד שלך
           </h3>
           <div className="flex items-center gap-3">
-            <div className="flex-1 px-4 py-3 bg-black/30 rounded-lg border border-white/10 font-mono text-lg text-amber-300 text-center tracking-wider">
+            <div className="flex-1 px-4 py-3 bg-(--glass-bg) rounded-lg border border-(--glass-border) font-mono text-lg text-amber-300 text-center tracking-wider">
               {referral.code}
             </div>
             <button
@@ -114,7 +114,7 @@ export function SettingsReferralSection({
               {referralCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
             </button>
           </div>
-          <div className="flex items-center justify-between text-xs text-slate-500">
+          <div className="flex items-center justify-between text-xs text-(--text-muted)">
             <span>
               {referral.uses} / {referral.maxUses} הזמנות נוצלו
             </span>
@@ -140,7 +140,7 @@ export function SettingsReferralSection({
                   toast.success("הועתק ללוח");
                 });
               }}
-              className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/10"
+              className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 bg-(--glass-bg) hover:bg-(--glass-bg) text-(--text-secondary) rounded-lg text-sm font-medium transition-colors border border-(--glass-border)"
             >
               <Copy className="w-3.5 h-3.5" />
               העתק הודעה
@@ -148,7 +148,7 @@ export function SettingsReferralSection({
           </div>
         </div>
       ) : referralLoaded ? (
-        <div className="p-5 bg-white/5 rounded-xl border border-white/10 text-center text-slate-400 text-sm">
+        <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) text-center text-(--text-muted) text-sm">
           מערכת ההפניות תהיה זמינה בקרוב
         </div>
       ) : (
@@ -157,8 +157,8 @@ export function SettingsReferralSection({
         </div>
       )}
 
-      <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
-        <h3 className="font-semibold text-white text-sm">קיבלת קוד מחבר?</h3>
+      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+        <h3 className="font-semibold text-(--text-primary) text-sm">קיבלת קוד מחבר?</h3>
         <div className="flex gap-2">
           <input
             type="text"
@@ -166,7 +166,7 @@ export function SettingsReferralSection({
             onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
             placeholder="הזן קוד הפניה"
             dir="ltr"
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white font-mono text-sm placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50 transition-colors"
+            className="flex-1 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-3 py-2.5 text-(--text-primary) font-mono text-sm placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/50 transition-colors"
           />
           <button
             type="button"

@@ -351,7 +351,7 @@ export function ChainsSection({
                     {step.title}
                   </span>
                   {i < chain.steps.length - 1 && (
-                    <span className="text-slate-600 text-[10px]">&larr;</span>
+                    <span className="text-(--text-muted) text-[10px]">&larr;</span>
                   )}
                 </div>
               ))}
@@ -359,7 +359,7 @@ export function ChainsSection({
 
             {/* Footer */}
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-600">
+              <span className="text-xs text-(--text-muted)">
                 {chain.steps.length} שלבים
                 {chain.steps.some((s) => s.variables && s.variables.length > 0) &&
                   ` · ${chain.steps.reduce((sum, s) => sum + (s.variables?.length || 0), 0)} משתנים`}

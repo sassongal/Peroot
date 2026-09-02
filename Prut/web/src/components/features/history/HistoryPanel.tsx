@@ -47,7 +47,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Automation: "bg-lime-500",
   Community: "bg-amber-400",
   Nonprofit: "bg-emerald-400",
-  None: "bg-white/20",
+  None: "bg-(--glass-bg)",
 };
 
 interface HistoryPanelProps {
@@ -142,7 +142,7 @@ export function HistoryPanel({
 
       <div className="space-y-4 mb-6 relative z-10">
         <div className="relative group">
-          <Search className="absolute end-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-500 transition-colors" />
+          <Search className="absolute end-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted) group-focus-within:text-amber-500 transition-colors" />
           <input
             type="text"
             placeholder="חיפוש בהיסטוריה..."
@@ -156,7 +156,7 @@ export function HistoryPanel({
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Filter className="absolute end-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <Filter className="absolute end-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-(--text-muted)" />
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -236,11 +236,11 @@ export function HistoryPanel({
         )}
 
         {isLoaded && history.length > 0 && filteredHistory.length === 0 && (
-          <div className="text-xs text-slate-500 text-center py-6">לא נמצאו תוצאות לחיפוש</div>
+          <div className="text-xs text-(--text-muted) text-center py-6">לא נמצאו תוצאות לחיפוש</div>
         )}
 
         {filteredHistory.map((item, index) => {
-          const categoryColor = CATEGORY_COLORS[item.category] || "bg-white/20";
+          const categoryColor = CATEGORY_COLORS[item.category] || "bg-(--glass-bg)";
           const isFirst = index === 0;
 
           return (
@@ -273,7 +273,7 @@ export function HistoryPanel({
                   </span>
                   {item.source && item.source !== "web" && <SourceBadge source={item.source} />}
                 </div>
-                <span className="text-[10px] text-slate-500" suppressHydrationWarning>
+                <span className="text-[10px] text-(--text-muted)" suppressHydrationWarning>
                   {hasHydrated ? <DateBadge mode="compact" entity={item.entity} /> : "..."}
                 </span>
               </div>

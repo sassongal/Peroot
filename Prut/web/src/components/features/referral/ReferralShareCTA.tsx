@@ -83,7 +83,7 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
         <Gift className="w-5 h-5 shrink-0 text-amber-400" />
         <div className="flex-1 min-w-0">
           <p className="text-sm text-amber-300/90 font-medium">אהבת? שתף עם חברים</p>
-          <p className="text-[11px] text-slate-500">קישור אישי, החבר נכנס ישר לפירוט</p>
+          <p className="text-[11px] text-(--text-muted)">קישור אישי, החבר נכנס ישר לפירוט</p>
         </div>
         <button
           onClick={handleCopyLink}
@@ -94,7 +94,7 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
         </button>
         <button
           onClick={() => setVisible(false)}
-          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
+          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-(--text-muted) hover:text-(--text-muted) transition-colors cursor-pointer"
           aria-label="סגור"
         >
           <X className="w-3.5 h-3.5" />

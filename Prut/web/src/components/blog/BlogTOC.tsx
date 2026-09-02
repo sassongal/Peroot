@@ -88,7 +88,7 @@ export function BlogTOC({ content }: BlogTOCProps) {
       dir="rtl"
       className="sticky top-20 w-52 shrink-0 hidden xl:block self-start"
     >
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3 px-3">
+      <p className="text-xs font-semibold text-(--text-muted) uppercase tracking-widest mb-3 px-3">
         תוכן עניינים
       </p>
       <ul className="space-y-1">
@@ -103,7 +103,7 @@ export function BlogTOC({ content }: BlogTOCProps) {
                   "border-s-2",
                   isActive
                     ? "text-amber-400 border-amber-400 bg-amber-500/5"
-                    : "text-slate-500 border-transparent hover:text-slate-300 hover:border-slate-600",
+                    : "text-(--text-muted) border-transparent hover:text-(--text-secondary) hover:border-slate-600",
                 ].join(" ")}
               >
                 {text}

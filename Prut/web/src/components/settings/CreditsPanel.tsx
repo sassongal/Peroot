@@ -84,8 +84,8 @@ export function CreditsPanel() {
   if (loading || !quota) {
     return (
       <div className="rounded-3xl border border-(--glass-border) bg-(--glass-bg) p-8 animate-pulse">
-        <div className="h-6 w-40 bg-black/10 dark:bg-white/10 rounded mb-4" />
-        <div className="h-12 w-24 bg-black/10 dark:bg-white/10 rounded" />
+        <div className="h-6 w-40 bg-(--glass-bg) rounded mb-4" />
+        <div className="h-12 w-24 bg-(--glass-bg) rounded" />
       </div>
     );
   }
@@ -101,7 +101,7 @@ export function CreditsPanel() {
         <Crown className="w-3 h-3" /> Pro
       </span>
     ) : (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/5 dark:bg-white/10 border border-(--glass-border) text-(--text-secondary) text-[10px] font-black uppercase tracking-widest">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-(--glass-bg) border border-(--glass-border) text-(--text-secondary) text-[10px] font-black uppercase tracking-widest">
         <Sparkles className="w-3 h-3" /> חינמי
       </span>
     );
@@ -153,7 +153,7 @@ export function CreditsPanel() {
       {tier === "pro" && (
         <Link
           href="/settings/subscription"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-(--glass-bg) border border-(--glass-border) text-(--text-secondary) text-xs font-black uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-(--glass-bg) border border-(--glass-border) text-(--text-secondary) text-xs font-black uppercase tracking-widest hover:bg-(--glass-bg) transition-colors"
         >
           ניהול מנוי
         </Link>
@@ -170,7 +170,7 @@ export function CreditsPanel() {
               return (
                 <li
                   key={e.id}
-                  className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-(--glass-border)"
+                  className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-(--glass-bg) border border-(--glass-border)"
                 >
                   <span className="text-xs font-bold text-(--text-secondary)">
                     {REASON_LABELS[e.reason] ?? e.reason}

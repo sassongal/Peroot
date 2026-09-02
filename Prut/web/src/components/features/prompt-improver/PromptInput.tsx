@@ -429,7 +429,7 @@ export function PromptInput({
                     "mt-4 w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
                     allFilled
                       ? "bg-white text-black hover:bg-slate-200 cursor-pointer"
-                      : "bg-white/20 text-slate-500 cursor-not-allowed",
+                      : "bg-(--glass-bg) text-(--text-muted) cursor-not-allowed",
                   )}
                 >
                   {t.prompt_generator.apply_to_prompt}

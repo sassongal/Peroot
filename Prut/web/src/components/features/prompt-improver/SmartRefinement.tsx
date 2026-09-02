@@ -97,7 +97,7 @@ export function SmartRefinement({
                     />
                   ))}
                 </div>
-                <span className="text-xs text-slate-500 font-mono tabular-nums">
+                <span className="text-xs text-(--text-muted) font-mono tabular-nums">
                   {answeredCount}/{questions.length}
                 </span>
               </div>
@@ -181,7 +181,7 @@ export function SmartRefinement({
                 {t.smart_refinement.free_request}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mb-2 text-right" dir="rtl">
+            <p className="text-xs text-(--text-muted) mb-2 text-right" dir="rtl">
               {t.smart_refinement.free_request_hint}
             </p>
             <textarea

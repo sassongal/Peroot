@@ -99,25 +99,25 @@ export default async function SharedPromptPage({ params }: Props) {
           url: `${siteUrl}/p/${id}`,
         })}
       />
-      <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
+      <div className="min-h-screen bg-(--surface-body) text-(--text-primary) p-4 md:p-8" dir="rtl">
         <div className="max-w-3xl mx-auto">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group w-fit mb-8"
+            className="flex items-center gap-2 text-sm text-(--text-muted) hover:text-(--text-primary) transition-colors group w-fit mb-8"
           >
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-[-2px]" />
             <span>חזרה לפירוט</span>
           </Link>
 
-          <div className="glass-card rounded-xl border border-white/10 overflow-hidden">
-            <div className="p-4 bg-white/2 border-b border-white/5 flex items-center justify-between">
+          <div className="glass-card rounded-xl border border-(--glass-border) overflow-hidden">
+            <div className="p-4 bg-(--glass-bg) border-b border-(--glass-border) flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-400 bg-white/5 px-3 py-1 rounded-full">
+                <span className="text-xs font-semibold text-(--text-muted) bg-(--glass-bg) px-3 py-1 rounded-full">
                   {prompt.category}
                 </span>
-                <span className="text-[10px] text-slate-600">{prompt.views || 0} צפיות</span>
+                <span className="text-[10px] text-(--text-muted)">{prompt.views || 0} צפיות</span>
               </div>
-              <span className="text-[10px] text-slate-600">נוצר עם Peroot</span>
+              <span className="text-[10px] text-(--text-muted)">נוצר עם Peroot</span>
             </div>
 
             <div className="p-6 flex flex-col gap-4" dir="rtl">
@@ -134,7 +134,7 @@ export default async function SharedPromptPage({ params }: Props) {
 
           {/* CTA */}
           <div className="text-center mt-12">
-            <p className="text-sm text-slate-500 mb-4">רוצים ליצור פרומפטים כאלה?</p>
+            <p className="text-sm text-(--text-muted) mb-4">רוצים ליצור פרומפטים כאלה?</p>
             <Link
               href={referralCode ? `/?ref=${referralCode}` : "/"}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all"

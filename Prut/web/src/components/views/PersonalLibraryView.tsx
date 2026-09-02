@@ -42,7 +42,7 @@ function GuestGate() {
       className="flex items-center justify-center min-h-[70vh] px-4 animate-in fade-in duration-500"
       dir="rtl"
     >
-      <div className="w-full max-w-lg bg-white/95 dark:bg-zinc-950/90 border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center text-center gap-5">
+      <div className="w-full max-w-lg bg-white/95 dark:bg-zinc-950/90 border border-(--glass-border) rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center text-center gap-5">
         <GuestGraphPreview height={220} />
         <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
           <Image
@@ -202,7 +202,7 @@ function PersonalLibraryLayout() {
       ) : (
         <div className="flex gap-4 items-start">
           {/* Desktop Sidebar */}
-          <aside className="hidden md:flex flex-col w-[260px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-white/8 bg-black/5 dark:bg-black/30 backdrop-blur-sm">
+          <aside className="hidden md:flex flex-col w-[260px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-(--glass-border) bg-black/5 dark:bg-black/30 backdrop-blur-sm">
             <PersonalLibrarySidebar isMobile={false} />
           </aside>
 

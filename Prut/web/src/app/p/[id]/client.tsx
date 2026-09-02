@@ -77,18 +77,18 @@ export function SharePageClient({ prompt }: { prompt: string }) {
   );
 
   return (
-    <div className="p-4 bg-white/2 border-t border-white/5 flex flex-col gap-4">
+    <div className="p-4 bg-(--glass-bg) border-t border-(--glass-border) flex flex-col gap-4">
       {/* שגר למודל — prefilled handoff, the same component the app uses */}
       <SendToModelBar prompt={prompt} from="share_page" className="items-center" />
 
       {/* Share buttons */}
       <div className="flex items-center gap-2 justify-center flex-wrap">
-        <span className="text-xs text-slate-500 ms-1">שתף:</span>
+        <span className="text-xs text-(--text-muted) ms-1">שתף:</span>
 
         {/* WhatsApp - shares page URL with Hebrew intro */}
         <button
           onClick={() => window.open(`https://wa.me/?text=${whatsappMessage}`, "_blank")}
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-xs transition-all cursor-pointer min-h-[44px]"
+          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-(--text-secondary) hover:text-[#25d366] text-xs transition-all cursor-pointer min-h-[44px]"
         >
           <WhatsAppIcon className="w-3.5 h-3.5" />
           <span>WhatsApp</span>
@@ -102,7 +102,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
               "_blank",
             )
           }
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-white/10 hover:border-white/20 text-slate-300 hover:text-white text-xs transition-all cursor-pointer min-h-[44px]"
+          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-(--glass-bg) hover:border-(--glass-border) text-(--text-secondary) hover:text-(--text-primary) text-xs transition-all cursor-pointer min-h-[44px]"
         >
           <XIcon className="w-3.5 h-3.5" />
           <span>Twitter / X</span>
@@ -116,7 +116,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
               "_blank",
             )
           }
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-[#0088cc]/10 hover:border-[#0088cc]/30 text-slate-300 hover:text-[#0088cc] text-xs transition-all cursor-pointer min-h-[44px]"
+          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#0088cc]/10 hover:border-[#0088cc]/30 text-(--text-secondary) hover:text-[#0088cc] text-xs transition-all cursor-pointer min-h-[44px]"
         >
           <TelegramIcon className="w-3.5 h-3.5" />
           <span>Telegram</span>
@@ -125,7 +125,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
         {/* Copy link */}
         <button
           onClick={handleCopyLink}
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-amber-500/10 hover:border-amber-500/30 text-slate-300 hover:text-amber-400 text-xs transition-all cursor-pointer min-h-[44px]"
+          className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-amber-500/10 hover:border-amber-500/30 text-(--text-secondary) hover:text-amber-400 text-xs transition-all cursor-pointer min-h-[44px]"
         >
           {linkCopied ? (
             <Check className="w-3.5 h-3.5 text-amber-400" />
@@ -144,7 +144,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
                 url: pageUrl,
               })
             }
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer min-h-[44px]"
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-(--glass-bg) text-(--text-secondary) text-xs transition-all cursor-pointer min-h-[44px]"
           >
             <Share2 className="w-3.5 h-3.5" />
             <span>עוד...</span>

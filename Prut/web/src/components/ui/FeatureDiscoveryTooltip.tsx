@@ -62,7 +62,7 @@ export function FeatureDiscoveryTooltip({
         {/* Close button */}
         <button
           onClick={onDismiss}
-          className="absolute top-3 end-3 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+          className="absolute top-3 end-3 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-(--text-muted) hover:text-(--text-secondary) hover:bg-(--glass-bg) transition-colors"
           aria-label="סגור טיפים"
         >
           <X className="w-4 h-4" />
@@ -75,7 +75,7 @@ export function FeatureDiscoveryTooltip({
           </div>
           <span className="text-xs font-bold text-amber-400 tracking-wide">הידעת?</span>
           {totalTips > 1 && (
-            <span className="text-[10px] text-slate-500 mr-auto">
+            <span className="text-[10px] text-(--text-muted) mr-auto">
               {currentIndex + 1} מתוך {totalTips}
             </span>
           )}
@@ -83,7 +83,7 @@ export function FeatureDiscoveryTooltip({
 
         {/* Tip content */}
         <div className="pr-0 md:pr-0" dir="rtl">
-          <p className="text-sm text-slate-200 leading-relaxed mb-3">
+          <p className="text-sm text-(--text-primary) leading-relaxed mb-3">
             <span className="text-lg ml-1.5">{tip.emoji}</span>
             {tip.text}
           </p>
@@ -109,8 +109,8 @@ export function FeatureDiscoveryTooltip({
               className={cn(
                 "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer",
                 isLast
-                  ? "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10"
-                  : "text-slate-400 hover:text-slate-200",
+                  ? "bg-(--glass-bg) border border-(--glass-border) text-(--text-secondary) hover:bg-(--glass-bg)"
+                  : "text-(--text-muted) hover:text-(--text-primary)",
               )}
             >
               {isLast ? (

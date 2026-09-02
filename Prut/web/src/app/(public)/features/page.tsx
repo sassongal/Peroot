@@ -864,7 +864,7 @@ export default function FeaturesPage() {
             </ScrollReveal>
 
             <ScrollReveal fromY={12} delay={0.2}>
-              <p className="text-slate-500 text-xs">
+              <p className="text-(--text-muted) text-xs">
                 <Link
                   href="/pricing"
                   className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors"

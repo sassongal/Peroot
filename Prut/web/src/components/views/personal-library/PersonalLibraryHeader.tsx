@@ -204,7 +204,7 @@ export function PersonalLibraryHeader() {
 
       {user && effectiveFolder === "favorites" && localSearch.trim() !== "" && (
         <div className="mb-3 flex items-start gap-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) px-3 py-2 text-[11px] text-(--text-muted)">
-          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500" aria-hidden />
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-(--text-muted)" aria-hidden />
           <span>
             בתיקיית מועדפים החיפוש הוא לפי התאמת טקסט (לא חיפוש &quot;דמיון&quot; כמו ב&quot;כל
             הפרומפטים&quot;).
@@ -308,7 +308,7 @@ export function PersonalLibraryHeader() {
                 className={cn(
                   "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   historyLength === 0
-                    ? "border-(--glass-border) text-slate-600 cursor-not-allowed"
+                    ? "border-(--glass-border) text-(--text-muted) cursor-not-allowed"
                     : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
                 )}
               >

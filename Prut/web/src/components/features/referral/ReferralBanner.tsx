@@ -71,7 +71,7 @@ export function ReferralBanner({ isNewUser }: { isNewUser: boolean }) {
       </button>
       <button
         onClick={handleDismiss}
-        className="p-1 rounded-md text-slate-500 hover:text-slate-300 transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+        className="p-1 rounded-md text-(--text-muted) hover:text-(--text-secondary) transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
         aria-label="סגור"
       >
         <X className="w-4 h-4" />

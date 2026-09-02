@@ -400,7 +400,7 @@ function CodeBlock({ children }: { children: string }) {
         className="absolute top-2 left-2"
       />
       <pre
-        className="bg-[#0d0d0d] border border-border rounded-xl p-4 pr-4 pl-10 text-sm font-mono text-foreground leading-relaxed overflow-x-auto whitespace-pre-wrap text-right [-webkit-overflow-scrolling:touch]"
+        className="bg-(--glass-bg) border border-border rounded-xl p-4 pr-4 pl-10 text-sm font-mono text-foreground leading-relaxed overflow-x-auto whitespace-pre-wrap text-right [-webkit-overflow-scrolling:touch]"
         dir="rtl"
       >
         {children}
@@ -544,7 +544,7 @@ export default function GuidePage() {
               </Link>
               <a
                 href="#what-is-prompt"
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-border text-secondary-foreground text-sm hover:border-white/30 hover:text-foreground transition-all"
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-border text-secondary-foreground text-sm hover:border-(--glass-border) hover:text-foreground transition-all"
               >
                 קרא את המדריך
                 <ChevronRight className="w-4 h-4 rotate-90" />
@@ -970,7 +970,7 @@ export default function GuidePage() {
                       </Link>
                       <Link
                         href="/examples"
-                        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl border border-border text-secondary-foreground text-sm hover:border-white/30 hover:text-foreground transition-all"
+                        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl border border-border text-secondary-foreground text-sm hover:border-(--glass-border) hover:text-foreground transition-all"
                       >
                         ספריית פרומפטים
                         <ArrowRight className="w-4 h-4" />

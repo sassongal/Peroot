@@ -135,7 +135,7 @@ export function PersonalLibraryGrid() {
           <div className="flex items-center gap-0.5">
             {pages.map((p, idx) =>
               p === "..." ? (
-                <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-xs text-slate-600">
+                <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-xs text-(--text-muted)">
                   ...
                 </span>
               ) : (
@@ -288,7 +288,7 @@ export function PersonalLibraryGrid() {
               className="mx-2 text-center py-12 rounded-xl border border-(--glass-border) bg-(--glass-bg)"
               dir="rtl"
             >
-              <Search className="w-8 h-8 text-slate-500 mx-auto mb-3" />
+              <Search className="w-8 h-8 text-(--text-muted) mx-auto mb-3" />
               <p className="text-(--text-muted) text-sm font-medium">אין תוצאות לחיפוש</p>
               <p className="text-(--text-muted) text-xs mt-1 opacity-70">
                 &quot;{localSearch || personalQuery}&quot;

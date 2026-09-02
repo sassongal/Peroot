@@ -121,25 +121,25 @@ export function ChainBuilder({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-[#0f0f0f] border border-white/10 rounded-2xl p-6 mx-4"
+        className="w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-(--surface-panel) border border-(--glass-border) rounded-2xl p-6 mx-4"
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-white">בניית שרשרת פרומפטים</h3>
+          <h3 className="text-xl font-semibold text-(--text-primary)">בניית שרשרת פרומפטים</h3>
           <button
             aria-label="סגור"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-slate-400 transition-colors"
+            className="p-2 rounded-full hover:bg-(--glass-bg) text-(--text-muted) transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* How-it-works intro card — explains chains in 2-3 lines with a
-            concrete example. Collapsible so it doesn't get in the way on
-            re-visits. */}
+ concrete example. Collapsible so it doesn't get in the way on
+ re-visits. */}
         <div className="mb-5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 overflow-hidden">
           <button
             type="button"
@@ -159,22 +159,22 @@ export function ChainBuilder({
             />
           </button>
           {introOpen && (
-            <div className="px-4 pb-4 text-xs text-slate-300 leading-relaxed space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="px-4 pb-4 text-xs text-(--text-secondary) leading-relaxed space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
               <p>
                 שרשרת פרומפטים היא רצף של 2-10 שלבים שמייצרים יחד תוצר מורכב. כל שלב מקבל את הפלט של
                 השלב הקודם כקלט, כך שתוכל לפרק משימה גדולה (למשל: מחקר → סיכום → כתיבת פוסט → עריכה)
                 לשלבים קטנים שכל אחד מהם מבצע משהו ממוקד.
               </p>
-              <div className="rounded-lg bg-black/30 border border-white/10 px-3 py-2 text-[11px] text-slate-400 space-y-1">
+              <div className="rounded-lg bg-(--glass-bg) border border-(--glass-border) px-3 py-2 text-[11px] text-(--text-muted) space-y-1">
                 <div className="text-indigo-300 font-semibold">דוגמה: יצירת פוסט לינקדאין</div>
                 <div>
                   1. מחקר על הנושא → 2. חילוץ 3 תובנות מרכזיות → 3. כתיבת טיוטה → 4. חידוד טון → 5.
                   הוספת hook
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400">
-                <strong className="text-slate-300">מה נשמר:</strong> השם, התיאור, כל השלבים, וסדר
-                הריצה. ערכי משתנים נקבעים בזמן הריצה ולא נשמרים עם השרשרת.
+              <p className="text-[11px] text-(--text-muted)">
+                <strong className="text-(--text-secondary)">מה נשמר:</strong> השם, התיאור, כל
+                השלבים, וסדר הריצה. ערכי משתנים נקבעים בזמן הריצה ולא נשמרים עם השרשרת.
               </p>
             </div>
           )}
@@ -186,13 +186,13 @@ export function ChainBuilder({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="שם השרשרת"
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/30"
+            className="w-full bg-(--glass-bg) border border-(--glass-border) rounded-xl px-4 py-3 text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/30"
           />
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="תיאור קצר (אופציונלי)"
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/30"
+            className="w-full bg-(--glass-bg) border border-(--glass-border) rounded-xl px-4 py-2.5 text-sm text-(--text-secondary) placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/30"
           />
         </div>
 
@@ -208,7 +208,7 @@ export function ChainBuilder({
               )}
               <div
                 className={cn(
-                  "border border-white/10 rounded-xl p-4 bg-white/2 hover:bg-white/4 transition-colors",
+                  "border border-(--glass-border) rounded-xl p-4 bg-(--glass-bg) hover:bg-(--glass-bg) transition-colors",
                   dragIndex === index && "opacity-50 border-amber-500/30",
                 )}
                 draggable
@@ -217,20 +217,20 @@ export function ChainBuilder({
                 onDragEnd={handleDragEnd}
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <GripVertical className="w-4 h-4 text-slate-600 cursor-grab active:cursor-grabbing" />
+                  <GripVertical className="w-4 h-4 text-(--text-muted) cursor-grab active:cursor-grabbing" />
                   <span className="text-xs font-bold text-amber-400/80 bg-amber-500/10 px-2 py-0.5 rounded-full">
                     שלב {index + 1}
                   </span>
                   <input
                     value={step.title}
                     onChange={(e) => updateStep(step.id, { title: e.target.value })}
-                    className="flex-1 bg-transparent text-sm text-slate-200 focus:outline-none border-b border-transparent focus:border-white/20"
+                    className="flex-1 bg-transparent text-sm text-(--text-primary) focus:outline-none border-b border-transparent focus:border-(--glass-border)"
                     placeholder="שם השלב"
                   />
                   {steps.length > 1 && (
                     <button
                       onClick={() => removeStep(step.id)}
-                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-(--text-muted) hover:text-red-400 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -243,20 +243,20 @@ export function ChainBuilder({
                     value={step.prompt_text}
                     onChange={(e) => updateStep(step.id, { prompt_text: e.target.value })}
                     placeholder="כתוב פרומפט או בחר מהספרייה..."
-                    className="w-full h-24 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20 resize-none"
+                    className="w-full h-24 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-3 py-2 text-sm text-(--text-secondary) placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/20 resize-none"
                   />
                   {/* Quick select from personal library */}
                   {personalPrompts.length > 0 && !step.prompt_id && (
                     <details className="group">
-                      <summary className="text-xs text-slate-500 hover:text-amber-400 cursor-pointer transition-colors">
+                      <summary className="text-xs text-(--text-muted) hover:text-amber-400 cursor-pointer transition-colors">
                         בחר מהספרייה האישית
                       </summary>
-                      <div className="mt-2 max-h-32 overflow-y-auto space-y-1 border border-white/5 rounded-lg p-2 bg-black/30">
+                      <div className="mt-2 max-h-32 overflow-y-auto space-y-1 border border-(--glass-border) rounded-lg p-2 bg-(--glass-bg)">
                         {personalPrompts.slice(0, 20).map((p) => (
                           <button
                             key={p.id}
                             onClick={() => selectPromptForStep(step.id, p)}
-                            className="w-full text-start px-3 py-2 rounded-lg hover:bg-white/5 text-xs text-slate-400 hover:text-slate-200 transition-colors truncate"
+                            className="w-full text-start px-3 py-2 rounded-lg hover:bg-(--glass-bg) text-xs text-(--text-muted) hover:text-(--text-primary) transition-colors truncate"
                           >
                             {p.title}
                           </button>
@@ -280,7 +280,7 @@ export function ChainBuilder({
                           "flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors border",
                           step.mode === key
                             ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
-                            : "border-white/5 text-slate-600 hover:text-slate-400 hover:border-white/10",
+                            : "border-(--glass-border) text-(--text-muted) hover:text-(--text-secondary) hover:border-(--glass-border)",
                         )}
                         title={label}
                       >
@@ -298,17 +298,17 @@ export function ChainBuilder({
         {/* Add Step */}
         <button
           onClick={addStep}
-          className="w-full mt-4 py-3 rounded-xl border border-dashed border-white/10 text-slate-500 hover:text-amber-400 hover:border-amber-500/30 transition-colors flex items-center justify-center gap-2 text-sm"
+          className="w-full mt-4 py-3 rounded-xl border border-dashed border-(--glass-border) text-(--text-muted) hover:text-amber-400 hover:border-amber-500/30 transition-colors flex items-center justify-center gap-2 text-sm"
         >
           <Plus className="w-4 h-4" />
           הוסף שלב
         </button>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-white/10">
+        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-(--glass-border)">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition-colors"
+            className="px-5 py-2.5 rounded-xl border border-(--glass-border) text-(--text-muted) hover:bg-(--glass-bg) text-sm transition-colors"
           >
             ביטול
           </button>

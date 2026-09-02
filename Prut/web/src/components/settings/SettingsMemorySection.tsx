@@ -21,7 +21,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   preference: "border-amber-500/30 bg-amber-500/10 text-amber-300",
   project: "border-indigo-500/30 bg-indigo-500/10 text-indigo-300",
   language: "border-pink-500/30 bg-pink-500/10 text-pink-300",
-  general: "border-slate-500/30 bg-slate-500/10 text-slate-300",
+  general: "border-slate-500/30 bg-slate-500/10 text-(--text-secondary)",
 };
 
 export function SettingsMemorySection() {
@@ -60,11 +60,11 @@ export function SettingsMemorySection() {
   return (
     <div className="space-y-6" dir="rtl">
       <div>
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-(--text-primary) flex items-center gap-2">
           <Brain className="w-5 h-5 text-indigo-400" />
           זיכרון AI
         </h2>
-        <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+        <p className="text-sm text-(--text-muted) mt-1 leading-relaxed">
           עובדות שה-AI יודע עליך, מוחלות אוטומטית על כל שיפור פרומפט החל מהפרומפט הראשון.
         </p>
       </div>
@@ -72,7 +72,7 @@ export function SettingsMemorySection() {
       {/* Info banner */}
       <div className="flex items-start gap-2.5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
         <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p className="text-xs text-(--text-muted) leading-relaxed">
           הזיכרון נבנה אוטומטית מהפרומפטים שאתה כותב. ניתן להוסיף עובדות ידנית או למחוק עובדות שאינן
           מדויקות. מקסימום 100 עובדות.
         </p>
@@ -80,21 +80,21 @@ export function SettingsMemorySection() {
 
       {/* Manual add */}
       <div className="space-y-2">
-        <label className="text-xs font-medium text-slate-400">הוסף עובדה ידנית</label>
+        <label className="text-xs font-medium text-(--text-muted)">הוסף עובדה ידנית</label>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             value={newFact}
             onChange={(e) => setNewFact(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             placeholder="למשל: מנהל מוצר ב-B2B SaaS"
-            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/60 transition-colors"
+            className="flex-1 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-indigo-500/60 transition-colors"
             maxLength={300}
           />
           <div className="flex gap-2">
             <select
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
-              className="flex-1 sm:flex-none sm:min-w-[110px] bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/60 transition-colors cursor-pointer"
+              className="flex-1 sm:flex-none sm:min-w-[110px] bg-(--glass-bg) border border-(--glass-border) rounded-lg px-2 py-2 text-sm text-(--text-secondary) focus:outline-none focus:border-indigo-500/60 transition-colors cursor-pointer"
             >
               {CATEGORIES.map((c) => (
                 <option key={c.key} value={c.key}>
@@ -121,24 +121,24 @@ export function SettingsMemorySection() {
       {/* Facts list */}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-slate-500" />
+          <Loader2 className="w-5 h-5 animate-spin text-(--text-muted)" />
         </div>
       ) : facts.length === 0 ? (
         <div className="text-center py-10 space-y-2">
-          <Brain className="w-10 h-10 text-slate-600 mx-auto" />
-          <p className="text-sm text-slate-400">AI ילמד עליך בהדרגה תוך כדי שימוש</p>
-          <p className="text-xs text-slate-500">
+          <Brain className="w-10 h-10 text-(--text-muted) mx-auto" />
+          <p className="text-sm text-(--text-muted)">AI ילמד עליך בהדרגה תוך כדי שימוש</p>
+          <p className="text-xs text-(--text-muted)">
             גם פרומפט אחד יכול לחשוף מידע שישתמר לכל השיפורים הבאים
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500">{facts.length} / 100 עובדות</span>
+            <span className="text-xs text-(--text-muted)">{facts.length} / 100 עובדות</span>
           </div>
           {grouped.map((group) => (
             <div key={group.key} className="space-y-2">
-              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              <h3 className="text-xs font-semibold text-(--text-muted) uppercase tracking-wide">
                 {group.label}
               </h3>
               <div className="flex flex-wrap gap-2">

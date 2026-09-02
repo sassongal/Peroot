@@ -97,7 +97,7 @@ export function AutoChainBuilder({
         onClick={onClose}
       >
         <div
-          className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0f0f0f] border border-white/10 rounded-2xl mx-4"
+          className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-(--surface-panel) border border-(--glass-border) rounded-2xl mx-4"
           onClick={(e) => e.stopPropagation()}
         >
           <ChainPreview
@@ -119,7 +119,7 @@ export function AutoChainBuilder({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg max-h-[85vh] overflow-y-auto bg-[#0f0f0f] border border-white/10 rounded-2xl p-6 mx-4"
+        className="w-full max-w-lg max-h-[85vh] overflow-y-auto bg-(--surface-panel) border border-(--glass-border) rounded-2xl p-6 mx-4"
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -130,14 +130,16 @@ export function AutoChainBuilder({
               <Wand2 className="w-5 h-5 text-amber-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">בניית שרשרת אוטומטית</h3>
-              <p className="text-xs text-slate-400">תאר את המטרה הסופית ו-AI יבנה שרשרת פרומפטים</p>
+              <h3 className="text-lg font-semibold text-(--text-primary)">בניית שרשרת אוטומטית</h3>
+              <p className="text-xs text-(--text-muted)">
+                תאר את המטרה הסופית ו-AI יבנה שרשרת פרומפטים
+              </p>
             </div>
           </div>
           <button
             aria-label="סגור"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-slate-400 transition-colors"
+            className="p-2 rounded-full hover:bg-(--glass-bg) text-(--text-muted) transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -145,26 +147,26 @@ export function AutoChainBuilder({
 
         {/* Goal Input */}
         <div className="space-y-3">
-          <label className="text-sm font-medium text-slate-300">מה המטרה הסופית?</label>
+          <label className="text-sm font-medium text-(--text-secondary)">מה המטרה הסופית?</label>
           <textarea
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
             placeholder="לדוגמה: Newsletter שבועי בתחום הטכנולוגיה, כולל מחקר, כתיבת תוכן, subject lines ופוסט לסושיאל"
-            className="w-full h-28 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/30 resize-none"
+            className="w-full h-28 bg-(--glass-bg) border border-(--glass-border) rounded-xl px-4 py-3 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/30 resize-none"
             disabled={isGenerating}
           />
         </div>
 
         {/* Example Goals */}
         <div className="mt-4">
-          <p className="text-[11px] text-slate-500 mb-2">או בחר דוגמה:</p>
+          <p className="text-[11px] text-(--text-muted) mb-2">או בחר דוגמה:</p>
           <div className="flex flex-wrap gap-1.5">
             {EXAMPLE_GOALS.map((example) => (
               <button
                 key={example}
                 onClick={() => setGoal(example)}
                 disabled={isGenerating}
-                className="text-[11px] px-2.5 py-1.5 rounded-lg border border-white/5 text-slate-500 hover:text-amber-400 hover:border-amber-500/20 transition-colors disabled:opacity-50"
+                className="text-[11px] px-2.5 py-1.5 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-amber-400 hover:border-amber-500/20 transition-colors disabled:opacity-50"
               >
                 {example}
               </button>
@@ -181,10 +183,10 @@ export function AutoChainBuilder({
         )}
 
         {/* Generate Button */}
-        <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+        <div className="mt-6 pt-4 border-t border-(--glass-border) flex items-center justify-between">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition-colors"
+            className="px-5 py-2.5 rounded-xl border border-(--glass-border) text-(--text-muted) hover:bg-(--glass-bg) text-sm transition-colors"
           >
             ביטול
           </button>

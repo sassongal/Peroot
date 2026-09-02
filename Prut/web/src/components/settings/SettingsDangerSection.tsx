@@ -32,7 +32,7 @@ export function SettingsDangerSection({
         <h2 id="settings-danger-heading" className="text-xl font-bold text-red-400">
           אזור מסוכן
         </h2>
-        <p className="text-sm text-slate-400">פעולות שלא ניתן לבטל</p>
+        <p className="text-sm text-(--text-muted)">פעולות שלא ניתן לבטל</p>
       </header>
 
       <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20 space-y-4">
@@ -40,7 +40,7 @@ export function SettingsDangerSection({
           <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-semibold text-red-400">מחיקת חשבון</h3>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-(--text-muted)">
               מחיקת החשבון תסיר לצמיתות את כל הנתונים שלך כולל היסטוריה, ספרייה אישית ומועדפים.
               פעולה זו לא ניתנת לביטול.
             </p>
@@ -57,17 +57,17 @@ export function SettingsDangerSection({
             <span>מחק את החשבון שלי</span>
           </button>
         ) : (
-          <div className="space-y-3 p-4 bg-black/30 rounded-xl">
-            <p className="text-sm text-slate-300">הזן את כתובת האימייל שלך לאישור</p>
+          <div className="space-y-3 p-4 bg-(--glass-bg) rounded-xl">
+            <p className="text-sm text-(--text-secondary)">הזן את כתובת האימייל שלך לאישור</p>
             <input
               type="email"
               value={confirmEmail}
               onChange={(e) => setConfirmEmail(e.target.value)}
               placeholder="your@email.com"
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-red-500/50 transition-colors"
+              className="w-full bg-(--glass-bg) border border-(--glass-border) rounded-xl py-2.5 px-4 text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-red-500/50 transition-colors"
               dir="ltr"
             />
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-(--text-secondary)">
               כדי לאשר, הקלד <strong className="text-red-400">מחק את החשבון</strong>
             </p>
             <input
@@ -75,7 +75,7 @@ export function SettingsDangerSection({
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
               placeholder="הקלד כאן..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-red-500/50 transition-colors"
+              className="w-full bg-(--glass-bg) border border-(--glass-border) rounded-xl py-2.5 px-4 text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-red-500/50 transition-colors"
               dir="rtl"
             />
             <div className="flex gap-2">
@@ -86,7 +86,7 @@ export function SettingsDangerSection({
                   setDeleteConfirmText("");
                   setConfirmEmail("");
                 }}
-                className="cursor-pointer flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-medium rounded-xl transition-colors"
+                className="cursor-pointer flex-1 px-4 py-2.5 bg-(--glass-bg) hover:bg-(--glass-bg) text-(--text-secondary) font-medium rounded-xl transition-colors"
               >
                 ביטול
               </button>

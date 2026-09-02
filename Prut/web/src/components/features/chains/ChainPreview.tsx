@@ -169,33 +169,33 @@ export function ChainPreview({
           <button
             aria-label="חזרה"
             onClick={onBack}
-            className="p-2 rounded-full hover:bg-white/10 text-slate-400 transition-colors"
+            className="p-2 rounded-full hover:bg-(--glass-bg) text-(--text-muted) transition-colors"
             title="חזרה"
           >
             <ArrowRight className="w-5 h-5" />
           </button>
           <div>
-            <h3 className="text-lg font-semibold text-white">{chain.title}</h3>
+            <h3 className="text-lg font-semibold text-(--text-primary)">{chain.title}</h3>
             {chain.description && (
-              <p className="text-xs text-slate-400 mt-0.5">{chain.description}</p>
+              <p className="text-xs text-(--text-muted) mt-0.5">{chain.description}</p>
             )}
           </div>
         </div>
         <button
           aria-label="סגור"
           onClick={onClose}
-          className="p-2 rounded-full hover:bg-white/10 text-slate-400 transition-colors"
+          className="p-2 rounded-full hover:bg-(--glass-bg) text-(--text-muted) transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* Summary bar */}
-      <div className="flex items-center gap-3 mb-6 mt-3 text-xs text-slate-500">
+      <div className="flex items-center gap-3 mb-6 mt-3 text-xs text-(--text-muted)">
         <span>{chain.steps.length} שלבים</span>
         {globalVariables.length > 0 && (
           <>
-            <span className="text-slate-700">|</span>
+            <span className="text-(--text-muted)">|</span>
             <span>
               {globalVariables.length} משתנים: {globalVariables.map((v) => v.label).join(", ")}
             </span>
@@ -229,7 +229,7 @@ export function ChainPreview({
                   "border rounded-xl transition-all",
                   isEditing
                     ? "border-amber-500/40 bg-amber-500/3"
-                    : "border-white/10 bg-white/2 hover:bg-white/4",
+                    : "border-(--glass-border) bg-(--glass-bg) hover:bg-(--glass-bg)",
                   dragIndex === idx && "opacity-50 border-amber-500/30",
                 )}
                 draggable={!isEditing}
@@ -240,7 +240,7 @@ export function ChainPreview({
                 {/* Step Header */}
                 <div className="flex items-center gap-3 p-4">
                   {!isEditing && (
-                    <GripVertical className="w-4 h-4 text-slate-600 cursor-grab active:cursor-grabbing shrink-0" />
+                    <GripVertical className="w-4 h-4 text-(--text-muted) cursor-grab active:cursor-grabbing shrink-0" />
                   )}
 
                   {/* Step number badge */}
@@ -264,13 +264,13 @@ export function ChainPreview({
                     <input
                       value={step.title}
                       onChange={(e) => updateStep(idx, { title: e.target.value })}
-                      className="flex-1 bg-transparent text-sm text-white focus:outline-none border-b border-amber-500/30"
+                      className="flex-1 bg-transparent text-sm text-(--text-primary) focus:outline-none border-b border-amber-500/30"
                       autoFocus
                     />
                   ) : (
                     <button
                       onClick={() => toggleExpand(idx)}
-                      className="flex-1 text-start text-sm font-medium text-slate-200 truncate"
+                      className="flex-1 text-start text-sm font-medium text-(--text-primary) truncate"
                     >
                       {step.title}
                     </button>
@@ -288,7 +288,7 @@ export function ChainPreview({
 
                   {/* Input source */}
                   {step.input_from_step && !isEditing && (
-                    <span className="text-[10px] text-slate-500 shrink-0">
+                    <span className="text-[10px] text-(--text-muted) shrink-0">
                       קלט: שלב {step.input_from_step}
                     </span>
                   )}
@@ -307,7 +307,7 @@ export function ChainPreview({
                       <>
                         <button
                           onClick={() => toggleExpand(idx)}
-                          className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-(--glass-bg) text-(--text-muted) transition-colors"
                         >
                           {isExpanded ? (
                             <ChevronUp className="w-3.5 h-3.5" />
@@ -320,14 +320,14 @@ export function ChainPreview({
                             setEditingStepIdx(idx);
                             setExpandedSteps((prev) => new Set([...prev, idx]));
                           }}
-                          className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-amber-400 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-(--glass-bg) text-(--text-muted) hover:text-amber-400 transition-colors"
                           title="ערוך שלב"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => removeStep(idx)}
-                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-(--text-muted) hover:text-red-400 transition-colors"
                           title="הסר שלב"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -340,7 +340,7 @@ export function ChainPreview({
                 {/* Output description (always visible when collapsed) */}
                 {!isExpanded && !isEditing && step.output_description && (
                   <div className="px-4 pb-3 -mt-1">
-                    <p className="text-[11px] text-slate-500 truncate">
+                    <p className="text-[11px] text-(--text-muted) truncate">
                       פלט: {step.output_description}
                     </p>
                   </div>
@@ -348,11 +348,11 @@ export function ChainPreview({
 
                 {/* Expanded / Editing Content */}
                 {(isExpanded || isEditing) && (
-                  <div className="px-4 pb-4 space-y-3 border-t border-white/5 mt-1 pt-3">
+                  <div className="px-4 pb-4 space-y-3 border-t border-(--glass-border) mt-1 pt-3">
                     {/* Mode selector (editing) */}
                     {isEditing && (
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500 shrink-0">מצב:</span>
+                        <span className="text-[11px] text-(--text-muted) shrink-0">מצב:</span>
                         <div className="flex gap-1.5">
                           {(Object.keys(MODE_CONFIG) as ChainStepMode[]).map((mode) => {
                             const conf = MODE_CONFIG[mode];
@@ -365,7 +365,7 @@ export function ChainPreview({
                                   "flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] transition-colors",
                                   step.mode === mode
                                     ? conf.color
-                                    : "border-white/5 text-slate-600 hover:text-slate-400",
+                                    : "border-(--glass-border) text-(--text-muted) hover:text-(--text-secondary)",
                                 )}
                               >
                                 <Icon className="w-3 h-3" />
@@ -382,17 +382,17 @@ export function ChainPreview({
                       <textarea
                         value={step.prompt}
                         onChange={(e) => updateStep(idx, { prompt: e.target.value })}
-                        className="w-full h-40 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20 resize-none"
+                        className="w-full h-40 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-3 py-2 text-sm text-(--text-secondary) placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/20 resize-none"
                         placeholder="הפרומפט המלא..."
                       />
                     ) : (
                       <div className="relative">
-                        <pre className="text-xs text-slate-400 leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto bg-black/20 rounded-lg p-3 border border-white/5">
+                        <pre className="text-xs text-(--text-muted) leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto bg-(--glass-bg) rounded-lg p-3 border border-(--glass-border)">
                           {step.prompt}
                         </pre>
                         <button
                           onClick={() => handleCopyPrompt(step.prompt)}
-                          className="absolute top-2 left-2 p-1.5 rounded-md bg-black/50 hover:bg-white/10 text-slate-500 hover:text-white transition-colors"
+                          className="absolute top-2 left-2 p-1.5 rounded-md bg-black/50 hover:bg-(--glass-bg) text-(--text-muted) hover:text-(--text-primary) transition-colors"
                           title="העתק"
                         >
                           <Copy className="w-3 h-3" />
@@ -404,7 +404,7 @@ export function ChainPreview({
                     {isEditing && (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-slate-500">משתנים:</span>
+                          <span className="text-[11px] text-(--text-muted)">משתנים:</span>
                           <button
                             onClick={() => {
                               const newVars: ChainVariable[] = [
@@ -436,7 +436,7 @@ export function ChainPreview({
                                 updateStep(idx, { variables: newVars });
                               }}
                               placeholder="תווית"
-                              className="flex-1 bg-black/30 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-amber-500/20"
+                              className="flex-1 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-2 py-1.5 text-xs text-(--text-secondary) focus:outline-none focus:border-amber-500/20"
                             />
                             <input
                               value={v.default || ""}
@@ -446,14 +446,14 @@ export function ChainPreview({
                                 updateStep(idx, { variables: newVars });
                               }}
                               placeholder="ברירת מחדל"
-                              className="flex-1 bg-black/30 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-amber-500/20"
+                              className="flex-1 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-2 py-1.5 text-xs text-(--text-secondary) focus:outline-none focus:border-amber-500/20"
                             />
                             <button
                               onClick={() => {
                                 const newVars = step.variables.filter((_, i) => i !== vi);
                                 updateStep(idx, { variables: newVars });
                               }}
-                              className="p-1 rounded hover:bg-red-500/10 text-slate-600 hover:text-red-400 transition-colors"
+                              className="p-1 rounded hover:bg-red-500/10 text-(--text-muted) hover:text-red-400 transition-colors"
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -465,17 +465,17 @@ export function ChainPreview({
                     {/* Output description */}
                     {isEditing ? (
                       <div>
-                        <span className="text-[11px] text-slate-500">פלט צפוי:</span>
+                        <span className="text-[11px] text-(--text-muted)">פלט צפוי:</span>
                         <input
                           value={step.output_description}
                           onChange={(e) => updateStep(idx, { output_description: e.target.value })}
-                          className="w-full mt-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500/20"
+                          className="w-full mt-1 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-3 py-2 text-xs text-(--text-secondary) focus:outline-none focus:border-amber-500/20"
                           placeholder="תיאור הפלט הצפוי..."
                         />
                       </div>
                     ) : (
                       step.output_description && (
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[11px] text-(--text-muted)">
                           פלט צפוי: {step.output_description}
                         </p>
                       )
@@ -506,14 +506,14 @@ export function ChainPreview({
       {/* Add Step */}
       <button
         onClick={addStep}
-        className="w-full mt-4 py-3 rounded-xl border border-dashed border-white/10 text-slate-500 hover:text-amber-400 hover:border-amber-500/30 transition-colors flex items-center justify-center gap-2 text-sm"
+        className="w-full mt-4 py-3 rounded-xl border border-dashed border-(--glass-border) text-(--text-muted) hover:text-amber-400 hover:border-amber-500/30 transition-colors flex items-center justify-center gap-2 text-sm"
       >
         <Plus className="w-4 h-4" />
         הוסף שלב
       </button>
 
       {/* Footer Actions */}
-      <div className="flex items-center justify-between gap-3 mt-6 pt-4 border-t border-white/10">
+      <div className="flex items-center justify-between gap-3 mt-6 pt-4 border-t border-(--glass-border)">
         <div className="flex items-center gap-2">
           {onRun && (
             <button

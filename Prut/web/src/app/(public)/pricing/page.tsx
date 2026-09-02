@@ -369,7 +369,7 @@ export default function PricingPage() {
                     ) : feature.free ? (
                       <Check className="w-4 h-4 text-green-400" />
                     ) : (
-                      <X className="w-4 h-4 text-slate-600" />
+                      <X className="w-4 h-4 text-(--text-muted)" />
                     )}
                   </div>
                   <div className="p-3 md:p-4 flex items-center justify-center">
@@ -380,7 +380,7 @@ export default function PricingPage() {
                     ) : feature.pro ? (
                       <Check className="w-4 h-4 text-amber-400" />
                     ) : (
-                      <X className="w-4 h-4 text-slate-600" />
+                      <X className="w-4 h-4 text-(--text-muted)" />
                     )}
                   </div>
                 </div>

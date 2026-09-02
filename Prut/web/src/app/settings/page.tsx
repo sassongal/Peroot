@@ -244,7 +244,7 @@ export default function SettingsPage() {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4">
-          <Shield className="w-16 h-16 text-slate-600 mx-auto" />
+          <Shield className="w-16 h-16 text-(--text-muted) mx-auto" />
           <h1 className="text-2xl font-bold text-foreground">נדרשת התחברות</h1>
           <p className="text-muted-foreground">עליך להתחבר כדי לגשת להגדרות החשבון</p>
           <Link

@@ -66,13 +66,13 @@ async function RecentBlogPostsContent() {
                 </span>
               )}
               {post.published_at && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                <div className="flex items-center gap-1 text-[10px] text-(--text-muted)">
                   <Calendar className="w-3 h-3 shrink-0" />
                   <span>{formatDateHe(post.published_at)}</span>
                 </div>
               )}
               {post.read_time && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-600">
+                <div className="flex items-center gap-1 text-[10px] text-(--text-muted)">
                   <Clock className="w-3 h-3 shrink-0" />
                   <span>{post.read_time}</span>
                 </div>

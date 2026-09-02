@@ -121,7 +121,7 @@ export function TagNodePanel({
                   >
                     {p.title}
                   </button>
-                  <span className="text-[10px] text-slate-400 shrink-0">
+                  <span className="text-[10px] text-(--text-muted) shrink-0">
                     {CAPABILITY_LABELS[cap]}
                   </span>
                   {nodeType === "tag" && (

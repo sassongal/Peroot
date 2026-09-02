@@ -26,15 +26,15 @@ export function SettingsDataSection({
         <h2 id="settings-data-heading" className="text-xl font-bold">
           נתונים ופרטיות
         </h2>
-        <p className="text-sm text-slate-400">נהל את הנתונים שלך</p>
+        <p className="text-sm text-(--text-muted)">נהל את הנתונים שלך</p>
       </header>
 
-      <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-3">
+      <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
         <div className="flex items-start gap-3">
           <Download className="w-5 h-5 text-blue-400 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-semibold">ייצוא נתונים</h3>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-(--text-muted)">
               הורד את כל הנתונים שלך כקובץ JSON - כולל פרופיל, היסטוריה, ספרייה, מועדפים, סטטיסטיקות
               ויומן פעילות
             </p>
@@ -55,12 +55,12 @@ export function SettingsDataSection({
         </button>
       </div>
 
-      <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-3">
+      <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
         <div className="flex items-start gap-3">
           <History className="w-5 h-5 text-orange-400 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-semibold">מחיקת היסטוריה</h3>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-(--text-muted)">
               מחק את כל היסטוריית השיפורים שלך ({historyLength} פריטים)
             </p>
           </div>

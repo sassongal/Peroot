@@ -49,7 +49,7 @@ function CycleCard<T extends string | number>({
     <button
       type="button"
       onClick={() => onChange(options[(current + 1) % options.length].value)}
-      className="flex flex-col items-center gap-1 p-3 rounded-xl border border-border bg-secondary hover:bg-white/6 transition-colors text-center"
+      className="flex flex-col items-center gap-1 p-3 rounded-xl border border-border bg-secondary hover:bg-(--glass-bg) transition-colors text-center"
       aria-label={`${label}: ${currentLabel}. לחץ להחלפה`}
     >
       <span className="text-[10px] text-muted-foreground">{label}</span>
@@ -76,7 +76,7 @@ function ToggleCard({
         "flex flex-col items-center gap-1 p-3 rounded-xl border transition-colors text-center",
         active
           ? "border-amber-500/50 bg-amber-500/10 text-amber-400"
-          : "border-border bg-secondary hover:bg-white/6 text-muted-foreground",
+          : "border-border bg-secondary hover:bg-(--glass-bg) text-muted-foreground",
       ].join(" ")}
     >
       <span className="text-sm font-semibold">{label}</span>
@@ -305,7 +305,7 @@ export function A11yWidget() {
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400",
           hasActivePrefs
             ? "bg-amber-500 text-black hover:bg-amber-400"
-            : "bg-slate-700 text-white hover:bg-slate-600 dark:hover:bg-slate-800 dark:hover:bg-slate-700",
+            : "bg-slate-700 dark:bg-slate-800 text-white hover:bg-slate-600 dark:hover:bg-slate-700",
         ].join(" ")}
       >
         <svg
