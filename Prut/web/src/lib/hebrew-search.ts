@@ -10,10 +10,27 @@ const HEBREW_PREFIXES = ["ה", "ו", "ב", "ל", "מ", "ש", "כ"];
 
 // Hebrew points (niqqud + cantillation range) — stripped so "פֵּרוּט" matches "פרוט".
 const NIQQUD_RE = /[֑-ׇ]/g;
+// Arabic tashkeel (fathah, kasrah, shadda, sukun, tanwin, superscript alef)
+// and tatweel: "كِتَاب" and "كتاب" are one word (languages spec B5).
+const TASHKEEL_RE = /[\u064B-\u065F\u0670\u0640]/g;
 
-/** Lowercase + strip niqqud. The shared base every matcher builds on. */
+/**
+ * Lowercase + strip niqqud. The shared base every matcher builds on.
+ *
+ * Also folds the spellings a search should not care about in the other
+ * output languages: Arabic hamza forms (أ إ آ → ا), final taa marbuta to
+ * haa (ة → ه) and alef maqsura to yaa (ى → ي), tashkeel stripped; Russian
+ * ё → е, which people type both ways.
+ */
 export function normalizeHebrew(text: string): string {
-  return text.toLowerCase().replace(NIQQUD_RE, "");
+  return text
+    .toLowerCase()
+    .replace(NIQQUD_RE, "")
+    .replace(TASHKEEL_RE, "")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/ё/g, "е");
 }
 
 /**
