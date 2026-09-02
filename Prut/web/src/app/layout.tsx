@@ -209,11 +209,20 @@ export default async function RootLayout({
         {/* Inline blocking script — intentionally NOT using next/script.
             Must execute synchronously before first paint to read the saved
             theme class from localStorage and apply it, preventing a flash of
-            wrong-theme content (FOUC). Content is a static string, not
-            user-controlled, so dangerouslySetInnerHTML is safe here. */}
+            wrong-theme content (FOUC).
+
+            It has to REMOVE the other class, not just add its own. The server
+            renders <html className="dark">, so an add-only script left a light
+            mode user on `class="dark light"`: `.dark` carries the dark palette
+            and `.light` matches nothing (the light palette lives on bare
+            :root), so the page painted dark until the React effect caught up.
+            Observed in production as a dark blog page under a light setting.
+
+            Content is a static string, not user-controlled, so
+            dangerouslySetInnerHTML is safe here. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('peroot-theme');if(t)document.documentElement.classList.add(t)}catch(e){}`,
+            __html: `try{var t=localStorage.getItem('peroot-theme');var r=document.documentElement;if(t==='light'){r.classList.remove('dark');r.classList.add('light')}else if(t==='dark'){r.classList.remove('light');r.classList.add('dark')}}catch(e){}`,
           }}
         />
         {/* Accessibility preferences FOUC prevention — applies saved a11y CSS
