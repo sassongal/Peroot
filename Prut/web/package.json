@@ -6,6 +6,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
+    "engines:sync": "tsx scripts/sync-prompt-engines.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

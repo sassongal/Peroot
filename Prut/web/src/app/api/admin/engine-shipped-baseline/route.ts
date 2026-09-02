@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { withAdmin } from "@/lib/api-middleware";
-import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
-import { getShippedImageEngineBaseline } from "@/lib/engines/image-engine";
-import { getShippedVideoEngineBaseline } from "@/lib/engines/video-engine";
+import { parseCapabilityMode } from "@/lib/capability-mode";
+import { shippedEngineBaselines } from "@/lib/engines/shipped-baselines";
 
 /**
- * GET /api/admin/engine-shipped-baseline?mode=video_generation|image_generation
- * Returns in-repo default templates for drift comparison with `prompt_engines`.
+ * GET /api/admin/engine-shipped-baseline?mode=<capability mode>
+ * Returns the in-repo default templates for drift comparison with
+ * `prompt_engines`, for every mode (it used to cover image and video only).
  */
 export const GET = withAdmin(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -17,15 +17,9 @@ export const GET = withAdmin(async (req) => {
   }
 
   const mode = parseCapabilityMode(modeRaw);
-  if (mode === CapabilityMode.VIDEO_GENERATION) {
-    return NextResponse.json({ ok: true, baseline: getShippedVideoEngineBaseline() });
+  const baseline = shippedEngineBaselines()[mode];
+  if (!baseline) {
+    return NextResponse.json({ error: `No shipped baseline for ${mode}` }, { status: 400 });
   }
-  if (mode === CapabilityMode.IMAGE_GENERATION) {
-    return NextResponse.json({ ok: true, baseline: getShippedImageEngineBaseline() });
-  }
-
-  return NextResponse.json(
-    { error: "Only video_generation and image_generation have shipped baselines here" },
-    { status: 400 }
-  );
+  return NextResponse.json({ ok: true, baseline });
 });

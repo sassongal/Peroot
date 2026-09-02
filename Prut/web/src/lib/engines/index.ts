@@ -1,5 +1,4 @@
-
-import { CapabilityMode, capabilityModeToDbMode, parseCapabilityMode } from "../capability-mode";
+import { CapabilityMode, parseCapabilityMode } from "../capability-mode";
 import { PromptEngine, EngineConfig } from "./types";
 import { StandardEngine } from "./standard-engine";
 import { ResearchEngine } from "./research-engine";
@@ -14,42 +13,52 @@ const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
 export async function getEngine(mode: CapabilityMode): Promise<PromptEngine> {
   const now = Date.now();
-  
-  if (engineCache[mode] && (now - engineCache[mode].timestamp < CACHE_TTL)) {
+
+  if (engineCache[mode] && now - engineCache[mode].timestamp < CACHE_TTL) {
     return createEngineInstance(mode, engineCache[mode].config);
   }
 
   const supabase = await createClient();
-  
+
   // 1. Fetch Global Identity (Shared across all engines)
   const { data: globalIdentityRow } = await supabase
-    .from('ai_prompts')
-    .select('prompt')
-    .eq('prompt_key', 'global_system_identity')
+    .from("ai_prompts")
+    .select("prompt")
+    .eq("prompt_key", "global_system_identity")
     .maybeSingle();
-  
+
   const globalIdentity = globalIdentityRow?.prompt || "";
 
   // 2. Fetch Engine Specific Config
+  //
+  // The rows are keyed by the enum value itself ("STANDARD"), not the
+  // lowercased form used for usage logging. This lookup used
+  // capabilityModeToDbMode() until 2026-09-02, matched nothing, and every
+  // engine silently ran on its code default while the admin editor edited
+  // rows nobody read. scripts/sync-prompt-engines.ts keeps the rows in step
+  // with the shipped templates so switching the lookup on changed nothing
+  // for users except the global identity finally being injected.
   const { data: config } = await supabase
-    .from('prompt_engines')
-    .select('*')
-    .eq('mode', capabilityModeToDbMode(mode))
-    .eq('is_active', true)
+    .from("prompt_engines")
+    .select("*")
+    .eq("mode", mode)
+    .eq("is_active", true)
     .maybeSingle();
 
-  const engineConfig: EngineConfig | undefined = config ? {
-      mode: parseCapabilityMode(config.mode),
-      name: config.name,
-      description: config.description,
-      system_prompt_template: config.system_prompt_template,
-      user_prompt_template: config.user_prompt_template,
-      output_format_instruction: config.output_format_instruction,
-      default_params: config.default_params,
-      is_active: config.is_active,
-      id: config.id,
-      global_system_identity: globalIdentity
-  } : undefined;
+  const engineConfig: EngineConfig | undefined = config
+    ? {
+        mode: parseCapabilityMode(config.mode),
+        name: config.name,
+        description: config.description,
+        system_prompt_template: config.system_prompt_template,
+        user_prompt_template: config.user_prompt_template,
+        output_format_instruction: config.output_format_instruction,
+        default_params: config.default_params,
+        is_active: config.is_active,
+        id: config.id,
+        global_system_identity: globalIdentity,
+      }
+    : undefined;
 
   if (engineConfig) {
     engineCache[mode] = { config: engineConfig, timestamp: now };
@@ -79,7 +88,7 @@ export function invalidateEngineCache(mode?: CapabilityMode) {
     delete engineCache[mode];
   } else {
     // Clear all
-    Object.keys(engineCache).forEach(key => delete engineCache[key]);
+    Object.keys(engineCache).forEach((key) => delete engineCache[key]);
   }
 }
 

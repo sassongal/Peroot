@@ -331,6 +331,20 @@ prompts through Peroot. Plan: `docs/plans/2026-08-29-peroot-for-agents.md` (v1.0
   are exempt in `proxy.ts` (bearer/PKCE auth, no cookies). `/api/oauth/authorize`
   (the consent form) is deliberately NOT exempt.
 
+## Engine templates: the row wins, so keep the row current (2026-09-02)
+
+`getEngine()` prefers the active `prompt_engines` row over the code default in
+`src/lib/engines/*-engine.ts`. Until 2026-09-02 the lookup lowercased the mode
+against uppercase rows, matched nothing, and every engine ran on its code
+default while the admin editor edited rows nobody read (and the
+`global_system_identity` was never injected). The lookup is fixed, the rows
+were synced to the shipped templates (old text kept in `prompt_engine_history`).
+
+Rule: after changing an engine's default template in code, run
+`npm run engines:sync`, apply and commit the migration it writes. Otherwise the
+change never reaches users. The admin drift view
+(`/api/admin/engine-shipped-baseline?mode=`) compares a row with the code.
+
 ## Background jobs (style analysis, achievements)
 
 `background_jobs` table → `/api/jobs/process` worker (hourly vercel.json cron
