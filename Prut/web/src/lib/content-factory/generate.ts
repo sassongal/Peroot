@@ -11,6 +11,7 @@
  *         gemini-2.5-flash-lite for prompt batch generation (cost savings).
  */
 
+import { stripAiDashes } from "@/lib/text/dashes";
 import { generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -54,16 +55,8 @@ const BlogPostSchema = z.object({
     .describe("2-3 פרומפטים רלוונטיים מהספרייה"),
 });
 
-// Project law: no em/en dashes in anything a reader sees. Models lean on
-// them and it reads machine-made; scrub deterministically so the law holds
-// even when the model ignores the style instructions.
-function stripAiDashes(text: string): string {
-  return text
-    .replace(/\s*\u2014\s*/g, ", ")
-    .replace(/(\d)\s*\u2013\s*(\d)/g, "$1-$2")
-    .replace(/\s*\u2013\s*/g, ", ")
-    .replace(/, ,/g, ",");
-}
+// Project law: no em/en dashes in anything a reader sees. One scrubber for
+// the whole product lives in @/lib/text/dashes.
 
 /** Clamp soft limits the schema deliberately does not enforce. */
 function clampBlogPost(post: GeneratedBlogPost): GeneratedBlogPost {

@@ -182,7 +182,7 @@ const AR: LocaleStrings = {
 const RU: LocaleStrings = {
   name: "Russian",
   register:
-    "Use the formal register throughout: address the reader as Вы, never ты. Use the imperative for instructions (напишите, проанализируйте) and Russian quotation marks («»).",
+    'Use the formal register throughout: address the reader as Вы, never ты. Use the imperative for instructions (напишите, проанализируйте) and Russian quotation marks («»). Never write the copula as a dash between Вы and the noun: write "Вы опытный эксперт" or "Вы являетесь экспертом".',
   headers: {
     role: "Роль и идентичность",
     task: "Задача",

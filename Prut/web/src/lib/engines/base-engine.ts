@@ -275,7 +275,7 @@ ${alignment}
       arabic:
         "7. Write Modern Standard Arabic (الفصحى), never a dialect. Use Western digits (0-9), not Arabic-Indic digits (٠-٩). Use Arabic punctuation (، ؛ ؟). Address the model directly in the imperative (اكتب، حلّل).",
       russian:
-        "7. Use the formal register throughout: address the reader as Вы, never ты. Use the imperative for instructions (напишите, проанализируйте) and Russian quotation marks («»). Keep one spelling of ё/е consistently.",
+        '7. Use the formal register throughout: address the reader as Вы, never ты. Use the imperative for instructions (напишите, проанализируйте) and Russian quotation marks («»). Keep one spelling of ё/е consistently. Never write the copula as a dash between Вы and the noun: write "Вы опытный эксперт" or "Вы являетесь экспертом".',
       english:
         "7. Use one variety of English consistently (American spelling: organize, color). Do not mix British and American forms.",
     };

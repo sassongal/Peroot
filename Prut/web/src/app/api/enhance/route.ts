@@ -1,3 +1,4 @@
+import { stripAiDashes, scrubDashesInResponse } from "@/lib/text/dashes";
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import { isIP } from "node:net";
@@ -1041,7 +1042,10 @@ export async function POST(req: Request) {
         : {}),
       onFinish: async (completion) => {
         const durationMs = Date.now() - startTime;
-        const textCopy = completion.text;
+        // The client received the scrubbed stream; persist and cache the same
+        // text, so history, the enhance cache and the Connect API agree with
+        // what was shown.
+        const textCopy = stripAiDashes(completion.text);
         const usageCopy = completion.usage;
         const finishReasonCopy = (completion as { finishReason?: string }).finishReason;
 
@@ -1247,7 +1251,8 @@ export async function POST(req: Request) {
       },
     });
 
-    const streamResp = result.toTextStreamResponse();
+    // Project law: no em or en dashes reach a reader, whatever the model did.
+    const streamResp = scrubDashesInResponse(result.toTextStreamResponse());
     if (guestId && guestNeedsCookie) {
       streamResp.headers.append("Set-Cookie", buildGuestCookieHeader(guestId));
     }
