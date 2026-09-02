@@ -114,7 +114,7 @@ export function LiveInputScorePill({ score, onOpenBreakdown }: LiveInputScorePil
       {/* Desktop hover tooltip — top 3 missing items */}
       {showTooltip && tooltipItems.length > 0 && (
         <div
-          className="hidden md:block absolute top-full mt-2 left-0 right-0 min-w-[260px] z-50 bg-(--bg-primary) border border-(--glass-border) rounded-xl shadow-lg p-3 space-y-2"
+          className="hidden md:block absolute top-full mt-2 left-0 right-0 min-w-[260px] z-50 bg-(--surface-panel) border border-(--glass-border) rounded-xl shadow-lg p-3 space-y-2"
           dir="rtl"
         >
           <p className="text-[10px] font-bold text-(--text-muted) uppercase tracking-wider mb-1">

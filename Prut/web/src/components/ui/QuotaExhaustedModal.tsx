@@ -77,7 +77,7 @@ export function QuotaExhaustedModal({
           </div>
 
           {refreshAt && (
-            <div className="w-full flex flex-col items-center gap-2 py-4 px-4 rounded-2xl bg-(--glass-surface) border border-(--glass-border)">
+            <div className="w-full flex flex-col items-center gap-2 py-4 px-4 rounded-2xl bg-(--glass-bg) border border-(--glass-border)">
               <span className="text-xs text-(--text-muted)">חידוש המכסה בעוד</span>
               <CountdownTimer refreshAt={refreshAt} />
             </div>

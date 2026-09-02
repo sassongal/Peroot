@@ -46,7 +46,7 @@ export function AttachmentDetailsDrawer({ block, onClose, onRefreshEnrich, onRem
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 20, opacity: 0 }}
-          className="bg-(--surface-card) rounded-2xl max-w-2xl w-full my-8 shadow-2xl overflow-hidden border border-(--glass-border)"
+          className="bg-(--surface-panel) rounded-2xl max-w-2xl w-full my-8 shadow-2xl overflow-hidden border border-(--glass-border)"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-4 p-5 border-b border-(--glass-border)">
