@@ -58,6 +58,9 @@ export default function SettingsPage() {
     router.replace(id === "profile" ? "/settings" : `/settings?tab=${id}`, { scroll: false });
   };
   const [isAdmin, setIsAdmin] = useState(false);
+  const [shareLanguage, setShareLanguage] = useState<"hebrew" | "english" | "arabic" | "russian">(
+    "hebrew",
+  );
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
@@ -119,7 +122,9 @@ export default function SettingsPage() {
           const [{ data: profile }, { data: settings }] = await Promise.all([
             supabase
               .from("profiles")
-              .select("display_name, credits_balance, credits_refreshed_at")
+              .select(
+                "display_name, credits_balance, credits_refreshed_at, preferred_output_language",
+              )
               .eq("id", user.id)
               .single(),
             supabase.from("site_settings").select("daily_free_limit").single(),
@@ -131,6 +136,8 @@ export default function SettingsPage() {
             "";
           setDisplayName(loadedName);
           savedNameRef.current = loadedName.trim();
+          const lang = profile?.preferred_output_language;
+          if (lang === "english" || lang === "arabic" || lang === "russian") setShareLanguage(lang);
           setCredits({
             balance: profile?.credits_balance ?? 0,
             dailyLimit: resolveDailyLimit(settings?.daily_free_limit, QUOTA_FALLBACK.freeDaily),
@@ -554,6 +561,7 @@ export default function SettingsPage() {
             {activeSection === "referral" && (
               <SettingsReferralSection
                 referral={referral}
+                language={shareLanguage}
                 referralLoaded={referralLoaded}
                 referralCopied={referralCopied}
                 onReferralCopied={setReferralCopied}

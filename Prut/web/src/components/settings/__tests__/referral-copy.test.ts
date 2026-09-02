@@ -43,3 +43,27 @@ describe("referral copy", () => {
     expect(src).toMatch(/\/\?ref=\$\{code\}/);
   });
 });
+
+describe("the invitation follows the inviter's language (spec C.10)", () => {
+  it("is Hebrew by default with the plain referral link", async () => {
+    const { shareMessage } = await import("../SettingsReferralSection");
+    const msg = shareMessage("ABC123");
+    expect(msg).toContain("/?ref=ABC123");
+    expect(msg).not.toContain("lang=");
+    expect(msg).toMatch(/[֐-׿]/);
+  });
+
+  it("carries the language in the link so the friend starts in it too", async () => {
+    const { shareMessage } = await import("../SettingsReferralSection");
+    const ru = shareMessage("ABC123", "russian");
+    expect(ru).toContain("/?ref=ABC123&lang=ru");
+    expect(ru).toMatch(/[Ѐ-ӿ]/);
+    expect(ru).not.toMatch(/[֐-׿]/);
+    const ar = shareMessage("ABC123", "arabic");
+    expect(ar).toContain("&lang=ar");
+    expect(ar).toMatch(/[؀-ۿ]/);
+    const en = shareMessage("ABC123", "english");
+    expect(en).toContain("&lang=en");
+    for (const m of [ru, ar, en]) expect(m).not.toMatch(/[–—]/);
+  });
+});

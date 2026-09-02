@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { JobType, JobPayload } from "@/lib/jobs/queue";
+import { JobType, JobPayload, enqueueJob } from "@/lib/jobs/queue";
 import { logger } from "@/lib/logger";
 
 import { createServiceClient } from "@/lib/supabase/service";
@@ -43,6 +43,25 @@ export async function GET(req: Request) {
     if (sweepErr) logger.error("[Worker] referral sweep failed:", sweepErr);
     else if (sweep && (sweep.granted > 0 || sweep.activated > 0)) {
       logger.info("[Worker] referral sweep:", sweep);
+      // A grant is the inviter's moment: queue an achievement check for
+      // every inviter whose friend was just activated (inviter_first).
+      if (sweep.granted > 0) {
+        const since = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        const { data: fresh } = await supabase
+          .from("referral_redemptions")
+          .select("code_id")
+          .gte("granted_at", since);
+        const codeIds = [...new Set((fresh ?? []).map((r) => r.code_id as string))];
+        if (codeIds.length > 0) {
+          const { data: owners } = await supabase
+            .from("referral_codes")
+            .select("user_id")
+            .in("id", codeIds);
+          for (const owner of owners ?? []) {
+            await enqueueJob("achievement_check", { userId: owner.user_id as string });
+          }
+        }
+      }
     }
   } catch (e) {
     logger.error("[Worker] referral sweep threw:", e);

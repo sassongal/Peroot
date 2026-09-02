@@ -25,8 +25,29 @@ const SITE_URL = "https://www.peroot.space";
  * the proxy into a cookie and redeemed automatically at signup, so the link
  * does all of that by itself. Every abandoned step was a referral lost.
  */
-function shareMessage(code: string): string {
-  return `הצטרף לפירוט, מחולל הפרומפטים בעברית: ${SITE_URL}/?ref=${code}`;
+type ShareLanguage = "hebrew" | "english" | "arabic" | "russian";
+
+/**
+ * The invitation follows the inviter's own output language (spec C.10): a
+ * Russian writer forwards a Russian line, and the link also presets that
+ * language for the friend (`?lang=`), so the first enhancement is already
+ * in the language they share.
+ */
+export function shareMessage(code: string, language: ShareLanguage = "hebrew"): string {
+  const link =
+    language === "hebrew"
+      ? `${SITE_URL}/?ref=${code}`
+      : `${SITE_URL}/?ref=${code}&lang=${language === "english" ? "en" : language === "arabic" ? "ar" : "ru"}`;
+  switch (language) {
+    case "english":
+      return `Join me on Peroot, the AI prompt generator from Israel: ${link}`;
+    case "arabic":
+      return `انضم إليّ في بيروت، مولّد البرومبتات بالذكاء الاصطناعي من إسرائيل: ${link}`;
+    case "russian":
+      return `Присоединяйтесь ко мне в Peroot, генераторе промптов с ИИ из Израиля: ${link}`;
+    default:
+      return `הצטרף לפירוט, מחולל הפרומפטים בעברית: ${link}`;
+  }
 }
 
 interface ReferralInfo {
@@ -46,6 +67,8 @@ interface ReferralInfo {
 
 interface SettingsReferralSectionProps {
   referral: ReferralInfo | null;
+  /** The inviter's preferred output language; the invitation is written in it. */
+  language?: ShareLanguage;
   referralLoaded: boolean;
   referralCopied: boolean;
   onReferralCopied: (v: boolean) => void;
@@ -57,6 +80,7 @@ interface SettingsReferralSectionProps {
 
 export function SettingsReferralSection({
   referral,
+  language = "hebrew",
   referralLoaded,
   referralCopied,
   onReferralCopied,
@@ -159,7 +183,7 @@ export function SettingsReferralSection({
           )}
           <div className="flex gap-2">
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(shareMessage(referral.code))}`}
+              href={`https://wa.me/?text=${encodeURIComponent(shareMessage(referral.code, language))}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm font-medium transition-colors border border-green-600/20"
@@ -169,7 +193,7 @@ export function SettingsReferralSection({
             <button
               type="button"
               onClick={() => {
-                void copyText(shareMessage(referral.code)).then((ok) => {
+                void copyText(shareMessage(referral.code, language)).then((ok) => {
                   if (!ok) {
                     toast.error("ההעתקה נחסמה, סמנו והעתיקו ידנית");
                     return;

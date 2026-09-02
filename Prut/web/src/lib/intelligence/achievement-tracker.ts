@@ -10,6 +10,7 @@ import { logger } from "@/lib/logger";
  * - first_enhance, power_user_50, power_user_100 (usage milestones)
  * - streak_3, streak_7, streak_30 (engagement streaks)
  * - chain_master, share_first, explorer, context_pro (feature usage)
+ * - inviter_first (a referred friend made a first enhancement)
  *
  * Every method takes an optional `db` client. Cookie-authed web routes omit it
  * (RLS scopes to the user). The background-jobs worker MUST pass the service
@@ -42,7 +43,32 @@ export const AchievementTracker = {
       this.checkStreakMilestones(userId, db),
       this.checkFeatureMilestones(userId, db),
       this.checkUsageMilestones(userId, db),
+      this.checkReferralMilestones(userId, db),
     ]);
+  },
+
+  /**
+   * Referral milestone: inviter_first, awarded once a friend this user
+   * brought has made a first enhancement (granted_at is set by the
+   * referral sweep at that moment). The worker enqueues a check for the
+   * inviter right after the sweep, and it is also re-checked on the
+   * inviter's own next action, so a missed enqueue only delays it.
+   */
+  async checkReferralMilestones(userId: string, db?: SupabaseClient) {
+    const supabase = db ?? (await createClient());
+    const { data: codes } = await supabase
+      .from("referral_codes")
+      .select("id")
+      .eq("user_id", userId);
+    const ids = (codes ?? []).map((c) => c.id as string);
+    if (ids.length === 0) return;
+    const { data: granted } = await supabase
+      .from("referral_redemptions")
+      .select("id")
+      .in("code_id", ids)
+      .not("granted_at", "is", null)
+      .limit(1);
+    if (granted && granted.length > 0) await this.award(userId, "inviter_first", db);
   },
 
   /**
