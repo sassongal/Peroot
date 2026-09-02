@@ -3,6 +3,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { isMaintenanceMode } from "@/lib/maintenance";
+import { HEBREW_SLUG_TO_ENGLISH } from "@/lib/category-slugs";
 
 // In-memory maintenance mode cache (avoids Redis call on every request)
 let maintenanceCache: { value: boolean; expires: number } | null = null;
@@ -153,6 +154,27 @@ export function validateCsrfOrigin(request: NextRequest): NextResponse | null {
   return null;
 }
 
+/**
+ * `/prompts/<non-ASCII slug>[/rest]` → where it should go, or null when the
+ * path is fine as it is. Exported for the tests.
+ */
+export function resolveLegacyPromptSlug(
+  pathname: string,
+): { to: string; status: 301 | 302 } | null {
+  const m = /^\/prompts\/([^/]+)(\/.*)?$/.exec(pathname);
+  if (!m) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(m[1]);
+  } catch {
+    return { to: "/prompts", status: 302 };
+  }
+  if (/^[\x21-\x7e]+$/.test(decoded)) return null;
+  const english = HEBREW_SLUG_TO_ENGLISH[decoded];
+  if (english) return { to: `/prompts/${english}${m[2] ?? ""}`, status: 301 };
+  return { to: "/prompts", status: 302 };
+}
+
 export async function proxy(request: NextRequest) {
   // CSRF protection: validate origin for state-changing API requests
   const csrfResponse = validateCsrfOrigin(request);
@@ -169,6 +191,18 @@ export async function proxy(request: NextRequest) {
   // legitimate route contains these characters, so answer a clean 404 here.
   if (pathname.includes("\\") || /%5c/i.test(pathname) || /[\x00-\x1f]/.test(pathname)) {
     return new NextResponse("Not Found", { status: 404 });
+  }
+
+  // Legacy Hebrew category slugs (/prompts/שיווק) must never reach the ISR
+  // page: Next tags the cached page with its decoded path in the
+  // x-next-cache-tags header, and a non-ASCII header value throws
+  // ERR_INVALID_CHAR before the page's own redirect can run (Sentry
+  // JAVASCRIPT-NEXTJS-P, 2026-09-02). Known slugs get their permanent
+  // English address here; anything else non-ASCII under /prompts goes to
+  // the catalogue instead of a 500.
+  const legacySlug = resolveLegacyPromptSlug(pathname);
+  if (legacySlug) {
+    return NextResponse.redirect(new URL(legacySlug.to, request.url), legacySlug.status);
   }
 
   const isMaintenance = await getCachedMaintenanceMode();

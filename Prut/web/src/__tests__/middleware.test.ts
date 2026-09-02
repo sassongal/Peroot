@@ -14,7 +14,13 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { NextRequest } from "next/server";
-import { needsAuth, isStateChangingMethod, isCsrfExempt, validateCsrfOrigin } from "../proxy";
+import {
+  needsAuth,
+  isStateChangingMethod,
+  isCsrfExempt,
+  validateCsrfOrigin,
+  resolveLegacyPromptSlug,
+} from "../proxy";
 
 function makeRequest(opts: {
   pathname: string;
@@ -219,5 +225,42 @@ describe("validateCsrfOrigin", () => {
     const result = validateCsrfOrigin(req);
     expect(result).not.toBeNull();
     expect(result?.status).toBe(403);
+  });
+});
+
+describe("resolveLegacyPromptSlug (Sentry JAVASCRIPT-NEXTJS-P)", () => {
+  it("sends a known Hebrew category slug to its English address, permanently", () => {
+    expect(resolveLegacyPromptSlug("/prompts/" + encodeURIComponent("שיווק"))).toEqual({
+      to: "/prompts/marketing",
+      status: 301,
+    });
+    expect(resolveLegacyPromptSlug("/prompts/שיווק")).toEqual({
+      to: "/prompts/marketing",
+      status: 301,
+    });
+  });
+
+  it("keeps the rest of the path on a nested prompt page", () => {
+    expect(
+      resolveLegacyPromptSlug("/prompts/" + encodeURIComponent("מכירות") + "/abc-123"),
+    ).toEqual({
+      to: "/prompts/sales/abc-123",
+      status: 301,
+    });
+  });
+
+  it("sends an unknown non-ASCII slug to the catalogue instead of a 500", () => {
+    expect(resolveLegacyPromptSlug("/prompts/" + encodeURIComponent("מייל-פנייה-קרה"))).toEqual({
+      to: "/prompts",
+      status: 302,
+    });
+    expect(resolveLegacyPromptSlug("/prompts/%E0%A4")).toEqual({ to: "/prompts", status: 302 });
+  });
+
+  it("leaves ASCII slugs and other paths alone", () => {
+    expect(resolveLegacyPromptSlug("/prompts/marketing")).toBeNull();
+    expect(resolveLegacyPromptSlug("/prompts/marketing/abc-123")).toBeNull();
+    expect(resolveLegacyPromptSlug("/prompts")).toBeNull();
+    expect(resolveLegacyPromptSlug("/blog/" + encodeURIComponent("שיווק"))).toBeNull();
   });
 });

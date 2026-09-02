@@ -70,7 +70,10 @@ export function useAllPersonalPrompts({
       .limit(CORPUS_ROW_LIMIT)
       .then(({ data, count, error }) => {
         if (cancelled) return;
-        if (error) logger.error("[useAllPersonalPrompts] corpus fetch failed", error);
+        // A fetch cut short by navigation or unmount is not a failure
+        // (Sentry JAVASCRIPT-NEXTJS-N reported it as one on every page change).
+        const aborted = /AbortError|aborted/i.test(String(error?.message ?? ""));
+        if (error && !aborted) logger.error("[useAllPersonalPrompts] corpus fetch failed", error);
         const fetched = (data ?? []) as PersonalPrompt[];
         if (typeof count === "number" && count > fetched.length + 5) {
           logger.warn("[useAllPersonalPrompts] row count mismatch", {
