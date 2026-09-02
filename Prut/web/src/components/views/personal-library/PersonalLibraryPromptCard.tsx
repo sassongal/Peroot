@@ -235,12 +235,15 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
       {/* Collapsed Row */}
       <div
         className={cn(
-          "flex items-center gap-2 px-3 cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+          // DESIGN.md asks card interiors to breathe. The row was px-3/py-2.5
+          // with a 2px gap, which is what made a title, a badge and the
+          // controls read as one dense strip rather than a row.
+          "flex items-center gap-2.5 px-4 cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
           isExpanded
-            ? "py-3 border-b border-(--glass-border)"
+            ? "py-3.5 border-b border-(--glass-border)"
             : density === "compact"
-              ? "py-1.5"
-              : "py-2.5",
+              ? "py-2"
+              : "py-3",
         )}
         onClick={toggleExpand}
         role="button"
