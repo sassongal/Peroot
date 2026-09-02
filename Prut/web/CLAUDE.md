@@ -225,6 +225,27 @@ Two SQL functions cannot import the module and carry a mirrored default that mus
 kept in sync: `handle_new_user()` and `refresh_and_decrement_credits()`
 (`supabase/migrations/20260901140000_quota_law.sql`).
 
+## Privacy: profiles is not public (2026-09-02)
+
+`profiles` carried `Public profiles are viewable by everyone.` (`USING (true)`
+for role `public`, which includes `anon`), so anyone with the anon key from the
+client bundle could read every user's email, name, plan tier and credit
+balance. Dropped in `20260902110000_rls_and_grants_hygiene.sql`. Reads are now
+own-row plus admin, and every non-admin read in the codebase is already
+`.eq("id", user.id)`.
+
+Consequence: the unused `global_leaderboard` view is `security_invoker` and
+joined profiles for a display name, so it returns nothing to anonymous callers.
+If a leaderboard is ever built it needs a definer view over whitelisted columns,
+never a blanket read on the profile table.
+
+Related: every SECURITY DEFINER function was executable by PUBLIC, so it was
+callable as `POST /rest/v1/rpc/<name>` with the same anon key. Grants are now
+by name (`20260902120000_definer_function_grants.sql`). When adding a definer
+function, `REVOKE ALL ... FROM PUBLIC` and grant only the roles that call it.
+Trigger bodies get no grant: PostgreSQL checks EXECUTE at CREATE TRIGGER, not
+when the trigger fires.
+
 ## Business Logic
 - **Free plan:** `site_settings.daily_free_limit` improvements/day (live: **2**)
 - **Guests:** `site_settings.guest_daily_limit` (live: **1**), only while `allow_guest_access` is true
@@ -249,6 +270,14 @@ kept in sync: `handle_new_user()` and `refresh_and_decrement_credits()`
   eslint.config.mjs) and scrubbed deterministically in content-factory output
   (`stripAiDashes`). Goal: everything must read as human-written, so also avoid
   formulaic AI phrasing in copy and generated content. Code comments are exempt.
+- **Theme classes swap, never stack.** The server renders `<html className="dark">`;
+  the inline bootstrap script in `layout.tsx` must REMOVE the opposite class, not
+  just add the stored one. `.dark` carries the dark palette and `.light` matches
+  nothing (the light palette lives on bare `:root`), so `class="dark light"`
+  paints dark. Pinned by `src/app/__tests__/theme-bootstrap.test.ts`.
+- **Light mode is not optional.** A dark-only colour with no `dark:` counterpart
+  fails `src/components/__tests__/light-mode.test.ts`. Deliberately dark screens
+  (login gate, onboarding, maintenance, Connect docs) are listed there by name.
 - Server Components by default, `"use client"` only when necessary
 
 ## Personal Library Architecture
