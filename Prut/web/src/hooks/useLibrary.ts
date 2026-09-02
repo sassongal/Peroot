@@ -461,6 +461,7 @@ export function useLibrary() {
     onboarding_completed?: boolean;
     plan_tier?: "free" | "pro";
     credits_balance?: number;
+    preferred_output_language?: "hebrew" | "english" | "arabic" | "russian";
   }) => {
     if (!user) return;
 

@@ -23,7 +23,13 @@ import { InputScoreBreakdown } from "./InputScoreBreakdown";
 import { QuickImprovementChips } from "./QuickImprovementChips";
 import type { TargetModel } from "@/lib/engines/types";
 import { TargetModelSelect } from "@/components/features/prompt-improver/TargetModelSelect";
-import { useVoiceRecorder, VOICE_LANGUAGES, type VoiceLang } from "@/hooks/useVoiceRecorder";
+import { useVoiceRecorder, type VoiceLang } from "@/hooks/useVoiceRecorder";
+import { OutputLanguagePicker } from "@/components/features/prompt-improver/OutputLanguagePicker";
+import {
+  detectScriptLanguage,
+  outputLanguageDef,
+  type OutputLanguage,
+} from "@/lib/output-language";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/context/AuthContext";
@@ -66,8 +72,10 @@ interface PromptInputProps {
   targetModel: TargetModel;
   setTargetModel: (model: TargetModel) => void;
   // Voice language (lifted to parent so HomeClient can derive outputLanguage)
+  /** Speech-recognition locale, derived by the parent from the input text. */
   voiceLang: VoiceLang;
-  setVoiceLang: (lang: VoiceLang) => void;
+  outputLanguage: OutputLanguage;
+  setOutputLanguage: (next: OutputLanguage, source?: "picker" | "suggestion") => void;
   // Credits
   creditsRemaining?: number | null;
   // Voice interim text callback — lets parent include interim speech in scoring
@@ -147,6 +155,8 @@ const EXAMPLES_BY_MODE: Record<string, string[]> = {
   ],
 };
 
+const TOOLS_SEEN_KEY = "peroot_tools_opened";
+
 const PLACEHOLDERS_BY_MODE: Record<string, string> = {
   [CapabilityMode.STANDARD]: "",
   [CapabilityMode.DEEP_RESEARCH]: "מה תרצה לחקור? תאר את הנושא, היקף המחקר, והשאלות המרכזיות...",
@@ -189,7 +199,8 @@ export function PromptInput({
   targetModel,
   setTargetModel,
   voiceLang,
-  setVoiceLang,
+  outputLanguage,
+  setOutputLanguage,
   creditsRemaining,
   onInterimChange,
 }: PromptInputProps) {
@@ -203,13 +214,34 @@ export function PromptInput({
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlValue, setUrlValue] = useState("");
   const [interimResult, setInterimResult] = useState("");
-  const [showLangPicker, setShowLangPicker] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [scoreBreakdownOpen, setScoreBreakdownOpen] = useState(false);
   const [guestGateFeature, setGuestGateFeature] = useState<string | null>(null);
   // U2.1: the tools row (files/URL/image/mic/language/model) is collapsed
   // behind one "+" button by default.
   const [showTools, setShowTools] = useState(false);
+  // "Tools" hint: glow and dot until the drawer has been opened once, ever.
+  const [toolsSeen, setToolsSeen] = useState(true);
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(TOOLS_SEEN_KEY)) queueMicrotask(() => setToolsSeen(false));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  useEffect(() => {
+    if (!showTools || toolsSeen) return;
+    queueMicrotask(() => setToolsSeen(true));
+    try {
+      localStorage.setItem(TOOLS_SEEN_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  }, [showTools, toolsSeen]);
+  // The language the user appears to be typing in, offered as a one-click
+  // switch when it differs from the output language. Dismissed per language
+  // so a Hebrew speaker who wants English output is asked once, not per key.
+  const [dismissedSuggestion, setDismissedSuggestion] = useState<OutputLanguage | null>(null);
 
   // Image/video engines always emit English prompts (generation platforms
   // require it), so the output-language control is locked there.
@@ -218,15 +250,6 @@ export function PromptInput({
     selectedCapability === CapabilityMode.VIDEO_GENERATION;
 
   // Close language picker on click outside
-  useEffect(() => {
-    if (!showLangPicker) return;
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest("[data-lang-picker]")) setShowLangPicker(false);
-    };
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, [showLangPicker]);
 
   // Performance optimization: Memoize heavy text processing
   // This prevents re-calculation when other props (like loading state) change
@@ -304,8 +327,16 @@ export function PromptInput({
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-sm font-semibold text-(--text-muted) uppercase tracking-widest mb-2 px-1">
-          {t.prompt_generator.capability_mode}
+        <div className="flex items-center justify-between gap-3 mb-2 px-1">
+          <div className="text-sm font-semibold text-(--text-muted) uppercase tracking-widest">
+            {t.prompt_generator.capability_mode}
+          </div>
+          <OutputLanguagePicker
+            value={outputLanguage}
+            onChange={(next) => setOutputLanguage(next, "picker")}
+            locked={outputLangLocked}
+            disabled={isLoading}
+          />
         </div>
         <CapabilitySelector
           value={selectedCapability}
@@ -509,7 +540,11 @@ export function PromptInput({
                 </div>
                 <textarea
                   ref={textareaRef}
-                  dir="rtl"
+                  // The box follows its own text: an English or Russian prompt
+                  // typed here used to sit right-aligned with its punctuation
+                  // on the wrong side. Empty box still reads as RTL via the
+                  // placeholder's own direction.
+                  dir="auto"
                   value={displayValue}
                   onChange={(e) => {
                     setInputVal(e.target.value);
@@ -546,6 +581,37 @@ export function PromptInput({
                   }}
                 />
               </div>
+              {(() => {
+                if (outputLangLocked || isLoading) return null;
+                const detected = detectScriptLanguage(inputVal).language;
+                if (!detected || detected === outputLanguage || detected === dismissedSuggestion)
+                  return null;
+                const def = outputLanguageDef(detected);
+                return (
+                  <div
+                    className="mx-6 md:mx-8 mb-3 flex items-center gap-2 text-xs animate-in fade-in duration-200"
+                    dir="rtl"
+                    role="status"
+                  >
+                    <span className="text-(--text-muted)">כתבת ב{def.he}.</span>
+                    <button
+                      type="button"
+                      onClick={() => setOutputLanguage(detected, "suggestion")}
+                      className="px-2.5 min-h-[32px] rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200 font-medium hover:bg-amber-500/20 transition-colors cursor-pointer"
+                    >
+                      להוציא ב{def.he}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDismissedSuggestion(detected)}
+                      className="px-2 min-h-[32px] rounded-full text-(--text-muted) hover:text-(--text-primary) transition-colors cursor-pointer"
+                      aria-label="להשאיר את שפת הפלט הנוכחית"
+                    >
+                      לא, תודה
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Tools row (U2.1 first-screen diet): everything secondary —
@@ -560,19 +626,30 @@ export function PromptInput({
                 aria-expanded={showTools}
                 aria-label={showTools ? "סגור כלים" : "כלים: קבצים, קול, שפה ומודל יעד"}
                 className={cn(
-                  "shrink-0 flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-full text-xs font-medium border transition-all cursor-pointer relative",
+                  // Owner ask (2026-09-02): the drawer hides voice, files and
+                  // the target model, and usage data said nobody found it. So
+                  // it reads as a button now: larger, gold outlined, with a
+                  // quiet glow until it has been opened once.
+                  "shrink-0 flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-full text-sm font-semibold border transition-all cursor-pointer relative",
                   showTools
-                    ? "bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-300"
-                    : "bg-black/5 dark:bg-black/30 border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10",
+                    ? "bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300"
+                    : "bg-amber-500/8 border-amber-500/35 text-amber-800 dark:text-amber-200 hover:bg-amber-500/15 hover:border-amber-500/60",
+                  !showTools && !toolsSeen && "shadow-[0_0_18px_rgba(245,158,11,0.25)]",
                 )}
               >
                 <Plus
                   className={cn(
-                    "w-4 h-4 transition-transform duration-200",
+                    "w-5 h-5 transition-transform duration-200",
                     showTools && "rotate-45",
                   )}
                 />
                 <span>כלים</span>
+                {!showTools && !toolsSeen && (
+                  <span
+                    className="absolute -top-1 -start-1 w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"
+                    aria-hidden="true"
+                  />
+                )}
                 {hasAttachments && !showTools && (
                   <span
                     className="absolute -top-0.5 -start-0.5 w-2 h-2 rounded-full bg-amber-400"
@@ -608,60 +685,6 @@ export function PromptInput({
                       )}
                     </>
                   )}
-                  {/* Output language — this control sets the RESULT language (it
-                    also drives voice recognition), so it lives outside the mic
-                    support gate: browsers without SpeechRecognition still get
-                    it. Image/video modes force English (platform requirement),
-                    so it is disabled there with the reason. */}
-                  <div className="relative" data-lang-picker>
-                    <button
-                      onClick={() => setShowLangPicker((prev) => !prev)}
-                      disabled={outputLangLocked}
-                      className={cn(
-                        "px-2 py-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center gap-1 rounded-full text-xs bg-black/5 dark:bg-black/30 border border-(--glass-border) backdrop-blur-md transition-all",
-                        outputLangLocked
-                          ? "text-(--text-muted) opacity-50 cursor-not-allowed"
-                          : "text-(--text-muted) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer",
-                      )}
-                      title={
-                        outputLangLocked
-                          ? "במצבי תמונה ווידאו הפלט באנגלית, זו דרישת פלטפורמות היצירה"
-                          : "שפת הפלט של הפרומפט"
-                      }
-                      aria-label="בחר את שפת הפלט"
-                    >
-                      <Globe className="w-3.5 h-3.5" />
-                      {outputLangLocked
-                        ? "EN"
-                        : (VOICE_LANGUAGES.find((l) => l.code === voiceLang)?.short ?? "HE")}
-                    </button>
-                    {showLangPicker && !outputLangLocked && (
-                      <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-(--glass-border) rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[120px] md:min-w-[140px] max-w-[calc(100vw-2rem)]">
-                        <div className="px-3 pt-2 pb-1 text-[10px] text-(--text-muted)">
-                          שפת הפלט
-                        </div>
-                        {VOICE_LANGUAGES.map((lang) => (
-                          <button
-                            key={lang.code}
-                            onClick={() => {
-                              setVoiceLang(lang.code);
-                              setShowLangPicker(false);
-                            }}
-                            className={cn(
-                              "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
-                              voiceLang === lang.code
-                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
-                                : "text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/5",
-                            )}
-                          >
-                            <span className="font-mono font-bold text-[10px]">{lang.short}</span>
-                            <span>{lang.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
                   {capabilitySupportsTargetModel(selectedCapability) && (
                     <TargetModelSelect
                       value={targetModel}

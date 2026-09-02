@@ -894,7 +894,9 @@ describe("POST /api/enhance", () => {
       const res = await POST(req);
 
       expect(res.status).toBe(500);
-      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId);
+      // The refund carries the bucket it must return to; "daily" is the default
+      // when the charge did not report one.
+      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId, 1, "daily");
     });
 
     it("refunds credit on ConcurrencyError and returns 503", async () => {
@@ -909,7 +911,9 @@ describe("POST /api/enhance", () => {
 
       expect(res.status).toBe(503);
       expect(res.headers.get("Retry-After")).toBe("5");
-      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId);
+      // The refund carries the bucket it must return to; "daily" is the default
+      // when the charge did not report one.
+      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId, 1, "daily");
     });
 
     it("refunds the guest credit (not a user credit) when AIGateway throws", async () => {
@@ -972,7 +976,9 @@ describe("POST /api/enhance", () => {
         finishReason: "stop",
       });
 
-      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId);
+      // The refund carries the bucket it must return to; "daily" is the default
+      // when the charge did not report one.
+      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId, 1, "daily");
     });
 
     it("refunds via onFinish when finishReason is 'error'", async () => {
@@ -1010,7 +1016,9 @@ describe("POST /api/enhance", () => {
         finishReason: "error",
       });
 
-      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId);
+      // The refund carries the bucket it must return to; "daily" is the default
+      // when the charge did not report one.
+      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId, 1, "daily");
     });
   });
 
@@ -1407,7 +1415,9 @@ describe("POST /api/enhance", () => {
       const { POST } = await import("../route");
       await POST(makeRequest(VALID_BODY));
 
-      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId);
+      // The refund carries the bucket it must return to; "daily" is the default
+      // when the charge did not report one.
+      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId, 1, "daily");
     });
 
     it("writes a history row on a cache hit", async () => {

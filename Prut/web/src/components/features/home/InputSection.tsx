@@ -9,6 +9,7 @@ import type { ContextAttachment } from "@/lib/context/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { TargetModel } from "@/lib/engines/types";
 import type { VoiceLang } from "@/hooks/useVoiceRecorder";
+import type { OutputLanguage } from "@/lib/output-language";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { HistoryItem } from "@/hooks/useHistory";
@@ -83,7 +84,8 @@ interface InputSectionProps {
 
   // Voice language
   voiceLang: VoiceLang;
-  setVoiceLang: (lang: VoiceLang) => void;
+  outputLanguage: OutputLanguage;
+  setOutputLanguage: (next: OutputLanguage, source?: "picker" | "suggestion") => void;
 
   // Credits
   creditsRemaining?: number | null;
@@ -146,7 +148,8 @@ export const InputSection = memo<InputSectionProps>(
     targetModel,
     setTargetModel,
     voiceLang,
-    setVoiceLang,
+    outputLanguage,
+    setOutputLanguage,
     creditsRemaining,
     isNewUser,
     user,
@@ -212,7 +215,8 @@ export const InputSection = memo<InputSectionProps>(
           targetModel={targetModel}
           setTargetModel={setTargetModel}
           voiceLang={voiceLang}
-          setVoiceLang={setVoiceLang}
+          outputLanguage={outputLanguage}
+          setOutputLanguage={setOutputLanguage}
           creditsRemaining={creditsRemaining}
           onInterimChange={onInterimChange}
         />

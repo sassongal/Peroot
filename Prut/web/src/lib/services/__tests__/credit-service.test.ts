@@ -427,6 +427,7 @@ describe("CreditService", () => {
       expect(rpcFn).toHaveBeenCalledWith("refund_credit", {
         target_user_id: "user-1",
         amount: 1,
+        bucket: "daily",
       });
     });
 
@@ -454,6 +455,7 @@ describe("CreditService", () => {
       expect(rpcFn).toHaveBeenCalledWith("refund_credit", {
         target_user_id: "user-1",
         amount: 2,
+        bucket: "daily",
       });
     });
 
@@ -469,6 +471,7 @@ describe("CreditService", () => {
       expect(rpcFn).toHaveBeenCalledWith("refund_credit", {
         target_user_id: "user-1",
         amount: 1,
+        bucket: "daily",
       });
     });
   });

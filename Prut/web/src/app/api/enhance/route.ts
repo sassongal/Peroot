@@ -178,6 +178,8 @@ export async function POST(req: Request) {
   // a mid-request exception would charge a guest without refund.
   let guestId: string | null = null;
   let isRefinementOuter = false;
+  // Which bucket the credit came from; refunds must return to the same one.
+  let chargedFromOuter: "daily" | "bonus" | undefined;
   // Declared here so catch block can release the in-flight lock on any
   // error path, not just the happy path that reaches after().
   let releaseInflightLock: (() => Promise<void>) | null = null;
@@ -564,6 +566,7 @@ export async function POST(req: Request) {
       if (userId) {
         if (!isRefinement) {
           const creditResult = await checkAndDecrementCredits(userId, tier, queryClient);
+          chargedFromOuter = creditResult.chargedFrom;
           if (!creditResult.allowed) {
             await releaseInflightLock();
             releaseInflightLock = null;
@@ -709,6 +712,7 @@ export async function POST(req: Request) {
 
         // Refund the credit decremented above — stage-1 costs us no LLM tokens.
         await refundEnhanceCredit({
+          chargedFrom: chargedFromOuter,
           userId,
           guestId,
           isRefinement,
@@ -845,6 +849,7 @@ export async function POST(req: Request) {
         // for them either. Guests get their rolling-window slot restored
         // via the Lua-bounded refundGuestCredit; admins were never charged.
         await refundEnhanceCredit({
+          chargedFrom: chargedFromOuter,
           userId,
           guestId,
           isRefinement,
@@ -1123,6 +1128,7 @@ export async function POST(req: Request) {
               textCopy.length === 0 || finishReasonCopy === "error" || (isTruncated && !!userId);
             if (shouldRefund) {
               await refundEnhanceCredit({
+                chargedFrom: chargedFromOuter,
                 userId,
                 guestId,
                 isRefinement,
@@ -1261,6 +1267,7 @@ export async function POST(req: Request) {
       logger.warn("[EnhanceAPI] Concurrency limit reached:", error.message);
       // Refund credit since we never called AI
       await refundEnhanceCredit({
+        chargedFrom: chargedFromOuter,
         userId,
         guestId,
         isRefinement: isRefinementOuter,
@@ -1275,6 +1282,7 @@ export async function POST(req: Request) {
     logger.error("[EnhanceAPI] Error:", error);
     // Best-effort credit refund on failure
     await refundEnhanceCredit({
+      chargedFrom: chargedFromOuter,
       userId,
       guestId,
       isRefinement: isRefinementOuter,

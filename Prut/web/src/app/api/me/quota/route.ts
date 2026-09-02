@@ -19,7 +19,7 @@ export const GET = withUser(
       const [{ data: profile }, { data: settings }, { data: adminRole }] = await Promise.all([
         queryClient
           .from("profiles")
-          .select("plan_tier, credits_balance, last_prompt_at")
+          .select("plan_tier, credits_balance, last_prompt_at, bonus_credits, bonus_expires_at")
           .eq("id", user.id)
           .maybeSingle(),
         queryClient.from("site_settings").select("daily_free_limit").maybeSingle(),
@@ -47,11 +47,24 @@ export const GET = withUser(
         (!lastPromptAt || Date.now() - new Date(lastPromptAt).getTime() >= 24 * 60 * 60 * 1000);
       const displayBalance = shouldReset ? dailyLimit : rawBalance;
 
+      // The referral bonus is a second bucket: spent after the daily one,
+      // never reset, worth nothing once expired. The UI needs both numbers
+      // separately ("2 today + 3 bonus") and the sum for the gate.
+      const bonusExpiresAt = profile?.bonus_expires_at ?? null;
+      const bonusLive =
+        (profile?.bonus_credits ?? 0) > 0 &&
+        !!bonusExpiresAt &&
+        new Date(bonusExpiresAt).getTime() > Date.now();
+      const bonusCredits = bonusLive ? (profile?.bonus_credits ?? 0) : 0;
+
       return NextResponse.json(
         {
           plan_tier: tier,
           credits_balance: displayBalance,
           daily_limit: dailyLimit,
+          bonus_credits: bonusCredits,
+          bonus_expires_at: bonusLive ? bonusExpiresAt : null,
+          total_available: displayBalance + bonusCredits,
           refresh_at: refreshAt ? refreshAt.toISOString() : null,
           last_prompt_at: lastPromptAt,
         },

@@ -28,10 +28,22 @@ interface PromptLimitsShape {
 
 interface QuotaResponse {
   plan_tier: "free" | "pro" | "admin";
+  /** Daily bucket. */
   credits_balance: number;
   daily_limit: number;
+  /** Referral bonus bucket, already 0 when expired. */
+  bonus_credits?: number;
+  bonus_expires_at?: string | null;
+  /** credits_balance + bonus_credits. What the gate should look at. */
+  total_available?: number;
   refresh_at: string | null;
   last_prompt_at: string | null;
+}
+
+/** Both buckets together; older servers only send credits_balance. */
+function totalAvailable(q: QuotaResponse | null): number {
+  if (!q) return 0;
+  return q.total_available ?? q.credits_balance + (q.bonus_credits ?? 0);
 }
 
 export function usePromptLimits() {
@@ -137,7 +149,7 @@ export function usePromptLimits() {
         return;
       }
       if (quota) {
-        setCanUsePrompt(quota.credits_balance > 0);
+        setCanUsePrompt(totalAvailable(quota) > 0);
       } else {
         setCanUsePrompt(true);
       }
@@ -196,7 +208,7 @@ export function usePromptLimits() {
   }
 
   function getRemainingPrompts(): number {
-    if (user) return quota?.credits_balance ?? 0;
+    if (user) return totalAvailable(quota);
     if (guestQuota) return Math.max(0, guestQuota.remaining);
     return Math.max(0, settings.guest_daily_limit - usage.count);
   }
@@ -204,7 +216,7 @@ export function usePromptLimits() {
   function getRequiredAction(): "login" | "upgrade" | null {
     if (user) {
       if (isAdmin || isPro) return null;
-      return quota !== null && quota.credits_balance < 1 ? "upgrade" : null;
+      return quota !== null && totalAvailable(quota) < 1 ? "upgrade" : null;
     }
     if (!user && !settings.allow_guest_access) return "login";
     if (!user && guestQuota) return guestQuota.remaining < 1 ? "login" : null;
@@ -277,5 +289,10 @@ export function usePromptLimits() {
     maxFreePrompts: settings.guest_daily_limit,
     creditDisplay: creditShape,
     settings,
+    // Two buckets, reported apart so the pill can say "2 today + 3 bonus"
+    // instead of a single number that reads as a bigger daily quota.
+    dailyCredits: user ? (quota?.credits_balance ?? 0) : getRemainingPrompts(),
+    bonusCredits: user ? (quota?.bonus_credits ?? 0) : 0,
+    bonusExpiresAt: user ? (quota?.bonus_expires_at ?? null) : null,
   };
 }

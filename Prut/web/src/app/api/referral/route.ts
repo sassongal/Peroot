@@ -3,6 +3,7 @@ import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { randomBytes } from "crypto";
 import { withUser } from "@/lib/api-middleware";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 
 // GET: Get or create the user's own referral code (no credit mutation).
 // Auth owned by withUser.
@@ -11,25 +12,68 @@ export const GET = withUser(
     const supabase = ctx.db;
     const user = ctx.user!;
 
+    // The reward policy is data (site_settings), and the caller's own bonus
+    // state comes with it so the settings page can say "you have 3 until the
+    // 9th" without a second round trip.
+    const [{ data: settings }, { data: me }] = await Promise.all([
+      supabase
+        .from("site_settings")
+        .select("referral_bonus_credits, referral_bonus_days, referral_grant_on")
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("bonus_credits, bonus_expires_at")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ]);
+    const bonusPerReferral = resolveDailyLimit(
+      settings?.referral_bonus_credits,
+      QUOTA_FALLBACK.referralBonus,
+    );
+    const bonusDays = resolveDailyLimit(
+      settings?.referral_bonus_days,
+      QUOTA_FALLBACK.referralBonusDays,
+    );
+    const grantOn = settings?.referral_grant_on === "signup" ? "signup" : "activation";
+    const bonusLive =
+      (me?.bonus_credits ?? 0) > 0 &&
+      !!me?.bonus_expires_at &&
+      new Date(me.bonus_expires_at).getTime() > Date.now();
+    const policy = {
+      bonusPerReferral,
+      bonusDays,
+      grantOn,
+      bonusCredits: bonusLive ? (me?.bonus_credits ?? 0) : 0,
+      bonusExpiresAt: bonusLive ? me?.bonus_expires_at : null,
+    };
+
     // Check for existing code
     const { data: existing } = await supabase
       .from("referral_codes")
-      .select("id, code, uses_count, max_uses, credits_per_referral")
+      .select("id, code, uses_count, max_uses")
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (existing) {
-      const { count } = await supabase
-        .from("referral_redemptions")
-        .select("*", { count: "exact", head: true })
-        .eq("code_id", existing.id);
+      const [{ count }, { count: active }] = await Promise.all([
+        supabase
+          .from("referral_redemptions")
+          .select("*", { count: "exact", head: true })
+          .eq("code_id", existing.id),
+        supabase
+          .from("referral_redemptions")
+          .select("*", { count: "exact", head: true })
+          .eq("code_id", existing.id)
+          .not("activated_at", "is", null),
+      ]);
 
       return NextResponse.json({
         code: existing.code,
         uses: existing.uses_count,
         maxUses: existing.max_uses,
-        creditsPerReferral: existing.credits_per_referral,
         totalReferrals: count || 0,
+        activeReferrals: active || 0,
+        ...policy,
       });
     }
 
@@ -49,8 +93,9 @@ export const GET = withUser(
       code,
       uses: 0,
       maxUses: 50,
-      creditsPerReferral: 5,
       totalReferrals: 0,
+      activeReferrals: 0,
+      ...policy,
     });
   },
   { rateLimit: "none" },

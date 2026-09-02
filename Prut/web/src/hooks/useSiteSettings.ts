@@ -19,6 +19,14 @@ interface SiteSettings {
   /** Anonymous visitor, per rolling 24h window. */
   guest_daily_limit: number;
   registration_bonus: number;
+  /** Referral reward per referred friend, paid into the bonus bucket. */
+  referral_bonus_credits: number;
+  /** Days a bonus stays usable after the latest grant. */
+  referral_bonus_days: number;
+  /** Safety ceiling on the bonus bucket. */
+  bonus_credits_cap: number;
+  /** "activation" (friend's first enhancement) or "signup". */
+  referral_grant_on: "activation" | "signup";
   theme_primary_color: string;
   theme_secondary_color: string;
   maintenance_mode: boolean;
@@ -41,6 +49,10 @@ const defaultSettings: SiteSettings = {
   daily_free_limit: QUOTA_FALLBACK.freeDaily,
   guest_daily_limit: QUOTA_FALLBACK.guestDaily,
   registration_bonus: 0, // Rolling 24h window: no registration bonus (see 20260424_rolling_credits.sql)
+  referral_bonus_credits: QUOTA_FALLBACK.referralBonus,
+  referral_bonus_days: QUOTA_FALLBACK.referralBonusDays,
+  bonus_credits_cap: QUOTA_FALLBACK.bonusCap,
+  referral_grant_on: "activation",
   theme_primary_color: "#F59E0B", // Amber/Orange from site
   theme_secondary_color: "#EAB308", // Yellow from site
   maintenance_mode: false,

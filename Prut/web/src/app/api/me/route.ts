@@ -17,7 +17,7 @@ export const GET = withUser(
     const [{ data: profile }, { data: adminRole }] = await Promise.all([
       queryClient
         .from("profiles")
-        .select("plan_tier, credits_balance, display_name")
+        .select("plan_tier, credits_balance, display_name, preferred_output_language")
         .eq("id", user.id)
         .maybeSingle(),
       queryClient
@@ -37,6 +37,8 @@ export const GET = withUser(
         display_name: profile?.display_name || user.user_metadata?.full_name || null,
         plan_tier: isAdmin ? "admin" : profile?.plan_tier || "free",
         credits_balance: profile?.credits_balance ?? 0,
+        // Remembered across devices; null when the user never chose.
+        preferred_output_language: profile?.preferred_output_language ?? null,
       },
       { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } },
     );

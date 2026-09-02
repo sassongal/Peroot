@@ -86,8 +86,13 @@ export default function SettingsPage() {
     code: string;
     uses: number;
     maxUses: number;
-    creditsPerReferral: number;
     totalReferrals: number;
+    activeReferrals: number;
+    bonusPerReferral: number;
+    bonusDays: number;
+    grantOn: "activation" | "signup";
+    bonusCredits: number;
+    bonusExpiresAt: string | null;
   } | null>(null);
   const [referralLoaded, setReferralLoaded] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);

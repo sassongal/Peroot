@@ -3,6 +3,17 @@
 import { Check, Copy, Gift, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
+import { creditsPhrase } from "@/lib/quota-policy";
+import { formatDateHe } from "@/lib/dates/format";
+
+/** "יום אחד" / "יומיים" / "שבוע" / "N ימים": the number never appears as a bare digit in copy. */
+function daysPhrase(n: number): string {
+  if (n === 1) return "יום אחד";
+  if (n === 2) return "יומיים";
+  if (n === 7) return "שבוע";
+  if (n === 14) return "שבועיים";
+  return `${n} ימים`;
+}
 
 const SITE_URL = "https://www.peroot.space";
 
@@ -22,8 +33,15 @@ interface ReferralInfo {
   code: string;
   uses: number;
   maxUses: number;
-  creditsPerReferral: number;
   totalReferrals: number;
+  /** Referred users who have made at least one enhancement. */
+  activeReferrals: number;
+  bonusPerReferral: number;
+  bonusDays: number;
+  grantOn: "activation" | "signup";
+  /** The caller's own bonus bucket (0 when expired). */
+  bonusCredits: number;
+  bonusExpiresAt: string | null;
 }
 
 interface SettingsReferralSectionProps {
@@ -56,7 +74,11 @@ export function SettingsReferralSection({
         <h2 id="settings-referral-heading" className="text-xl font-bold">
           הזמן חברים
         </h2>
-        <p className="text-sm text-(--text-muted)">שתף את הקישור שלך והבא חברים לפירוט</p>
+        <p className="text-sm text-(--text-muted)">
+          {referral
+            ? `כל חבר שמצטרף ${referral.grantOn === "activation" ? "ומשפר פרומפט ראשון" : ""} מזכה אותך ב${creditsPhrase(referral.bonusPerReferral)} לשימוש תוך ${daysPhrase(referral.bonusDays)}`
+            : "שתף את הקישור שלך והבא חברים לפירוט"}
+        </p>
       </header>
 
       <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
@@ -81,7 +103,11 @@ export function SettingsReferralSection({
             <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">
               3
             </span>
-            <span className="text-(--text-secondary)">ההצטרפות נרשמת על שמך</span>
+            <span className="text-(--text-secondary)">
+              {referral
+                ? `${referral.grantOn === "activation" ? "אחרי השיפור הראשון שלו" : "ברגע ההרשמה"} מגיעים אליך ${creditsPhrase(referral.bonusPerReferral)} בונוס`
+                : "ההצטרפות נרשמת על שמך"}
+            </span>
           </div>
         </div>
       </div>
@@ -118,8 +144,19 @@ export function SettingsReferralSection({
             <span>
               {referral.uses} / {referral.maxUses} הזמנות נוצלו
             </span>
-            <span>{referral.totalReferrals} חברים הצטרפו</span>
+            <span>
+              {referral.totalReferrals} הצטרפו, {referral.activeReferrals} כבר פעילים
+            </span>
           </div>
+          {referral.bonusCredits > 0 && referral.bonusExpiresAt && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/8 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+              <Gift className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                יש לך {creditsPhrase(referral.bonusCredits)} בונוס לשימוש עד{" "}
+                {formatDateHe(referral.bonusExpiresAt)}. הם נשרפים אחרי המכסה היומית.
+              </span>
+            </div>
+          )}
           <div className="flex gap-2">
             <a
               href={`https://wa.me/?text=${encodeURIComponent(shareMessage(referral.code))}`}

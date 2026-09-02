@@ -33,7 +33,8 @@ describe("refundEnhanceCredit, the enhance-flow refund matrix", () => {
         rg.mockClear();
         const outcome = await refundEnhanceCredit({ userId: "u1", guestId, isRefinement });
         expect(outcome).toBe("user");
-        expect(rc).toHaveBeenCalledExactlyOnceWith("u1");
+        // "daily" is the default bucket when the charge reported none.
+        expect(rc).toHaveBeenCalledExactlyOnceWith("u1", 1, "daily");
         expect(rg).not.toHaveBeenCalled();
       }
     }

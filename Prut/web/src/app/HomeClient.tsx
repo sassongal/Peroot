@@ -34,7 +34,16 @@ import { stripTrailerForDisplay } from "@/lib/prompt-stream/trailer";
 import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
 import { scoreInput } from "@/lib/engines/scoring/input-scorer";
 import { TargetModel, OutputLanguage } from "@/lib/engines/types";
-import { voiceLangToOutputLang, type VoiceLang } from "@/hooks/useVoiceRecorder";
+import { type VoiceLang } from "@/hooks/useVoiceRecorder";
+import {
+  OUTPUT_LANGUAGE_STORAGE_KEY,
+  SCRIPT_MATCH_MIN,
+  detectScriptLanguage,
+  isOutputLanguage,
+  outputLanguageDef,
+  scriptMatchShare,
+} from "@/lib/output-language";
+import { trackOutputLanguageSelected, trackOutputLanguageMismatch } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
@@ -170,8 +179,85 @@ function PageContent() {
   // Always start with "general" on both server and client to prevent hydration
   // mismatch. Persisted value is restored in a post-mount effect below.
   const [targetModel, setTargetModel] = useState<TargetModel>("general");
-  const [voiceLang, setVoiceLang] = useState<VoiceLang>("he-IL");
-  const outputLanguage: OutputLanguage = voiceLangToOutputLang(voiceLang);
+  // Output language is its own decision now (languages spec B1-B2). It used
+  // to be derived from the voice-recognition locale, which lived in the tools
+  // drawer behind country flags; nobody found it. Restored from localStorage
+  // after mount, and first-time visitors get their browser's language.
+  const [outputLanguage, setOutputLanguageState] = useState<OutputLanguage>("hebrew");
+  const setOutputLanguage = useCallback(
+    (next: OutputLanguage, source: "picker" | "suggestion" | "auto" | "restored" = "picker") => {
+      setOutputLanguageState(next);
+      try {
+        localStorage.setItem(OUTPUT_LANGUAGE_STORAGE_KEY, next);
+      } catch {
+        /* private mode */
+      }
+      trackOutputLanguageSelected(next, source);
+      // An explicit choice follows the account to the next device. Own-row
+      // update under RLS; fire-and-forget, the local state already moved.
+      if (user && (source === "picker" || source === "suggestion")) {
+        void createClient()
+          .from("profiles")
+          .update({ preferred_output_language: next })
+          .eq("id", user.id)
+          .then(({ error }) => {
+            if (error) logger.warn("[output-language] profile save failed", error.message);
+          });
+      }
+    },
+    [user],
+  );
+  // Signed in: the saved preference wins over the browser guess and over a
+  // stale localStorage value from before the choice was made elsewhere.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    fetch(getApiPath("/api/me"))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me) => {
+        if (cancelled || !me || !isOutputLanguage(me.preferred_output_language)) return;
+        setOutputLanguageState(me.preferred_output_language);
+        try {
+          localStorage.setItem(OUTPUT_LANGUAGE_STORAGE_KEY, me.preferred_output_language);
+        } catch {
+          /* ignore */
+        }
+        trackOutputLanguageSelected(me.preferred_output_language, "restored");
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(OUTPUT_LANGUAGE_STORAGE_KEY);
+      if (isOutputLanguage(stored)) {
+        queueMicrotask(() => setOutputLanguageState(stored));
+        return;
+      }
+      // First visit: the browser language is the best guess we have. A Hebrew
+      // browser changes nothing; an Arabic or Russian one starts in that
+      // language, which is the whole point for the audiences we are after.
+      const nav = (navigator.language || "").toLowerCase();
+      const guess: OutputLanguage | null = nav.startsWith("ar")
+        ? "arabic"
+        : nav.startsWith("ru")
+          ? "russian"
+          : nav.startsWith("en")
+            ? "english"
+            : null;
+      if (guess) queueMicrotask(() => setOutputLanguage(guess, "auto"));
+    } catch {
+      /* ignore */
+    }
+  }, [setOutputLanguage]);
+  // Speech recognition follows the language the user is TYPING in, not the
+  // output language: a Hebrew speaker dictating Hebrew and asking for English
+  // output needs a Hebrew recogniser.
+  const voiceLang: VoiceLang = outputLanguageDef(
+    detectScriptLanguage(ps.input).language ?? outputLanguage,
+  ).voice;
 
   useEffect(() => {
     try {
@@ -591,6 +677,36 @@ function PageContent() {
     const questionsPart =
       lastGeniusIdx !== -1 ? acc.rawText.slice(lastGeniusIdx + GENIUS_MARKER.length) : "";
 
+    // Did the model actually answer in the requested language? The override
+    // in the system prompt is an instruction, not a guarantee. Refinement
+    // costs a signed-in user nothing, so a wrong-language result is offered
+    // a free rewrite instead of a shrug.
+    if (outputLanguage !== "hebrew") {
+      const share = scriptMatchShare(body, outputLanguage);
+      if (share < SCRIPT_MATCH_MIN) {
+        trackOutputLanguageMismatch(outputLanguage, share);
+        const langName = outputLanguageDef(outputLanguage).he;
+        if (user) {
+          toast.warning(`התוצאה לא יצאה ב${langName}`, {
+            description: "אפשר לנסות שוב, בלי לבזבז קרדיט.",
+            duration: 10000,
+            action: {
+              label: "נסה שוב בחינם",
+              onClick: () =>
+                void handleRefine(
+                  `כתוב מחדש את כל התוצאה ב${langName} בלבד, כולל כותרות ודוגמאות.`,
+                ),
+            },
+          });
+        } else {
+          toast.warning(`התוצאה לא יצאה ב${langName}`, {
+            description: "הירשמו כדי לחדד תוצאות בחינם.",
+            duration: 8000,
+          });
+        }
+      }
+    }
+
     if (lastGeniusIdx !== -1) {
       try {
         let jsonStr = questionsPart.trim();
@@ -628,6 +744,7 @@ function PageContent() {
           category: fetchQuestionsParams.category,
           tone: fetchQuestionsParams.tone,
           capability_mode: fetchQuestionsParams.capability_mode,
+          ...(outputLanguage !== "hebrew" && { output_language: outputLanguage }),
           ...(fetchQuestionsParams.iteration !== undefined && {
             iteration: fetchQuestionsParams.iteration,
           }),
@@ -1734,7 +1851,8 @@ function PageContent() {
             targetModel={targetModel}
             setTargetModel={handleSetTargetModel}
             voiceLang={voiceLang}
-            setVoiceLang={setVoiceLang}
+            outputLanguage={outputLanguage}
+            setOutputLanguage={setOutputLanguage}
             contextLimits={{
               maxFiles: PLAN_CONTEXT_LIMITS[isPro ? "pro" : "free"].maxFiles,
               tokenLimit: PLAN_CONTEXT_LIMITS[isPro ? "pro" : "free"].total,

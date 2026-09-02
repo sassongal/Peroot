@@ -40,6 +40,11 @@ describe("jobs worker (batch)", () => {
 
   it("processes MULTIPLE jobs in one invocation until the queue drains", async () => {
     rpc
+      // The referral sweep runs first on every invocation.
+      .mockResolvedValueOnce({
+        data: { activated: 0, granted: 0, mode: "activation" },
+        error: null,
+      })
       .mockResolvedValueOnce({
         data: [{ j_id: "1", j_type: "style_analysis", j_payload: { userId: "u1" }, j_attempts: 0 }],
         error: null,
@@ -67,6 +72,11 @@ describe("jobs worker (batch)", () => {
   it("a failing job goes back to pending with backoff, and the loop continues", async () => {
     analyzeUserStyle.mockRejectedValueOnce(new Error("llm down"));
     rpc
+      // The referral sweep runs first on every invocation.
+      .mockResolvedValueOnce({
+        data: { activated: 0, granted: 0, mode: "activation" },
+        error: null,
+      })
       .mockResolvedValueOnce({
         data: [{ j_id: "1", j_type: "style_analysis", j_payload: { userId: "u1" }, j_attempts: 1 }],
         error: null,
@@ -85,6 +95,11 @@ describe("jobs worker (batch)", () => {
   it("exhausted attempts mark the job failed (no infinite retry)", async () => {
     checkAll.mockRejectedValueOnce(new Error("boom"));
     rpc
+      // The referral sweep runs first on every invocation.
+      .mockResolvedValueOnce({
+        data: { activated: 0, granted: 0, mode: "activation" },
+        error: null,
+      })
       .mockResolvedValueOnce({
         data: [
           { j_id: "9", j_type: "achievement_check", j_payload: { userId: "u9" }, j_attempts: 5 },

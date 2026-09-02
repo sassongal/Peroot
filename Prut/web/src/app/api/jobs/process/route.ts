@@ -33,6 +33,21 @@ export async function GET(req: Request) {
   let completed = 0;
   let failed = 0;
 
+  // Referral rewards are paid here, not at redemption: the referrer gets the
+  // bonus once the friend has actually made an enhancement (or at signup,
+  // if site_settings.referral_grant_on says so). One sweep per run, before
+  // the queue, so a slow queue never starves it. Failure is logged and does
+  // not stop the queue: the next hourly run tries again.
+  try {
+    const { data: sweep, error: sweepErr } = await supabase.rpc("process_referral_grants");
+    if (sweepErr) logger.error("[Worker] referral sweep failed:", sweepErr);
+    else if (sweep && (sweep.granted > 0 || sweep.activated > 0)) {
+      logger.info("[Worker] referral sweep:", sweep);
+    }
+  } catch (e) {
+    logger.error("[Worker] referral sweep threw:", e);
+  }
+
   try {
     while (processed < MAX_JOBS_PER_RUN && Date.now() - startedAt < TIME_BUDGET_MS) {
       // Atomic claim of the next pending job

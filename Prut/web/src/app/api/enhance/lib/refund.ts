@@ -10,6 +10,13 @@ export interface RefundEnhanceArgs {
   /** Refinement flag — kept for observability; guests are charged (and
    *  therefore refunded) on refinements too since the guest quota-bypass fix. */
   isRefinement: boolean;
+  /**
+   * Which bucket the charge came from, as reported by the credit RPC. A refund
+   * has to go back to the same bucket: the daily bucket is a ceiling, so a
+   * credit that was spent from the bonus and refunded into "daily" would be
+   * clamped away at once, and the user who lost it would be a referrer.
+   */
+  chargedFrom?: "daily" | "bonus";
   /** Extra fields attached to the Sentry event if an authenticated refund fails. */
   context?: Record<string, unknown>;
 }
@@ -33,10 +40,10 @@ export type RefundOutcome = "user" | "guest" | "none";
  * whether or whom we refund — only observability.
  */
 export async function refundEnhanceCredit(args: RefundEnhanceArgs): Promise<RefundOutcome> {
-  const { userId, guestId, isRefinement, context } = args;
+  const { userId, guestId, isRefinement, context, chargedFrom } = args;
 
   if (userId) {
-    const result = await refundCredit(userId);
+    const result = await refundCredit(userId, 1, chargedFrom ?? "daily");
     if (!result.success) {
       Sentry.captureException(new Error("Credit refund failed"), {
         extra: { userId, ...context, error: result.error },

@@ -17,9 +17,16 @@ import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 // Types
 // ---------------------------------------------------------------------------
 
+export type CreditBucket = "daily" | "bonus";
+
 interface CreditCheckResult {
   allowed: boolean;
+  /** Daily bucket after the spend. */
   remaining: number;
+  /** Bonus bucket after the spend (referral reward, spent only after daily). */
+  bonusRemaining?: number;
+  /** Which bucket paid. A refund must go back to the same one. */
+  chargedFrom?: CreditBucket;
   error?: string;
 }
 
@@ -120,6 +127,8 @@ export async function checkAndDecrementCredits(
     return {
       allowed: true,
       remaining: creditRes.current_balance ?? 0,
+      bonusRemaining: creditRes.bonus_credits ?? 0,
+      chargedFrom: creditRes.charged_from === "bonus" ? "bonus" : "daily",
     };
   }
 
@@ -165,12 +174,16 @@ export async function checkAndDecrementCredits(
 export async function refundCredit(
   userId: string,
   amount = 1,
+  bucket: CreditBucket = "daily",
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const client = createServiceClient();
+    // The bucket matters: the daily bucket is a ceiling, so a bonus credit
+    // refunded into it is clamped away at once.
     const { error: rpcError } = await client.rpc("refund_credit", {
       target_user_id: userId,
       amount,
+      bucket,
     });
 
     // Surface RPC errors instead of silently swallowing them. If we don't,

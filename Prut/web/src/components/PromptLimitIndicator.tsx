@@ -12,7 +12,8 @@ interface PromptLimitIndicatorProps {
 }
 
 export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorProps) {
-  const { remainingPrompts, totalAllowed, isGuest, isAdmin, settings } = usePromptLimits();
+  const { remainingPrompts, totalAllowed, isGuest, isAdmin, settings, bonusCredits, dailyCredits } =
+    usePromptLimits();
 
   const { isPro } = usePromptLimits();
   const { loading: subLoading } = useSubscription();
@@ -82,8 +83,27 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
         >
           <Coins className={`w-4 h-4 ${isLow ? "text-red-400" : "text-amber-400"}`} />
           <span className="text-xs font-medium text-[var(--text-primary)]">
-            {displayCredits}{" "}
-            <span className="text-[var(--text-muted)] font-normal hidden md:inline">קרדיטים</span>
+            {bonusCredits > 0 ? (
+              // Two buckets: the daily allowance and the referral bonus that
+              // is spent after it. Shown apart so "5" never reads as a bigger
+              // daily quota.
+              <>
+                {dailyCredits}
+                <span className="text-[var(--text-muted)] font-normal"> היום + </span>
+                {bonusCredits}
+                <span className="text-[var(--text-muted)] font-normal hidden md:inline">
+                  {" "}
+                  בונוס
+                </span>
+              </>
+            ) : (
+              <>
+                {displayCredits}{" "}
+                <span className="text-[var(--text-muted)] font-normal hidden md:inline">
+                  קרדיטים
+                </span>
+              </>
+            )}
           </span>
         </Link>
         <Link

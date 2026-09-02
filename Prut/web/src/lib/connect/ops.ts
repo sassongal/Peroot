@@ -191,7 +191,7 @@ export async function connectQuota(userId: string): Promise<ConnectQuota> {
   const db = createServiceClient();
   const { data, error } = await db
     .from("profiles")
-    .select("credits_balance, plan_tier")
+    .select("credits_balance, plan_tier, bonus_credits, bonus_expires_at")
     .eq("id", userId)
     .single();
   if (error || !data) {
@@ -204,9 +204,16 @@ export async function connectQuota(userId: string): Promise<ConnectQuota> {
     return { tier, credits_remaining: null, quota_resets_at: null };
   }
   const resetsAt = await getRefreshAt(userId).catch(() => null);
+  // The referral bonus is a second bucket, spent after the daily allowance.
+  // Reporting only the daily balance would show "0" to a referrer holding
+  // three usable credits.
+  const bonusLive =
+    (data.bonus_credits ?? 0) > 0 &&
+    !!data.bonus_expires_at &&
+    new Date(data.bonus_expires_at).getTime() > Date.now();
   return {
     tier,
-    credits_remaining: data.credits_balance ?? 0,
+    credits_remaining: (data.credits_balance ?? 0) + (bonusLive ? (data.bonus_credits ?? 0) : 0),
     quota_resets_at: resetsAt ? resetsAt.toISOString() : null,
   };
 }

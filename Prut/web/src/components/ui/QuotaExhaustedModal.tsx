@@ -3,11 +3,17 @@
 import { useEffect } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
-import { X, LogIn, Sparkles, Clock } from "lucide-react";
+import { X, LogIn, Sparkles, Clock, Gift } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { CountdownTimer } from "./CountdownTimer";
-import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
+import {
+  PRO_MONTHLY_CREDITS,
+  QUOTA_FALLBACK,
+  creditsPhrase,
+  resolveDailyLimit,
+} from "@/lib/quota-policy";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 interface QuotaExhaustedModalProps {
   isOpen: boolean;
@@ -32,6 +38,11 @@ export function QuotaExhaustedModal({
 }: QuotaExhaustedModalProps) {
   const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
   useScrollLock(isOpen);
+  const { settings } = useSiteSettings();
+  const referralBonus = resolveDailyLimit(
+    settings.referral_bonus_credits,
+    QUOTA_FALLBACK.referralBonus,
+  );
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -105,6 +116,20 @@ export function QuotaExhaustedModal({
                 <Sparkles className="w-4 h-4" />
                 חדדו את התוצאה הקיימת, ללא קרדיט
               </button>
+            )}
+            {/* The referral is the one door that costs nothing and opens more
+                than once: each friend who joins and makes an enhancement pays
+                into the bonus bucket. Free users only; Pro has a monthly
+                allowance and guests have no code yet. */}
+            {!isGuest && (
+              <Link
+                href="/settings?tab=referral"
+                onClick={onClose}
+                className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-[10px] border border-(--glass-border) bg-(--glass-bg) text-(--text-secondary) text-sm hover:border-amber-500/40 hover:text-(--text-primary) transition-colors min-h-[44px]"
+              >
+                <Gift className="w-4 h-4 text-amber-500" />
+                הזמינו חבר וקבלו {creditsPhrase(referralBonus)} בונוס
+              </Link>
             )}
             <button
               onClick={onClose}

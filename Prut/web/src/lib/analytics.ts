@@ -166,3 +166,18 @@ export function trackPaywallHit(reason: "daily_limit" | "feature_locked", contex
 export function trackCheckoutOpened(plan: "pro_monthly" | "pro_yearly") {
   trackEvent("checkout_opened", { plan });
 }
+
+/**
+ * Output-language funnel. Until these existed there was no measurement at all,
+ * which is how "0 of 313 enhancements in another language" went unnoticed.
+ */
+export function trackOutputLanguageSelected(
+  language: string,
+  source: "picker" | "suggestion" | "auto" | "restored",
+) {
+  posthog.capture("output_language_selected", { language, source });
+}
+
+export function trackOutputLanguageMismatch(requested: string, share: number) {
+  posthog.capture("output_language_mismatch", { requested, share: Math.round(share * 100) });
+}

@@ -1,17 +1,15 @@
 "use client";
 
-import { ReactNode, useState, lazy, Suspense } from 'react';
-import { Check } from 'lucide-react';
-import { ScoreDelta } from './ScoreDelta';
-import { cn } from '@/lib/utils';
+import { ReactNode, useState, lazy, Suspense } from "react";
+import { Check } from "lucide-react";
+import { ScoreDelta } from "./ScoreDelta";
+import { cn } from "@/lib/utils";
 
 // Lazy: keeps diff-match-patch (~60KB gzip) out of the initial bundle.
 // Only loaded when the user toggles to diff mode.
-const TextDiff = lazy(() =>
-  import('./TextDiff').then(mod => ({ default: mod.TextDiff }))
-);
+const TextDiff = lazy(() => import("./TextDiff").then((mod) => ({ default: mod.TextDiff })));
 
-type Mode = 'tabs' | 'split' | 'diff';
+type Mode = "tabs" | "split" | "diff";
 
 interface BeforeAfterSplitProps {
   original: string;
@@ -29,14 +27,13 @@ interface BeforeAfterSplitProps {
   className?: string;
 }
 
-const PANE_BASE =
-  'p-6 text-sm leading-relaxed whitespace-pre-wrap max-h-[60vh] overflow-y-auto';
+const PANE_BASE = "p-6 text-sm leading-relaxed whitespace-pre-wrap max-h-[60vh] overflow-y-auto";
 
 export function BeforeAfterSplit({
   original,
   enhanced,
   enhancedNode,
-  mode = 'tabs',
+  mode = "tabs",
   score,
   className,
 }: BeforeAfterSplitProps) {
@@ -45,10 +42,10 @@ export function BeforeAfterSplit({
   // plain string, which is what existing call sites and tests expect.
   const enhancedDisplay: ReactNode = enhancedNode ?? enhanced;
   const hasOriginal = original.trim().length > 0;
-  const [activeTab, setActiveTab] = useState<'before' | 'after'>('after');
+  const [activeTab, setActiveTab] = useState<"before" | "after">("after");
 
   return (
-    <div className={cn('flex flex-col gap-3', className)} dir="rtl">
+    <div className={cn("flex flex-col gap-3", className)} dir="rtl">
       {score && (
         <div className="flex items-center gap-3 flex-wrap">
           <ScoreDelta before={score.before} after={score.after} />
@@ -70,30 +67,30 @@ export function BeforeAfterSplit({
         "לפני" is muted text-only with no background — present but never competing.
         See feedback memory: feedback_before_after_emphasis.md
       */}
-      {mode === 'tabs' && hasOriginal && (
+      {mode === "tabs" && hasOriginal && (
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setActiveTab('after')}
-            aria-pressed={activeTab === 'after'}
+            onClick={() => setActiveTab("after")}
+            aria-pressed={activeTab === "after"}
             className={cn(
-              'px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors',
-              activeTab === 'after'
-                ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40'
-                : 'text-(--text-secondary) border-transparent hover:text-(--text-primary)'
+              "px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors",
+              activeTab === "after"
+                ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40"
+                : "text-(--text-secondary) border-transparent hover:text-(--text-primary)",
             )}
           >
             אחרי
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('before')}
-            aria-pressed={activeTab === 'before'}
+            onClick={() => setActiveTab("before")}
+            aria-pressed={activeTab === "before"}
             className={cn(
-              'px-2 py-1 rounded-full text-[11px] font-normal border transition-colors',
-              activeTab === 'before'
-                ? 'text-(--text-secondary) border-(--glass-border)'
-                : 'text-(--text-muted) border-transparent opacity-70 hover:opacity-100'
+              "px-2 py-1 rounded-full text-[11px] font-normal border transition-colors",
+              activeTab === "before"
+                ? "text-(--text-secondary) border-(--glass-border)"
+                : "text-(--text-muted) border-transparent opacity-70 hover:opacity-100",
             )}
           >
             לפני
@@ -101,11 +98,11 @@ export function BeforeAfterSplit({
         </div>
       )}
 
-      {mode === 'split' ? (
+      {mode === "split" ? (
         <div
           className={cn(
-            'grid gap-3 items-start',
-            hasOriginal ? 'grid-cols-1 md:grid-cols-[1fr_2fr]' : 'grid-cols-1'
+            "grid gap-3 items-start",
+            hasOriginal ? "grid-cols-1 md:grid-cols-[1fr_2fr]" : "grid-cols-1",
           )}
         >
           {hasOriginal && (
@@ -113,7 +110,7 @@ export function BeforeAfterSplit({
               <div className="px-3 pt-2 text-[9px] font-normal uppercase tracking-wider text-(--text-muted)">
                 לפני
               </div>
-              <div className={cn(PANE_BASE, 'text-xs text-(--text-muted)')}>
+              <div className={cn(PANE_BASE, "text-xs text-(--text-muted)")} dir="auto">
                 {original}
               </div>
             </div>
@@ -122,25 +119,25 @@ export function BeforeAfterSplit({
             <div className="px-4 pt-3 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
               אחרי
             </div>
-            <div className={cn(PANE_BASE, 'text-base text-(--text-primary)')}>
+            {/* The pane follows its own text. The page is RTL, but an English
+                or Russian result rendered right-aligned reads as broken even
+                when every word is right. */}
+            <div className={cn(PANE_BASE, "text-base text-(--text-primary)")} dir="auto">
               {enhancedDisplay}
             </div>
           </div>
         </div>
-      ) : mode === 'diff' && hasOriginal ? (
+      ) : mode === "diff" && hasOriginal ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/4 shadow-sm">
           <div className="px-4 pt-3 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center justify-between">
             <span>השוואה</span>
             <span className="text-[9px] font-normal text-(--text-muted)">
-              <span className="text-emerald-500">ירוק</span> = נוסף · <span className="text-red-500">אדום</span> = הוסר
+              <span className="text-emerald-500">ירוק</span> = נוסף ·{" "}
+              <span className="text-red-500">אדום</span> = הוסר
             </span>
           </div>
           <div className={cn(PANE_BASE)}>
-            <Suspense
-              fallback={
-                <div className="text-sm text-(--text-muted)">טוען השוואה…</div>
-              }
-            >
+            <Suspense fallback={<div className="text-sm text-(--text-muted)">טוען השוואה…</div>}>
               <TextDiff before={original} after={enhanced} />
             </Suspense>
           </div>
@@ -148,21 +145,21 @@ export function BeforeAfterSplit({
       ) : (
         <div
           className={cn(
-            'rounded-xl transition-all',
-            activeTab === 'after'
-              ? 'border border-amber-500/30 bg-amber-500/4 shadow-sm'
-              : 'border border-(--glass-border) bg-(--glass-bg)/40 opacity-70'
+            "rounded-xl transition-all",
+            activeTab === "after"
+              ? "border border-amber-500/30 bg-amber-500/4 shadow-sm"
+              : "border border-(--glass-border) bg-(--glass-bg)/40 opacity-70",
           )}
         >
           <div
             className={cn(
               PANE_BASE,
-              activeTab === 'after'
-                ? 'text-base text-(--text-primary)'
-                : 'text-sm text-(--text-muted)'
+              activeTab === "after"
+                ? "text-base text-(--text-primary)"
+                : "text-sm text-(--text-muted)",
             )}
           >
-            {hasOriginal && activeTab === 'before' ? original : enhancedDisplay}
+            {hasOriginal && activeTab === "before" ? original : enhancedDisplay}
           </div>
         </div>
       )}

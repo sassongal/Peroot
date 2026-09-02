@@ -31,6 +31,15 @@ export const QUOTA_FALLBACK = {
   guestDaily: 1,
   /** Registered free user, per rolling 24h window. */
   freeDaily: 2,
+  /**
+   * Referral reward per referred friend, paid into the separate bonus bucket
+   * (owner decision, 2026-09-02). Mirrors site_settings.referral_bonus_credits.
+   */
+  referralBonus: 3,
+  /** Days the bonus bucket stays usable after the latest grant. */
+  referralBonusDays: 7,
+  /** Safety ceiling on the bonus bucket. */
+  bonusCap: 50,
 } as const;
 
 /**

@@ -28,9 +28,19 @@ const Schema = z.object({
   iteration: z.number().int().min(0).optional(),
   context: z.array(ContextBlockSchema).max(5).optional(),
   previousQuestionIds: z.array(z.number()).max(20).optional(),
+  // The language the result was produced in. Questions about a Russian
+  // result asked in Hebrew were the most embarrassing gap in the flow.
+  output_language: z.enum(["hebrew", "english", "arabic", "russian"]).optional(),
 });
 
-const SYSTEM_PROMPT = `אתה מומחה בהתאמה אישית של פרומפטים. המשימה שלך: צור שאלות שיתאימו את הפרומפט המשודרג לצרכים הספציפיים של המשתמש.
+const QUESTION_LANGUAGE: Record<string, string> = {
+  hebrew: "Hebrew",
+  english: "English",
+  arabic: "Arabic (Modern Standard, Western digits)",
+  russian: "Russian (formal register, Вы)",
+};
+
+const SYSTEM_PROMPT_TEMPLATE = `אתה מומחה בהתאמה אישית של פרומפטים. המשימה שלך: צור שאלות שיתאימו את הפרומפט המשודרג לצרכים הספציפיים של המשתמש.
 
 הפרומפט המשודרג כבר מבניות טובות, תפקיד, משימה, פורמט, מגבלות. אל תשאל על מה שכבר קיים בו.
 שאל על ה-WHO, WHERE, WHEN, FOR WHOM שיהפכו את הפרומפט לייחודי לסיטואציה הספציפית.
@@ -46,7 +56,7 @@ PERSONALIZATION QUESTION RULES:
 3. DYNAMIC COUNT (2-4 questions): One clear use case → 2 questions. Broad/multi-use prompt → 3-4 questions.
 4. Every question must change the LLM's output when answered, audience, tone, depth, platform, examples.
 5. Include 2-3 concrete domain-relevant example answers per question.
-6. Questions in Hebrew. Order by impact, most important first.
+6. Questions, descriptions, example answers and impactEstimate in {{LANG}}. Order by impact, most important first.
 
 Output ONLY a JSON array with no surrounding text, no markdown fences, no explanation.
 [{"id": 1, "question": "...", "description": "...", "examples": ["ex1", "ex2", "ex3"], "priority": 10, "category": "audience", "impactEstimate": "+10 נקודות", "required": true}]
@@ -58,6 +68,11 @@ FIELD DEFINITIONS:
 - required: true if answering significantly personalizes the output
 
 ALWAYS generate at least 2 questions. The prompt is structurally complete but never fully personalized.`;
+
+function systemPromptFor(outputLanguage?: string): string {
+  const lang = QUESTION_LANGUAGE[outputLanguage ?? "hebrew"] ?? QUESTION_LANGUAGE.hebrew;
+  return SYSTEM_PROMPT_TEMPLATE.replace("{{LANG}}", lang);
+}
 
 function buildUserMessage(
   prompt: string,
@@ -130,7 +145,7 @@ export const POST = withUser(
 
     try {
       const result = await AIGateway.generateFull({
-        system: SYSTEM_PROMPT,
+        system: systemPromptFor(body.output_language),
         prompt: userMessage,
         task: "classify",
         preferredModel: "gemini-2.5-flash-lite",
