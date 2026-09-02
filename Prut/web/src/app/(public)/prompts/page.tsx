@@ -14,6 +14,8 @@ import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { PromptSearch } from "@/components/features/library/PromptSearch";
 import { PromptLinkTile } from "@/components/ui/PromptLinkTile";
+import { CategoryQuickNav } from "@/components/features/library/CategoryQuickNav";
+import { Code, PenTool, Rocket, Settings, Sparkles, TrendingUp, LayoutGrid } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { promptPagePath } from "@/lib/category-slugs";
 
@@ -135,6 +137,22 @@ function groupSlugsByCollection() {
   return collectionGroups;
 }
 
+/**
+ * PROMPT_COLLECTIONS stores `icon` as a lucide component NAME ("TrendingUp"),
+ * but the section header rendered it inside a <span role="img">, so six
+ * headings on this page displayed the literal strings "TrendingUp", "Rocket",
+ * "PenTool", "Settings", "Code" and "SparklesIcon" next to the Hebrew title.
+ * Map the names to the components they were always meant to be.
+ */
+const SECTION_ICONS: Record<string, typeof TrendingUp> = {
+  TrendingUp,
+  Rocket,
+  PenTool,
+  Settings,
+  Code,
+  SparklesIcon: Sparkles,
+};
+
 export default async function PromptsIndexPage() {
   const groups = groupSlugsByCollection();
   const totalCategories = Object.keys(CATEGORY_SLUG_MAP).length;
@@ -209,25 +227,22 @@ export default async function PromptsIndexPage() {
           {/* Search */}
           <PromptSearch />
 
-          {/* Catalogue filter (U3.1): templates are a slice of THIS catalogue,
-              prompts that carry fillable {variables}. */}
-          <div className="flex items-center gap-2 mb-10 -mt-4" dir="rtl">
-            <span className="text-xs text-muted-foreground">סינון:</span>
-            <Link
-              href="/templates"
-              className="text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-500/30 transition-colors"
-            >
-              רק תבניות עם {"{משתנים}"}
-            </Link>
-          </div>
+          {/* Jump-nav across the six category sections. What stood here was a
+              chip labelled "סינון:" that filtered nothing — it navigated to
+              /templates. The templates entry is now an honest link, below. */}
+          <CategoryQuickNav
+            sections={groups.map((g) => ({
+              id: `cat-${g.collectionId}`,
+              title: g.title,
+              count: g.items.length,
+            }))}
+          />
 
           {/* Fresh prompts — real content above the category doors */}
           {popular.length > 0 && (
             <section className="mb-12 md:mb-16" aria-label="פרומפטים חדשים">
-              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-border">
-                <span className="text-2xl" role="img" aria-hidden="true">
-                  ✨
-                </span>
+              <div className="flex items-center gap-2.5 mb-5 pb-4 border-b border-border">
+                <Sparkles className="w-5 h-5 text-amber-500 shrink-0" aria-hidden />
                 <h2 className="text-xl md:text-2xl font-serif text-foreground">חדשים בספרייה</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -245,13 +260,22 @@ export default async function PromptsIndexPage() {
           {/* Category groups */}
           <div className="space-y-12 md:space-y-16">
             {groups.map((group) => (
-              <section key={group.collectionId} aria-label={group.title}>
+              <section
+                key={group.collectionId}
+                id={`cat-${group.collectionId}`}
+                aria-label={group.title}
+                className="scroll-mt-24"
+              >
                 {/* Section header */}
-                <div className={`flex items-center gap-3 mb-5 pb-4 border-b border-border`}>
-                  <span className="text-2xl" role="img" aria-hidden="true">
-                    {group.icon}
-                  </span>
+                <div className="flex items-center gap-2.5 mb-5 pb-4 border-b border-border">
+                  {(() => {
+                    const Icon = SECTION_ICONS[group.icon] ?? LayoutGrid;
+                    return <Icon className="w-5 h-5 text-amber-500 shrink-0" aria-hidden />;
+                  })()}
                   <h2 className="text-xl md:text-2xl font-serif text-foreground">{group.title}</h2>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {group.items.length}
+                  </span>
                 </div>
 
                 {/* Category cards */}
@@ -263,12 +287,12 @@ export default async function PromptsIndexPage() {
                     <Link
                       key={slug}
                       href={`/prompts/${slug}`}
-                      className="flex flex-col items-center gap-2 p-3 md:p-4 min-h-[110px] rounded-xl border border-border bg-secondary hover:bg-white/6 hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all text-center group"
+                      className="flex flex-col items-center justify-center gap-2 p-3 md:p-4 min-h-[104px] h-full rounded-xl border border-border bg-secondary hover:bg-(--glass-bg) hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-colors text-center"
                     >
-                      <span className="text-2xl md:text-3xl group-hover:scale-110 transition-transform duration-200">
+                      <span className="text-2xl md:text-3xl" aria-hidden>
                         {emoji}
                       </span>
-                      <span className="text-xs md:text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-snug wrap-break-word">
+                      <span className="text-xs md:text-sm text-(--text-secondary) leading-snug wrap-break-word">
                         {labelHe}
                       </span>
                     </Link>
@@ -278,8 +302,14 @@ export default async function PromptsIndexPage() {
             ))}
           </div>
 
-          {/* Cross-links */}
+          {/* Cross-links. The templates entry lives here, described for what it
+              is, instead of masquerading as a filter above the catalogue. */}
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <CrossLinkCard
+              href="/templates"
+              title="תבניות עם שדות למילוי"
+              description="הפרומפטים שיש בהם משתנים: ממלאים את השדות ומקבלים פרומפט מותאם"
+            />
             <CrossLinkCard
               href="/guide"
               title="איך לכתוב פרומפט טוב?"

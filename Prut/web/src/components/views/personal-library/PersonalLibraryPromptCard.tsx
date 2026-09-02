@@ -283,7 +283,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
           aria-label={`בחר את הפרומפט "${prompt.title}"`}
         >
           {isSelected ? (
-            <CheckSquare className="w-4 h-4 text-blue-400" />
+            <CheckSquare className="w-4 h-4 text-amber-500 dark:text-amber-400" />
           ) : (
             <Square className="w-4 h-4 text-(--text-muted)" />
           )}
@@ -303,7 +303,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
             "shrink-0 p-1 rounded transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none cursor-pointer",
             prompt.is_pinned
               ? "text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300"
-              : "text-(--text-muted) opacity-40 hover:opacity-100 hover:text-amber-500",
+              : "text-(--text-muted) opacity-0 group-hover:opacity-60 hover:!opacity-100 hover:text-amber-500 [@media(hover:none)]:opacity-40",
           )}
         >
           <Pin className={cn("w-3.5 h-3.5", prompt.is_pinned && "fill-amber-400")} />
@@ -354,39 +354,16 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
           </div>
         </div>
 
-        {/* Quick actions (collapsed) — always visible on mobile (no hover),
-            hover-revealed on pointer devices. On touch (hover:none) they stay
-            visible at every width, since the kebab menu lives here and would
-            otherwise be unreachable on a tablet. */}
-        <div
-          className="flex items-center gap-0.5 shrink-0 opacity-100 @md/plcard:opacity-0 @md/plcard:group-hover:opacity-100 [@media(hover:none)]:!opacity-100 transition-opacity"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              bumpPersonalLibraryLastUsed?.(prompt.id);
-              onCopyText(prompt.prompt);
-            }}
-            title="העתק"
-            aria-label="העתק פרומפט"
-            className="p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-400 hover:bg-(--glass-bg) transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 flex items-center justify-center cursor-pointer"
-          >
-            <Copy className="w-4 h-4 @md/plcard:w-3.5 @md/plcard:h-3.5" />
-          </button>
-          {onShowConnections && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onShowConnections(prompt.id);
-              }}
-              title="קשרים"
-              aria-label="הצג קשרים"
-              className="flex @md/plcard:hidden p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-11 min-w-11 items-center justify-center cursor-pointer"
-            >
-              <Network className="w-4 h-4" />
-            </button>
-          )}
+        {/* Row actions: ONE primary plus the menu.
+            This used to carry four controls (copy, relations, use, menu) on top
+            of the pin, checkbox and drag handle on the other side — seven slots
+            competing for one row, which left roughly 120px for the title in a
+            three-column grid and read as a pile of icons. Copy and relations
+            both already live in the menu below, so they are not repeated here.
+            They are also no longer hover-revealed: with two controls there is
+            nothing to hide, and fading them in on hover was what made the row
+            feel like it was shifting under the pointer. */}
+        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -395,9 +372,12 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
             }}
             title="השתמש"
             aria-label="השתמש בפרומפט"
-            className="flex p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 items-center justify-center"
+            className="flex items-center justify-center gap-1.5 shrink-0 min-h-11 @md/plcard:min-h-9 px-2.5 rounded-lg border border-(--glass-border) text-(--text-secondary) hover:text-amber-700 dark:hover:text-amber-300 hover:border-amber-500/40 hover:bg-amber-500/8 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none cursor-pointer"
           >
-            <ArrowRight className="w-4 h-4 @md/plcard:w-3.5 @md/plcard:h-3.5" />
+            <ArrowRight className="w-4 h-4 shrink-0" />
+            {/* The label appears once the card is wide enough to afford it, so
+                the primary action is not a bare icon on desktop. */}
+            <span className="hidden @md/plcard:inline text-xs font-medium">השתמש</span>
           </button>
           <div className="relative">
             <button
