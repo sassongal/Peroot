@@ -141,12 +141,16 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
           />
         </ErrorBoundary>
 
-        {!isLoading && completion && isAuthenticated && (
+        {!isLoading && completion && (
           <div className="flex justify-end px-1">
             <FeedbackButtons
               inputText={originalPrompt}
               enhancedText={completion}
               capabilityMode={String(capabilityMode)}
+              /* Refinement is closed to guests server side (/api/enhance rejects
+                 a guest refinement payload), so the free retry is offered only
+                 where it can actually run. A guest still gets to vote. */
+              onRetryFree={isAuthenticated ? onQuickRefine : undefined}
             />
           </div>
         )}
