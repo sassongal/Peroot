@@ -38,7 +38,7 @@ export function OutputLanguagePicker({
       aria-label="שפת הפלט"
       title={title}
       className={cn(
-        "inline-flex items-center gap-0.5 p-0.5 rounded-full border border-(--glass-border) bg-(--glass-bg)",
+        "inline-flex items-center gap-0.5 p-0.5 rounded-full border border-(--glass-border) bg-(--glass-bg) max-w-full overflow-x-auto",
         (locked || disabled) && "opacity-60",
         className,
       )}
@@ -58,7 +58,7 @@ export function OutputLanguagePicker({
             disabled={locked || disabled}
             onClick={() => onChange(lang.code)}
             className={cn(
-              "px-2.5 min-h-[32px] rounded-full text-xs font-medium transition-colors cursor-pointer",
+              "px-2 sm:px-2.5 min-h-[32px] rounded-full text-[11px] sm:text-xs font-medium transition-colors cursor-pointer whitespace-nowrap",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50",
               "disabled:cursor-not-allowed",
               active

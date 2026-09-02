@@ -327,8 +327,10 @@ export function PromptInput({
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
-        <div className="flex items-center justify-between gap-3 mb-2 px-1">
-          <div className="text-sm font-semibold text-(--text-muted) uppercase tracking-widest">
+        {/* On a phone the picker takes its own row: beside the label it was
+            wider than the space and lost its last language off the edge. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-2 px-1">
+          <div className="text-sm font-semibold text-(--text-muted) uppercase tracking-widest whitespace-nowrap">
             {t.prompt_generator.capability_mode}
           </div>
           <OutputLanguagePicker
@@ -336,6 +338,7 @@ export function PromptInput({
             onChange={(next) => setOutputLanguage(next, "picker")}
             locked={outputLangLocked}
             disabled={isLoading}
+            className="max-w-full"
           />
         </div>
         <CapabilitySelector
@@ -589,7 +592,7 @@ export function PromptInput({
                 const def = outputLanguageDef(detected);
                 return (
                   <div
-                    className="mx-6 md:mx-8 mb-3 flex items-center gap-2 text-xs animate-in fade-in duration-200"
+                    className="mx-6 md:mx-8 mb-3 flex flex-wrap items-center gap-2 text-xs animate-in fade-in duration-200"
                     dir="rtl"
                     role="status"
                   >
@@ -597,14 +600,14 @@ export function PromptInput({
                     <button
                       type="button"
                       onClick={() => setOutputLanguage(detected, "suggestion")}
-                      className="px-2.5 min-h-[32px] rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200 font-medium hover:bg-amber-500/20 transition-colors cursor-pointer"
+                      className="px-2.5 min-h-[32px] rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200 font-medium hover:bg-amber-500/20 transition-colors cursor-pointer whitespace-nowrap"
                     >
                       להוציא ב{def.he}
                     </button>
                     <button
                       type="button"
                       onClick={() => setDismissedSuggestion(detected)}
-                      className="px-2 min-h-[32px] rounded-full text-(--text-muted) hover:text-(--text-primary) transition-colors cursor-pointer"
+                      className="px-2 min-h-[32px] rounded-full text-(--text-muted) hover:text-(--text-primary) transition-colors cursor-pointer whitespace-nowrap"
                       aria-label="להשאיר את שפת הפלט הנוכחית"
                     >
                       לא, תודה

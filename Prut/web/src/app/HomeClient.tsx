@@ -236,17 +236,19 @@ function PageContent() {
         queueMicrotask(() => setOutputLanguageState(stored));
         return;
       }
-      // First visit: the browser language is the best guess we have. A Hebrew
-      // browser changes nothing; an Arabic or Russian one starts in that
-      // language, which is the whole point for the audiences we are after.
+      // First visit: an Arabic or Russian browser starts in that language,
+      // which is the whole point for the audiences we are after. English is
+      // deliberately NOT a default: Chrome in Israel is very often installed
+      // in English, so "en-US" is what a great many Hebrew writers report,
+      // and defaulting them to English output would flip the product on them.
+      // Caught on the first live screenshot, where a headless en-US browser
+      // came up with English selected.
       const nav = (navigator.language || "").toLowerCase();
       const guess: OutputLanguage | null = nav.startsWith("ar")
         ? "arabic"
         : nav.startsWith("ru")
           ? "russian"
-          : nav.startsWith("en")
-            ? "english"
-            : null;
+          : null;
       if (guess) queueMicrotask(() => setOutputLanguage(guess, "auto"));
     } catch {
       /* ignore */
