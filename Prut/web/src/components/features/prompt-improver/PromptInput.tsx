@@ -274,6 +274,12 @@ export function PromptInput({
     queueMicrotask(() => setDisplayedExamples(shuffled.slice(0, 4)));
   }, [selectedCapability]);
 
+  // The recognizer is torn down and rebuilt whenever its language changes,
+  // which would cut a dictation short: voiceLang follows the script of the
+  // text on screen, and transcribed words change that text. So the language
+  // the recognizer runs with is frozen for the duration of a recording.
+  const [micLang, setMicLang] = useState<VoiceLang>(voiceLang);
+
   // Voice Recorder Logic
   const { isListening, toggleListening, isSupported } = useVoiceRecorder({
     onResult: (text, isFinal) => {
@@ -305,8 +311,13 @@ export function PromptInput({
       setInterimResult("");
       onInterimChange?.("");
     },
-    lang: voiceLang,
+    lang: micLang,
   });
+
+  useEffect(() => {
+    if (isListening || micLang === voiceLang) return;
+    queueMicrotask(() => setMicLang(voiceLang));
+  }, [isListening, micLang, voiceLang]);
 
   useEffect(() => {
     const textarea = textareaRef.current;

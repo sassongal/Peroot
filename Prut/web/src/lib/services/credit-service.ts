@@ -174,7 +174,12 @@ export async function checkAndDecrementCredits(
 export async function refundCredit(
   userId: string,
   amount = 1,
-  bucket: CreditBucket = "daily",
+  /**
+   * "auto" lets the database decide: the daily bucket if it is below its
+   * ceiling, otherwise the bonus bucket if one is live. For callers that
+   * never saw the charge (the Connect timeout path).
+   */
+  bucket: CreditBucket | "auto" = "daily",
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const client = createServiceClient();

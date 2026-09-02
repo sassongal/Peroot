@@ -98,7 +98,7 @@ describe("/api/v1/enhance hardening", () => {
       expect(res.status).toBe(504);
       const body = await res.json();
       expect(body.code).toBe("timeout");
-      expect(mockRefund).toHaveBeenCalledWith("u1");
+      expect(mockRefund).toHaveBeenCalledWith("u1", 1, "auto");
     } finally {
       vi.useRealTimers();
     }

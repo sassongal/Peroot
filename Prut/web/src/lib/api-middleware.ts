@@ -168,8 +168,13 @@ export interface WithUserDeps {
     tier: Tier,
     db: SupabaseClient,
     amount: number,
-  ) => Promise<{ allowed: boolean; remaining: number; error?: string }>;
-  refundCredits: (userId: string, amount: number) => Promise<void>;
+  ) => Promise<{
+    allowed: boolean;
+    remaining: number;
+    error?: string;
+    chargedFrom?: "daily" | "bonus";
+  }>;
+  refundCredits: (userId: string, amount: number, bucket?: "daily" | "bonus") => Promise<void>;
   logger: {
     info: (msg: string, meta?: unknown) => void;
     warn: (msg: string, meta?: unknown) => void;
@@ -216,8 +221,8 @@ const defaultDeps: WithUserDeps = {
   },
   checkRateLimit,
   chargeCredits: (userId, tier, db, amount) => checkAndDecrementCredits(userId, tier, db, amount),
-  refundCredits: async (userId, amount) => {
-    await refundCredit(userId, amount);
+  refundCredits: async (userId, amount, bucket) => {
+    await refundCredit(userId, amount, bucket ?? "daily");
   },
   logger,
 };
@@ -305,15 +310,20 @@ export function withUser<C = unknown>(
       // Credit charge — eager; kept only on a 2xx (see refund logic below).
       let charged = false;
       let refunded = false;
+      // Which bucket paid (daily allowance or referral bonus). A refund must
+      // return to the same one: the daily bucket is a ceiling and would clamp
+      // a refunded bonus credit away.
+      let chargedFrom: "daily" | "bonus" | undefined;
       const refund = async () => {
         if (!charged || refunded || !user) return;
         refunded = true;
-        await deps.refundCredits(user.id, opts.credits!);
+        await deps.refundCredits(user.id, opts.credits!, chargedFrom);
       };
       if (opts.credits != null && !bypass && user) {
         const c = await deps.chargeCredits(user.id, tier, db, opts.credits);
         if (!c.allowed) return errors.insufficientCredits(c.remaining);
         charged = true;
+        chargedFrom = c.chargedFrom;
       }
 
       const ctx: UserCtx = {

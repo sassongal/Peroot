@@ -114,7 +114,7 @@ export async function POST(req: Request) {
   } catch (e) {
     if (e instanceof ConnectOpError && e.code === "timeout") {
       // The user paid for something the agent never received — give it back.
-      void refundCredit(auth.userId).catch(() => {});
+      void refundCredit(auth.userId, 1, "auto").catch(() => {});
       logConnectUsage({
         userId: auth.userId,
         keyId: auth.keyId,
