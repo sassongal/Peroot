@@ -167,6 +167,7 @@ export function ChainPreview({
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-3">
           <button
+            aria-label="חזרה"
             onClick={onBack}
             className="p-2 rounded-full hover:bg-white/10 text-slate-400 transition-colors"
             title="חזרה"
@@ -181,6 +182,7 @@ export function ChainPreview({
           </div>
         </div>
         <button
+          aria-label="סגור"
           onClick={onClose}
           className="p-2 rounded-full hover:bg-white/10 text-slate-400 transition-colors"
         >

@@ -7,6 +7,7 @@ import { breadcrumbSchema, articleSchema, faqSchema, howToSchema } from "@/lib/s
 import { IMAGE_GUIDES } from "../_data/image-guides";
 import type { Guide } from "../_data/image-guides";
 import { enrichGuideFromSkills } from "@/lib/engines/skills/guide-enricher";
+import { formatDateHe } from "@/lib/dates/format";
 
 async function getAllGuides(): Promise<Guide[]> {
   const { VIDEO_GUIDES } = await import("../_data/video-guides");
@@ -128,7 +129,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
               </span>
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Calendar className="w-3 h-3" />
-                עודכן: {new Date(guide.lastUpdated).toLocaleDateString("he-IL")}
+                עודכן: {formatDateHe(guide.lastUpdated)}
               </span>
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />

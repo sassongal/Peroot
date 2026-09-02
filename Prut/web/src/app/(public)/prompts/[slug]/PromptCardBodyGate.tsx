@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CopyButton } from "./CopyButton";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { UsePromptButton } from "./UsePromptButton";
 
 interface Props {
@@ -61,7 +61,7 @@ export function PromptCardBodyGate({
       )}
 
       <div className="flex items-center gap-2 mt-auto pt-1">
-        <CopyButton text={fullText} />
+        <CopyButton text={fullText} label="העתק פרומפט" variant="button" />
         <UsePromptButton id={promptId} title={title} prompt={fullText} category={slug} />
         <Link
           href={detailHref}

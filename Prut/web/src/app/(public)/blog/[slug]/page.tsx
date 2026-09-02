@@ -21,6 +21,7 @@ import { BlogTOC } from "@/components/blog/BlogTOC";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
+import { formatDateHe } from "@/lib/dates/format";
 
 // Maps blog post category (Hebrew) to the most relevant prompt library slug
 const BLOG_CATEGORY_TO_PROMPT_SLUG: Record<string, string> = {
@@ -239,9 +240,7 @@ export default async function BlogPostPage({ params }: Props) {
   const blogSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
   const ogImageUrl = `${blogSiteUrl}/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`;
 
-  const publishedDate = post.published_at
-    ? new Date(post.published_at).toLocaleDateString("he-IL")
-    : "";
+  const publishedDate = post.published_at ? formatDateHe(post.published_at) : "";
 
   // Enrich the HTML with id attributes on H2 headings for TOC linking
   const enrichedContent = injectH2Ids(post.content ?? "");

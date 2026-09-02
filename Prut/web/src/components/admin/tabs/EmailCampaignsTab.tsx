@@ -17,6 +17,7 @@ import {
   Layers,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
+import { formatDateHe, formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ const SEGMENT_OPTIONS: { value: Segment; label: string; he: string }[] = [
 ];
 
 function fmtCount(n: number) {
-  return n.toLocaleString("en-US");
+  return formatNumberHe(n);
 }
 
 function fmtDate(iso: string) {
@@ -796,9 +797,7 @@ function GlobalEmailLogs() {
   const fmtTime = (iso: string) => {
     const d = new Date(iso);
     return (
-      d.toLocaleDateString("he-IL") +
-      " " +
-      d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })
+      formatDateHe(d) + " " + d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })
     );
   };
 
@@ -819,6 +818,7 @@ function GlobalEmailLogs() {
           </div>
         </div>
         <button
+          aria-label="רענן"
           onClick={fetchLogs}
           disabled={loading}
           className="p-2 rounded-xl bg-white/3 border border-white/5 text-zinc-600 hover:text-white transition-all"

@@ -6,6 +6,7 @@ import type { Subscription } from "@/hooks/useSubscription";
 import { PLANS } from "@/lib/lemonsqueezy";
 import { useQuotaPolicy } from "@/context/QuotaPolicyContext";
 import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
+import { formatDateHe } from "@/lib/dates/format";
 
 interface SettingsBillingSectionProps {
   billingSuccess: boolean;
@@ -59,7 +60,7 @@ export function SettingsBillingSection({
               <h3 className="font-bold text-white">{isPro ? "Peroot Pro" : "תוכנית חינם"}</h3>
               <p className="text-xs text-slate-500">
                 {isPro
-                  ? `סטטוס: פעיל${subscription.renews_at ? ` · מתחדש ב-${new Date(subscription.renews_at).toLocaleDateString("he-IL")}` : ""}`
+                  ? `סטטוס: פעיל${subscription.renews_at ? ` · מתחדש ב-${formatDateHe(subscription.renews_at)}` : ""}`
                   : `${creditsPhrase(freeDaily)} ביום`}
               </p>
             </div>
@@ -144,8 +145,8 @@ export function SettingsBillingSection({
         <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-start gap-3">
           <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
           <p className="text-sm text-yellow-300">
-            המנוי שלך בוטל ויסתיים ב-{new Date(subscription.ends_at).toLocaleDateString("he-IL")}.
-            לאחר מכן תעבור לתוכנית החינם.
+            המנוי שלך בוטל ויסתיים ב-{formatDateHe(subscription.ends_at)}. לאחר מכן תעבור לתוכנית
+            החינם.
           </p>
         </div>
       )}

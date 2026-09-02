@@ -165,6 +165,7 @@ export function PreviewModal({
             </div>
           </div>
           <button
+            aria-label="סגור"
             onClick={onClose}
             className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-colors"
           >

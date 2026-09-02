@@ -35,6 +35,7 @@ import {
   ArrowUpFromLine,
   ArrowDownFromLine,
 } from "lucide-react";
+import { formatDateHe, formatNumberHe, formatTimeHe } from "@/lib/dates/format";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -104,7 +105,7 @@ function MetricCard({
       <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider">{label}</span>
       <div className="flex items-baseline gap-1.5">
         <span className="text-lg font-black text-white tabular-nums">
-          {typeof value === "number" ? value.toLocaleString() : value}
+          {typeof value === "number" ? formatNumberHe(value) : value}
         </span>
         {suffix && <span className="text-[10px] text-zinc-500 font-bold">{suffix}</span>}
         {delta !== undefined && delta !== 0 && (
@@ -601,7 +602,7 @@ export default function IntegrationsPage() {
               className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={cn("w-3 h-3", loading && "animate-spin")} />
-              {lastRefresh ? `עודכן ${lastRefresh.toLocaleTimeString("he-IL")}` : "טוען..."}
+              {lastRefresh ? `עודכן ${formatTimeHe(lastRefresh)}` : "טוען..."}
             </button>
           </div>
           <h1 className="text-4xl md:text-5xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
@@ -1021,11 +1022,7 @@ export default function IntegrationsPage() {
                   />
                   <MetricCard
                     label="מייל אחרון"
-                    value={
-                      data.resend.lastSentAt
-                        ? new Date(data.resend.lastSentAt).toLocaleDateString("he-IL")
-                        : ", "
-                    }
+                    value={data.resend.lastSentAt ? formatDateHe(data.resend.lastSentAt) : ", "}
                   />
                 </div>
               ) : null

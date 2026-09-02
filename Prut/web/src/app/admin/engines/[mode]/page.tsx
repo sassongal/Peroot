@@ -397,7 +397,10 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
                   dir="ltr"
                 />
                 <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-3 bg-zinc-900 border border-white/10 rounded-xl text-zinc-500 hover:text-white transition-all">
+                  <button
+                    aria-label="העתק"
+                    className="p-3 bg-zinc-900 border border-white/10 rounded-xl text-zinc-500 hover:text-white transition-all"
+                  >
                     <Copy className="w-4 h-4" />
                   </button>
                 </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Calendar, Clock, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Suspense } from "react";
+import { formatDateHe } from "@/lib/dates/format";
 
 interface BlogPost {
   slug: string;
@@ -37,10 +38,7 @@ async function RecentBlogPostsContent() {
     >
       {/* Section header */}
       <div className="flex items-center justify-between mb-6">
-        <h2
-          id="recent-posts-heading"
-          className="text-2xl font-serif text-(--text-primary)"
-        >
+        <h2 id="recent-posts-heading" className="text-2xl font-serif text-(--text-primary)">
           מאמרים אחרונים
         </h2>
         <Link
@@ -70,9 +68,7 @@ async function RecentBlogPostsContent() {
               {post.published_at && (
                 <div className="flex items-center gap-1 text-[10px] text-slate-500">
                   <Calendar className="w-3 h-3 shrink-0" />
-                  <span>
-                    {new Date(post.published_at).toLocaleDateString("he-IL")}
-                  </span>
+                  <span>{formatDateHe(post.published_at)}</span>
                 </div>
               )}
               {post.read_time && (

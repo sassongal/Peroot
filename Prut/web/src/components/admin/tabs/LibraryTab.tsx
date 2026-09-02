@@ -19,6 +19,7 @@ import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
 import { BatchImportTool } from "@/components/admin/BatchImportTool";
 import { CategoryManager } from "@/components/admin/CategoryManager";
+import { formatDateHe } from "@/lib/dates/format";
 
 type Tab = "overview" | "import" | "categories";
 
@@ -284,7 +285,7 @@ export function LibraryTab() {
                           </span>
                         </div>
                         <div className="col-span-2 text-zinc-700 text-[10px] font-bold">
-                          {new Date(p.created_at).toLocaleDateString("he-IL")}
+                          {formatDateHe(p.created_at)}
                         </div>
                       </div>
                     ))

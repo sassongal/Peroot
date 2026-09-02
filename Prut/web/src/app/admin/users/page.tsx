@@ -26,6 +26,7 @@ import { useI18n } from "@/context/I18nContext";
 import { logger } from "@/lib/logger";
 import { UserCreditsBlock } from "@/components/admin/UserCreditsBlock";
 import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
+import { formatDateHe } from "@/lib/dates/format";
 
 interface User {
   id: string;
@@ -251,8 +252,8 @@ export default function UsersPage() {
           u.role ?? "user",
           String(u.credits_balance ?? 0),
           u.is_banned ? "חסום" : "פעיל",
-          new Date(u.created_at).toLocaleDateString("he-IL"),
-          u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("he-IL") : "",
+          formatDateHe(u.created_at),
+          u.last_sign_in_at ? formatDateHe(u.last_sign_in_at) : "",
         ];
         return cols.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
       })
@@ -279,7 +280,7 @@ export default function UsersPage() {
     if (hrs < 24) return `${hrs}h ago`;
     const days = Math.floor(hrs / 24);
     if (days < 30) return `${days}d ago`;
-    return new Date(lastSignIn).toLocaleDateString("en-US");
+    return formatDateHe(lastSignIn);
   }
 
   function tierColor(tier: string | undefined) {
@@ -623,7 +624,7 @@ export default function UsersPage() {
                           </div>
                           <div className="flex items-center gap-2 text-zinc-600 font-bold text-xs">
                             <Calendar className="w-3 h-3 text-zinc-800" />
-                            {new Date(user.created_at).toLocaleDateString("en-US")}
+                            {formatDateHe(user.created_at)}
                           </div>
                         </div>
                       </td>

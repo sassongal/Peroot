@@ -240,6 +240,7 @@ export function SystemPromptsTab() {
             </div>
           </div>
           <button
+            aria-label="רענן"
             onClick={loadPrompts}
             className="p-5 bg-zinc-950 border border-white/5 rounded-[24px] hover:bg-white/3 transition-all active:scale-95 group"
           >

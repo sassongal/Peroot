@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
+import { formatNumberHe } from "@/lib/dates/format";
 
 interface EngineRow {
   id: string;
@@ -192,7 +193,7 @@ export function EnginesListTab() {
                       label="Requests"
                       value={
                         engineMetrics[engine.mode]
-                          ? engineMetrics[engine.mode].requestCount.toLocaleString()
+                          ? formatNumberHe(engineMetrics[engine.mode].requestCount)
                           : "0"
                       }
                     />

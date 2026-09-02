@@ -29,7 +29,7 @@ import { PageHeading } from "@/components/ui/PageHeading";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, speakablePageSchema } from "@/lib/schema";
-import { CopyButton } from "./CopyButton";
+import { CopyButton } from "@/components/ui/CopyButton";
 
 const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const _guideOg = `${_SITE}/api/og?title=${encodeURIComponent("מדריך כתיבת פרומפטים")}&subtitle=${encodeURIComponent("טכניקות מתקדמות, דוגמאות מעשיות וטיפים לשימוש ב-ChatGPT, Claude ו-Gemini")}&category=${encodeURIComponent("מדריכים")}`;
@@ -393,7 +393,12 @@ function GlassCard({
 function CodeBlock({ children }: { children: string }) {
   return (
     <div className="relative group/code">
-      <CopyButton text={children} />
+      <CopyButton
+        text={children}
+        label="העתק פרומפט"
+        variant="icon"
+        className="absolute top-2 left-2"
+      />
       <pre
         className="bg-[#0d0d0d] border border-border rounded-xl p-4 pr-4 pl-10 text-sm font-mono text-foreground leading-relaxed overflow-x-auto whitespace-pre-wrap text-right [-webkit-overflow-scrolling:touch]"
         dir="rtl"

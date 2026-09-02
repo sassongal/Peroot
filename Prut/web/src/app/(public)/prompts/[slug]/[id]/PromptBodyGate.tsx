@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyButton } from "../CopyButton";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { UsePromptButton } from "../UsePromptButton";
 
 interface Props {
@@ -26,7 +26,7 @@ export function PromptBodyGate({ promptId, fullText, title, slug, capabilityMode
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/50">
         <span className="text-xs font-medium text-muted-foreground">הפרומפט</span>
         <div className="flex items-center gap-2">
-          <CopyButton text={fullText} />
+          <CopyButton text={fullText} label="העתק פרומפט" variant="button" />
           <UsePromptButton id={promptId} title={title} prompt={fullText} category={slug} />
         </div>
       </div>

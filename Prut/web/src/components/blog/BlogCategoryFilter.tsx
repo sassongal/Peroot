@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Calendar } from "lucide-react";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
+import { formatDateHe } from "@/lib/dates/format";
 
 interface BlogPost {
   slug: string;
@@ -26,9 +27,7 @@ export function BlogCategoryFilter({ categories, posts }: BlogCategoryFilterProp
   const [activeCategory, setActiveCategory] = useState<string>(ALL_LABEL);
 
   const filteredPosts =
-    activeCategory === ALL_LABEL
-      ? posts
-      : posts.filter((p) => p.category === activeCategory);
+    activeCategory === ALL_LABEL ? posts : posts.filter((p) => p.category === activeCategory);
 
   return (
     <div>
@@ -81,11 +80,7 @@ export function BlogCategoryFilter({ categories, posts }: BlogCategoryFilterProp
               </span>
               <div className="flex items-center gap-1 text-[10px] text-slate-500">
                 <Calendar className="w-3 h-3" />
-                <span>
-                  {post.published_at
-                    ? new Date(post.published_at).toLocaleDateString("he-IL")
-                    : ""}
-                </span>
+                <span>{post.published_at ? formatDateHe(post.published_at) : ""}</span>
               </div>
               <span className="text-[10px] text-slate-600">{post.read_time}</span>
             </div>

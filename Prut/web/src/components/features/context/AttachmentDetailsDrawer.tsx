@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronDown, ChevronRight } from "lucide-react";
-import { CopyButton } from "./CopyButton";
+import { CopyButton } from "@/components/ui/CopyButton";
 import type { ContextBlock } from "@/lib/context/engine/types";
 
 interface Props {

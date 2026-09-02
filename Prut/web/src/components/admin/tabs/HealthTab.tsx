@@ -19,6 +19,7 @@ import {
   TrendingDown,
   Minus,
 } from "lucide-react";
+import { formatNumberHe, formatTimeHe } from "@/lib/dates/format";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -144,7 +145,7 @@ function statusGaugeColor(score: number) {
 }
 
 function fmt(n: number) {
-  return n.toLocaleString("en-US");
+  return formatNumberHe(n);
 }
 
 function fmtCost(n: number) {
@@ -882,7 +883,7 @@ export function HealthTab() {
       {/* ── Last checked ── */}
       {data?.checkedAt && (
         <div className="text-center text-[9px] font-black text-zinc-800 uppercase tracking-[0.3em]">
-          נבדק לאחרונה: {new Date(data.checkedAt).toLocaleTimeString("he-IL")}
+          נבדק לאחרונה: {formatTimeHe(data.checkedAt)}
         </div>
       )}
     </div>

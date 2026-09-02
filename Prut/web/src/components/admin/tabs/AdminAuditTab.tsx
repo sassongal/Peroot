@@ -18,6 +18,7 @@ import {
   ChevronUp,
   Download,
 } from "lucide-react";
+import { formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -402,7 +403,7 @@ export function AdminAuditTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         <SummaryCard
           label="Total Admin Actions"
-          value={loading ? "-" : (summary?.totalActions ?? 0).toLocaleString()}
+          value={loading ? "-" : formatNumberHe(summary?.totalActions ?? 0)}
           sub="בטווח הנבחר"
           icon={Activity}
           color="purple"
@@ -562,7 +563,7 @@ export function AdminAuditTab() {
                     />
                   </div>
                   <span className="text-emerald-400 font-black text-sm tabular-nums w-16 text-left shrink-0">
-                    {admin.count.toLocaleString()}
+                    {formatNumberHe(admin.count)}
                   </span>
                 </div>
               );

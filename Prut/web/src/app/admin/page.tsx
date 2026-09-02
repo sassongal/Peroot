@@ -25,6 +25,7 @@ import { DashboardMismatchCard } from "@/components/admin/DashboardMismatchCard"
 import { getApiPath } from "@/lib/api-path";
 import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
+import { formatDateHe } from "@/lib/dates/format";
 
 // ─── Data Shape ─────────────────────────────────────────────────────────────
 
@@ -637,11 +638,7 @@ export default function AdminDashboardPage() {
               {/* Quick date */}
               <div className="px-3 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-white/3 border border-white/5 text-zinc-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-2.5">
                 <Clock className="w-3.5 h-3.5" />
-                {new Date().toLocaleDateString("en-US", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
+                {formatDateHe(new Date())}
               </div>
             </div>
 

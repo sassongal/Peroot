@@ -288,6 +288,7 @@ export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySide
               autoFocus
             />
             <button
+              aria-label="הוסף תיקייה"
               onClick={handleAddNewFolder}
               className="p-1.5 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >

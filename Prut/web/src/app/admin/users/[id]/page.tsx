@@ -32,6 +32,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
+import { formatDateHe, formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -148,11 +149,7 @@ function timeAgo(iso: string) {
 }
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return formatDateHe(iso);
 }
 
 function tierColor(tier: string) {
@@ -506,6 +503,7 @@ export default function UserDetailPage() {
 
           {/* Refresh */}
           <button
+            aria-label="רענן"
             onClick={fetchDetail}
             disabled={loading}
             className="p-3 rounded-2xl bg-white/3 border border-white/5 text-zinc-600 hover:text-white transition-all active:scale-95"
@@ -525,13 +523,13 @@ export default function UserDetailPage() {
           />
           <QuickStat
             label="Input Tokens"
-            value={(totalInputTokens ?? 0).toLocaleString()}
+            value={formatNumberHe(totalInputTokens ?? 0)}
             icon={Layers}
             color="blue"
           />
           <QuickStat
             label="Output Tokens"
-            value={(totalOutputTokens ?? 0).toLocaleString()}
+            value={formatNumberHe(totalOutputTokens ?? 0)}
             icon={Sparkles}
             color="purple"
           />
@@ -1097,7 +1095,7 @@ export default function UserDetailPage() {
                       Total Input Tokens
                     </p>
                     <p className="text-2xl font-black text-zinc-200">
-                      {(totalInputTokens ?? 0).toLocaleString()}
+                      {formatNumberHe(totalInputTokens ?? 0)}
                     </p>
                   </div>
                   <div className="rounded-[28px] border border-white/5 bg-zinc-950/80 p-6 space-y-1">
@@ -1105,7 +1103,7 @@ export default function UserDetailPage() {
                       Total Output Tokens
                     </p>
                     <p className="text-2xl font-black text-zinc-200">
-                      {(totalOutputTokens ?? 0).toLocaleString()}
+                      {formatNumberHe(totalOutputTokens ?? 0)}
                     </p>
                   </div>
                   <div className="rounded-[28px] border border-white/5 bg-zinc-950/80 p-6 space-y-1">
@@ -1157,10 +1155,10 @@ export default function UserDetailPage() {
                               </p>
                             </div>
                             <span className="text-xs font-mono text-blue-400 text-right">
-                              {call.input_tokens.toLocaleString()}
+                              {formatNumberHe(call.input_tokens)}
                             </span>
                             <span className="text-xs font-mono text-indigo-400 text-right">
-                              {call.output_tokens.toLocaleString()}
+                              {formatNumberHe(call.output_tokens)}
                             </span>
                             <span className="text-xs font-mono text-emerald-400 text-right">
                               {fmtCost(call.cost_usd)}
@@ -1707,7 +1705,7 @@ function EmailsTab({ userId }: { userId: string }) {
                     </div>
                   </div>
                   <span className="text-[9px] font-bold text-zinc-700 shrink-0">
-                    {new Date(email.sentAt).toLocaleDateString("he-IL")}{" "}
+                    {formatDateHe(email.sentAt)}{" "}
                     {new Date(email.sentAt).toLocaleTimeString("he-IL", {
                       hour: "2-digit",
                       minute: "2-digit",

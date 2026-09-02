@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { CopySetupPrompt } from "@/components/connect/CopySetupPrompt";
+import { formatDateHe } from "@/lib/dates/format";
 
 interface ApiKeyMeta {
   id: string;
@@ -260,7 +261,7 @@ export function SettingsConnectSection() {
                   <div className="text-xs text-slate-500 font-mono" dir="ltr">
                     {k.key_prefix}••••{" "}
                     {k.last_used_at
-                      ? `· שימוש אחרון ${new Date(k.last_used_at).toLocaleDateString("he-IL")}`
+                      ? `· שימוש אחרון ${formatDateHe(k.last_used_at)}`
                       : "· טרם נעשה שימוש"}
                   </div>
                 </div>

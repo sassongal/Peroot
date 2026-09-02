@@ -95,6 +95,7 @@ export function VersionHistoryModal({
             <p className="text-xs text-(--text-muted) mt-0.5">{promptTitle}</p>
           </div>
           <button
+            aria-label="סגור"
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-(--glass-bg) text-(--text-muted) transition-colors"
           >

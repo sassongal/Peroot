@@ -28,6 +28,7 @@ import { CAPABILITY_COLORS } from "./graph-utils";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { usePromptActions } from "./use-prompt-actions";
 import { VersionHistoryModal } from "./VersionHistoryModal";
+import { formatDateHe } from "@/lib/dates/format";
 
 const CAPABILITY_LABELS: Record<CapabilityMode, string> = {
   [CapabilityMode.STANDARD]: "רגיל",
@@ -430,6 +431,7 @@ export function PromptNodeCard({
                   dir="auto"
                 />
                 <button
+                  aria-label="שמור כותרת"
                   onClick={handleSaveTitle}
                   disabled={savingTitle}
                   className="p-1 rounded text-green-400 hover:text-green-300 hover:bg-(--glass-bg)"
@@ -511,6 +513,7 @@ export function PromptNodeCard({
                 />
                 {tagInput.trim() && (
                   <button
+                    aria-label="הוסף תגית"
                     onClick={handleAddTag}
                     disabled={savingTags}
                     className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
@@ -559,7 +562,7 @@ export function PromptNodeCard({
               {prompt.last_used_at && (
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>{new Date(prompt.last_used_at).toLocaleDateString("he-IL")}</span>
+                  <span>{formatDateHe(prompt.last_used_at)}</span>
                 </div>
               )}
             </div>

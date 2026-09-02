@@ -5,6 +5,7 @@ import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { Activity, Users, Zap, Eye, Server, Pause, Play, RefreshCw, Radio } from "lucide-react";
+import { formatTimeHe } from "@/lib/dates/format";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -567,7 +568,7 @@ export function RealtimeTab() {
       {/* ── Last updated ── */}
       {data?.fetchedAt && (
         <div className="text-center text-[9px] font-black text-zinc-800 uppercase tracking-[0.3em]">
-          עודכן לאחרונה: {new Date(data.fetchedAt).toLocaleTimeString("he-IL")}
+          עודכן לאחרונה: {formatTimeHe(data.fetchedAt)}
         </div>
       )}
     </div>

@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { getCapabilityLabel } from "@/lib/capability-mode";
+import { formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -370,6 +371,7 @@ export default function AnalyticsOverviewTab() {
           ))}
         </div>
         <button
+          aria-label="רענן"
           onClick={loadAnalytics}
           disabled={loading}
           className="p-2 rounded-lg hover:bg-white/5 text-zinc-500 hover:text-white transition-colors"
@@ -446,13 +448,13 @@ export default function AnalyticsOverviewTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           label="Total Generations"
-          value={product.summary.totalPrompts.toLocaleString()}
+          value={formatNumberHe(product.summary.totalPrompts)}
           icon={Brain}
           color="blue"
         />
         <MetricCard
           label="Active Creators"
-          value={product.summary.activeCreators.toLocaleString()}
+          value={formatNumberHe(product.summary.activeCreators)}
           icon={Users}
           color="purple"
         />
@@ -475,7 +477,7 @@ export default function AnalyticsOverviewTab() {
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <div className="rounded-2xl border border-white/5 bg-zinc-950 p-5 text-center space-y-1">
           <div className="text-2xl font-black text-white tabular-nums">
-            {product.dau.toLocaleString()}
+            {formatNumberHe(product.dau)}
           </div>
           <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
             DAU, יום
@@ -483,7 +485,7 @@ export default function AnalyticsOverviewTab() {
         </div>
         <div className="rounded-2xl border border-white/5 bg-zinc-950 p-5 text-center space-y-1">
           <div className="text-2xl font-black text-white tabular-nums">
-            {product.wau.toLocaleString()}
+            {formatNumberHe(product.wau)}
           </div>
           <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
             WAU, שבוע
@@ -491,7 +493,7 @@ export default function AnalyticsOverviewTab() {
         </div>
         <div className="rounded-2xl border border-white/5 bg-zinc-950 p-5 text-center space-y-1">
           <div className="text-2xl font-black text-white tabular-nums">
-            {product.mau.toLocaleString()}
+            {formatNumberHe(product.mau)}
           </div>
           <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
             MAU, חודש
@@ -517,7 +519,7 @@ export default function AnalyticsOverviewTab() {
                   <div className="flex justify-between text-sm">
                     <span className="font-bold text-zinc-300">{getCapabilityLabel(mode)}</span>
                     <div className="flex gap-2 text-zinc-500 text-xs font-bold">
-                      <span>{count.toLocaleString()}</span>
+                      <span>{formatNumberHe(count)}</span>
                       <span>{pct}%</span>
                     </div>
                   </div>

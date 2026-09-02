@@ -25,6 +25,7 @@ import {
   Rss,
   Library,
 } from "lucide-react";
+import { formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -723,14 +724,14 @@ export function SeoConsoleTab() {
         <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-6">
           <MetricCard
             label="Total Public Pages"
-            value={contentMetrics.totalPublicPages.toLocaleString()}
+            value={formatNumberHe(contentMetrics.totalPublicPages)}
             sub={`${contentMetrics.publicPrompts} prompts`}
             icon={FileText}
             color="blue"
           />
           <MetricCard
             label="Blog Posts"
-            value={contentMetrics.blogPosts.toLocaleString()}
+            value={formatNumberHe(contentMetrics.blogPosts)}
             sub={`${contentMetrics.blogCategories} categories`}
             icon={BookOpen}
             color="purple"
@@ -744,7 +745,7 @@ export function SeoConsoleTab() {
           />
           <MetricCard
             label="Registered Users"
-            value={contentMetrics.totalUsers.toLocaleString()}
+            value={formatNumberHe(contentMetrics.totalUsers)}
             sub={`${contentMetrics.knownRoutes} known routes`}
             icon={Globe}
             color="amber"

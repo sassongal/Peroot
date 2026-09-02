@@ -21,6 +21,7 @@ import {
   Minus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDateHe, formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -123,13 +124,13 @@ function SummaryCards({ summary, loading }: { summary: Summary | null; loading: 
       label: "קליקים",
       icon: MousePointerClick,
       key: "clicks" as const,
-      fmt: (v: number) => v.toLocaleString(),
+      fmt: (v: number) => formatNumberHe(v),
     },
     {
       label: "חשיפות",
       icon: Eye,
       key: "impressions" as const,
-      fmt: (v: number) => v.toLocaleString(),
+      fmt: (v: number) => formatNumberHe(v),
     },
     { label: "CTR", icon: Target, key: "ctr" as const, fmt: (v: number) => `${v}%` },
     {
@@ -207,8 +208,8 @@ function GscTable({
   };
 
   const cols: { label: string; key: SortKey; fmt: (v: number) => string }[] = [
-    { label: "קליקים", key: "clicks", fmt: (v) => v.toLocaleString() },
-    { label: "חשיפות", key: "impressions", fmt: (v) => v.toLocaleString() },
+    { label: "קליקים", key: "clicks", fmt: (v) => formatNumberHe(v) },
+    { label: "חשיפות", key: "impressions", fmt: (v) => formatNumberHe(v) },
     { label: "CTR", key: "ctr", fmt: (v) => `${v}%` },
     { label: "מיקום", key: "position", fmt: (v) => `#${v}` },
   ];
@@ -337,12 +338,8 @@ function SitemapsPanel({ sitemaps, loading }: { sitemaps: Sitemap[]; loading: bo
               </div>
             </div>
             <div className="flex flex-wrap gap-4 text-xs text-zinc-500">
-              {s.lastSubmitted && (
-                <span>הוגש: {new Date(s.lastSubmitted).toLocaleDateString("he-IL")}</span>
-              )}
-              {s.lastDownloaded && (
-                <span>הורד: {new Date(s.lastDownloaded).toLocaleDateString("he-IL")}</span>
-              )}
+              {s.lastSubmitted && <span>הוגש: {formatDateHe(s.lastSubmitted)}</span>}
+              {s.lastDownloaded && <span>הורד: {formatDateHe(s.lastDownloaded)}</span>}
             </div>
             {contents.length > 0 && (
               <div className="flex flex-wrap gap-3">

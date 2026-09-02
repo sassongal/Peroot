@@ -15,6 +15,7 @@ import {
   TrendingUp,
   AlertTriangle,
 } from "lucide-react";
+import { formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -174,6 +175,7 @@ export function ScoringAnalyticsTab() {
           <h2 className="text-lg font-bold text-(--text-primary)">ניתוח ציונים</h2>
         </div>
         <button
+          aria-label="רענן"
           onClick={fetchData}
           className="p-2 rounded-lg hover:bg-white/10 text-(--text-muted) transition-colors"
           title="רענן"
@@ -184,7 +186,7 @@ export function ScoringAnalyticsTab() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard icon={Layers} label="סה״כ שיפורים" value={data.total.toLocaleString()} />
+        <KpiCard icon={Layers} label="סה״כ שיפורים" value={formatNumberHe(data.total)} />
         <KpiCard icon={Zap} label="ציון ממוצע (200 אחרונים)" value={`${avgScore}/100`} />
         <KpiCard icon={PieChart} label="מצבים פעילים" value={data.byMode.length.toString()} />
         <KpiCard

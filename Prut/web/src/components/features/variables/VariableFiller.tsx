@@ -228,6 +228,7 @@ export function VariableFiller({
               }}
             />
             <button
+              aria-label="שמור ערכים"
               onClick={handleSavePreset}
               className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
             >

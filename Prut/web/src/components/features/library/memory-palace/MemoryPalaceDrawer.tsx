@@ -14,6 +14,7 @@ import {
   trackPalaceNodeDoubleClicked,
   trackPalaceNavigated,
 } from "./palace-analytics";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 interface Props {
   open: boolean;
@@ -31,6 +32,8 @@ export function MemoryPalaceDrawer({
   onOpenPrompt,
 }: Props) {
   const reduceMotion = useReducedMotion();
+  // Mobile drawer: the backdrop closes it by tap, Escape by keyboard.
+  useEscapeKey(open, onClose);
   const [usageEvents, setUsageEvents] = useState<PromptUsageEvent[]>([]);
   const [activeId, setActiveId] = useState<string | null>(centerPromptId);
   const [hopIndex, setHopIndex] = useState(0);

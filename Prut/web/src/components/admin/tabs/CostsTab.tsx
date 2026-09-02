@@ -19,6 +19,7 @@ import {
   Download,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
+import { formatDateHe, formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -102,7 +103,7 @@ const SERVICE_OPTIONS = [
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(n: number) {
-  return n.toLocaleString("en-US");
+  return formatNumberHe(n);
 }
 
 function fmtCost(n: number) {
@@ -207,8 +208,8 @@ function CacheHitRateCard({ stats }: { stats: CoverageData["cacheStats"] }) {
           Cache Hit Rate
         </div>
         <div className="text-[9px] text-zinc-800 font-bold">
-          {stats.cacheHits.toLocaleString()}/{stats.totalRequests.toLocaleString()} requests · ~
-          {tokensSaved.toLocaleString()} tokens saved
+          {formatNumberHe(stats.cacheHits)}/{formatNumberHe(stats.totalRequests)} requests · ~
+          {formatNumberHe(tokensSaved)} tokens saved
         </div>
       </div>
     </div>
@@ -829,9 +830,7 @@ export default function CostsTab() {
                   סכום_$: e.amount_usd.toFixed(2),
                   תקופה: e.billing_period,
                   הערות: e.notes || "",
-                  נוסף_בתאריך: e.created_at
-                    ? new Date(e.created_at).toLocaleDateString("he-IL")
-                    : "",
+                  נוסף_בתאריך: e.created_at ? formatDateHe(e.created_at) : "",
                 }));
                 exportToCSV(
                   rows as Record<string, unknown>[],
@@ -1001,9 +1000,7 @@ export default function CostsTab() {
                         {entry.notes || "-"}
                       </td>
                       <td className="px-8 py-5 text-zinc-600 font-bold text-xs">
-                        {entry.created_at
-                          ? new Date(entry.created_at).toLocaleDateString("en-US")
-                          : "-"}
+                        {entry.created_at ? formatDateHe(entry.created_at) : "-"}
                       </td>
                     </tr>
                   ))

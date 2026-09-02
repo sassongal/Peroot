@@ -135,6 +135,7 @@ export function AutoChainBuilder({
             </div>
           </div>
           <button
+            aria-label="סגור"
             onClick={onClose}
             className="p-2 rounded-full hover:bg-white/10 text-slate-400 transition-colors"
           >

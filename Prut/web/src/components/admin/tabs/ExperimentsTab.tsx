@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   Circle,
 } from "lucide-react";
+import { formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -207,7 +208,7 @@ function FeatureAdoptionTracker({
                 </span>
               </div>
               <span className="w-16 text-sm font-black text-white tabular-nums text-left">
-                {feature.distinctUsers.toLocaleString()}
+                {formatNumberHe(feature.distinctUsers)}
               </span>
               <span
                 className={cn(

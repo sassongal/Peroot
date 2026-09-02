@@ -57,7 +57,7 @@ export const SidebarDrawer = memo<SidebarDrawerProps>(
     // (default → effect reads → setState → rerender) that blocks INP on
     // mount. See src/hooks/useLocalStorage.ts for the rationale.
     const [expanded, setExpanded] = useLocalStorage<boolean>("peroot_sidebar_expanded", false);
-    const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen);
+    const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
 
     const handleRestore = useCallback(
       (item: HistoryItem) => {

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 import { logger } from "@/lib/logger";
+import { formatNumberHe } from "@/lib/dates/format";
 
 interface BackupData {
   timestamp: string;
@@ -256,7 +257,7 @@ export function DatabaseTab() {
               />
               <Metric
                 label="Total Rows"
-                value={dbStats.statsLoading ? "..." : totalRows.toLocaleString()}
+                value={dbStats.statsLoading ? "..." : formatNumberHe(totalRows)}
               />
               <Metric
                 label="Health"
@@ -310,7 +311,7 @@ export function DatabaseTab() {
                 value={
                   dbStats.statsLoading
                     ? "..."
-                    : `${(dbStats.rowCounts.profiles ?? 0).toLocaleString()} rows`
+                    : `${formatNumberHe(dbStats.rowCounts.profiles ?? 0)} rows`
                 }
               />
               <Metric
@@ -318,7 +319,7 @@ export function DatabaseTab() {
                 value={
                   dbStats.statsLoading
                     ? "..."
-                    : `${(dbStats.rowCounts.personal_library ?? 0).toLocaleString()} rows`
+                    : `${formatNumberHe(dbStats.rowCounts.personal_library ?? 0)} rows`
                 }
               />
             </div>
@@ -345,7 +346,7 @@ export function DatabaseTab() {
               </div>
             </div>
             <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
-              {dbStats.statsLoading ? "..." : `${totalRows.toLocaleString()} Total Rows`}
+              {dbStats.statsLoading ? "..." : `${formatNumberHe(totalRows)} Total Rows`}
             </span>
           </div>
 
@@ -358,7 +359,7 @@ export function DatabaseTab() {
                   label={TABLE_LABELS[table] ?? table}
                   pct={dbStats.statsLoading ? 0 : Math.round((count / maxSingleTable) * 100)}
                   color={TABLE_COLORS[idx % TABLE_COLORS.length]}
-                  value={dbStats.statsLoading ? "..." : `${count.toLocaleString()} ROWS`}
+                  value={dbStats.statsLoading ? "..." : `${formatNumberHe(count)} ROWS`}
                 />
               ))}
           </div>

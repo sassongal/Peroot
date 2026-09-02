@@ -14,6 +14,7 @@ import {
   ArrowDown,
   LucideIcon,
 } from "lucide-react";
+import { formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -217,6 +218,7 @@ export default function FunnelTab() {
           </div>
 
           <button
+            aria-label="רענן"
             onClick={fetchFunnel}
             disabled={loading}
             className="p-3 rounded-2xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-40"
@@ -241,7 +243,7 @@ export default function FunnelTab() {
                 <SummaryCard
                   key={stage.key}
                   label={stage.label}
-                  value={stage.count.toLocaleString()}
+                  value={formatNumberHe(stage.count)}
                   sub={stage.labelHe}
                   icon={Icon}
                   color={stage.color}
@@ -308,7 +310,7 @@ export default function FunnelTab() {
                       <DropOffBadge pct={pct!} />
                       <div className="flex-1 border-t border-dashed border-white/5" />
                       <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
-                        {(prevStage.count - stage.count).toLocaleString()} נשרו
+                        {formatNumberHe(prevStage.count - stage.count)} נשרו
                       </span>
                     </div>
                   )}
@@ -344,7 +346,7 @@ export default function FunnelTab() {
 
                     <div className="w-24 text-right shrink-0">
                       <div className="text-2xl font-black text-white tabular-nums tracking-tighter">
-                        {stage.count.toLocaleString()}
+                        {formatNumberHe(stage.count)}
                       </div>
                       <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
                         {widthPct.toFixed(1)}%
@@ -420,10 +422,10 @@ export default function FunnelTab() {
                         </span>
                       </td>
                       <td className="px-8 py-5 text-zinc-300 font-black text-base tabular-nums">
-                        {prev.count.toLocaleString()}
+                        {formatNumberHe(prev.count)}
                       </td>
                       <td className="px-8 py-5 text-zinc-300 font-black text-base tabular-nums">
-                        {stage.count.toLocaleString()}
+                        {formatNumberHe(stage.count)}
                       </td>
                       <td className="px-8 py-5">
                         <span
@@ -440,7 +442,7 @@ export default function FunnelTab() {
                         </span>
                       </td>
                       <td className="px-8 py-5 text-zinc-600 font-bold text-sm tabular-nums">
-                        -{dropped.toLocaleString()}
+                        -{formatNumberHe(dropped)}
                       </td>
                     </tr>
                   );

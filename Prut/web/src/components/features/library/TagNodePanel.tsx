@@ -6,6 +6,7 @@ import type { PersonalPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { CAPABILITY_COLORS } from "./graph-utils";
 import { cn } from "@/lib/utils";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 const CAPABILITY_LABELS: Record<CapabilityMode, string> = {
   [CapabilityMode.STANDARD]: "רגיל",
@@ -54,6 +55,9 @@ export function TagNodePanel({
     if (nodeType !== "tag") return [];
     return prompts.filter((p) => !(p.tags ?? []).some((t) => t.trim().toLowerCase() === tagKey));
   }, [prompts, nodeType, tagKey]);
+
+  // The backdrop closes it with a mouse; Escape is the keyboard equivalent.
+  useEscapeKey(true, onClose);
 
   return (
     <>

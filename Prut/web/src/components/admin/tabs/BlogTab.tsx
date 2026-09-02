@@ -5,6 +5,7 @@ import { Plus, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { getApiPath } from "@/lib/api-path";
+import { formatDateHe } from "@/lib/dates/format";
 
 interface BlogPost {
   id: string;
@@ -124,7 +125,7 @@ export function BlogTab() {
               </div>
               <h3 className="text-sm font-bold text-white truncate">{post.title}</h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                {post.slug} · {new Date(post.created_at).toLocaleDateString("he-IL")}
+                {post.slug} · {formatDateHe(post.created_at)}
               </p>
             </div>
 
@@ -159,10 +160,7 @@ export function BlogTab() {
         {posts.length === 0 && (
           <div className="text-center py-12 text-slate-500">
             <p className="text-lg mb-2">אין מאמרים עדיין</p>
-            <Link
-              href="/admin/blog/new"
-              className="text-blue-400 hover:text-blue-300 text-sm"
-            >
+            <Link href="/admin/blog/new" className="text-blue-400 hover:text-blue-300 text-sm">
               צור את המאמר הראשון &rarr;
             </Link>
           </div>

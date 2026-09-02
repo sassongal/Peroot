@@ -72,3 +72,49 @@ export function formatTriState(input: TriStateInput): TriStateOutput {
   const lastUsed = input.lastUsedAt ? lastUsedRaw : null;
   return { created, updated, lastUsed };
 }
+
+const DATE_ONLY_FORMATTER = new Intl.DateTimeFormat("he-IL", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const TIME_ONLY_FORMATTER = new Intl.DateTimeFormat("he-IL", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+const NUMBER_FORMATTER = new Intl.NumberFormat("he-IL");
+
+/**
+ * A date with no time, Hebrew locale. Accepts what the app actually holds:
+ * an ISO string, a Date, or an epoch, and returns "" for anything unusable
+ * rather than "Invalid Date".
+ */
+export function formatDateHe(value: string | number | Date | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return DATE_ONLY_FORMATTER.format(d);
+}
+
+/** Hours and minutes, Hebrew locale. */
+export function formatTimeHe(value: string | number | Date | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return TIME_ONLY_FORMATTER.format(d);
+}
+
+/**
+ * Grouped number, Hebrew locale.
+ *
+ * The admin dashboards split three ways: `toLocaleString("en-US")`, a bare
+ * `toLocaleString()` that quietly followed whatever locale the viewer's
+ * browser reported, and raw digits. A dashboard where two counters on the
+ * same screen group differently is a dashboard you stop trusting.
+ */
+export function formatNumberHe(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "0";
+  return NUMBER_FORMATTER.format(value);
+}

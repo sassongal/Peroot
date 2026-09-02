@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { logger } from "@/lib/logger";
 import { InfoTooltip } from "@/components/admin/InfoTooltip";
+import { formatDateHe, formatNumberHe } from "@/lib/dates/format";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -102,7 +103,7 @@ function fmtPct(n: number) {
 }
 
 function fmtCount(n: number) {
-  return n.toLocaleString("en-US");
+  return formatNumberHe(n);
 }
 
 function relativeTime(iso: string) {
@@ -698,9 +699,9 @@ export default function RevenueTab() {
                         </span>
                         <span className="w-28 text-center text-[10px] font-bold text-zinc-500">
                           {sub.renews_at
-                            ? new Date(sub.renews_at).toLocaleDateString("he-IL")
+                            ? formatDateHe(sub.renews_at)
                             : sub.ends_at
-                              ? new Date(sub.ends_at).toLocaleDateString("he-IL")
+                              ? formatDateHe(sub.ends_at)
                               : "-"}
                         </span>
                         <span className="w-24 text-center text-[10px] font-bold text-zinc-600">

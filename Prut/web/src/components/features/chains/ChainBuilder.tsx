@@ -129,6 +129,7 @@ export function ChainBuilder({
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-white">בניית שרשרת פרומפטים</h3>
           <button
+            aria-label="סגור"
             onClick={onClose}
             className="p-2 rounded-full hover:bg-white/10 text-slate-400 transition-colors"
           >

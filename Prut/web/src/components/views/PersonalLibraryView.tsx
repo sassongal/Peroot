@@ -23,6 +23,7 @@ import {
   usePersonalLibraryShell,
   usePersonalLibraryActions,
 } from "./personal-library/context/PersonalLibraryContext";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 interface PersonalLibraryViewProps {
   onUsePrompt: (prompt: PersonalPrompt | LibraryPrompt) => void;
@@ -122,6 +123,8 @@ function PersonalLibraryLayout() {
   const ctx = useLibraryContext();
   const { favoritePersonalIds, selectedPromptId, setSelectedPromptId, isPersonalLoaded } = ctx;
   const { sidebarOpen, setSidebarOpen } = usePersonalLibrarySidebar();
+  // The mobile category drawer had no keyboard exit at all.
+  useEscapeKey(sidebarOpen, () => setSidebarOpen(false));
   const { localViewType } = usePersonalLibraryViewPrefs();
   const { onUsePrompt } = usePersonalLibraryActions();
   const {
