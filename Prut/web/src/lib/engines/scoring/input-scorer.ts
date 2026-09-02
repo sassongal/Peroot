@@ -57,6 +57,7 @@ import {
   hasImageNegative,
   hasVideoMotion,
 } from "./prompt-parse";
+import { I18N, i18n } from "./lexicon-i18n";
 import {
   scoreEnhancedTextDimensions,
   scoreEnhancedVisualDimensions,
@@ -145,7 +146,10 @@ const DIMS: Record<string, DimensionDef> = {
     tip: 'הגדר תפקיד/פרסונה בפתיחה: "אתה <תפקיד> עם <ניסיון/התמחות>"',
     test: (p) => {
       if (hasRoleStatement(p)) {
-        const hasCreds = /\d+\s+(שנות|שנים|years)|מוסמך|בכיר|senior|expert|lead/i.test(p.text);
+        const hasCreds = i18n(
+          /\d+\s+(שנות|שנים|years)|מוסמך|בכיר|senior|expert|lead/i,
+          I18N.credentials,
+        ).test(p.text);
         return hasCreds
           ? { ratio: 1, matched: ["persona", "credentials"], missing: [] }
           : { ratio: 0.7, matched: ["persona"], missing: ["credentials (שנות ניסיון / התמחות)"] };
@@ -180,25 +184,27 @@ const DIMS: Record<string, DimensionDef> = {
       let pts = 0;
       if (
         p.sections.has("audience") ||
-        /קהל\s?יעד|לקוחות|משתמשים|audience|target|persona|עבור/i.test(p.text)
+        i18n(/קהל\s?יעד|לקוחות|משתמשים|audience|target|persona|עבור/i, I18N.audience).test(p.text)
       ) {
         matched.push("audience");
         pts += 0.4;
       } else missing.push("target audience");
       if (
         p.sections.has("goal") ||
-        /מטרה|יעד|לצורך|בכדי|כדי\s+[לש]|כך\s+ש|שיוכל|מטרתי|goal|objective|so\s+that|in\s+order\s+to/i.test(
-          p.text,
-        )
+        i18n(
+          /מטרה|יעד|לצורך|בכדי|כדי\s+[לש]|כך\s+ש|שיוכל|מטרתי|goal|objective|so\s+that|in\s+order\s+to/i,
+          I18N.goal,
+        ).test(p.text)
       ) {
         matched.push("goal");
         pts += 0.3;
       } else missing.push("goal");
       if (
         p.sections.has("context") ||
-        /רקע|הקשר|מצב|אנחנו|הצוות|בחברה|בפרוייקט|בתחום|אני\s+(?:עובד|מנהל|מפתח|כותב|עוסק)|context|background|situation/i.test(
-          p.text,
-        )
+        i18n(
+          /רקע|הקשר|מצב|אנחנו|הצוות|בחברה|בפרוייקט|בתחום|אני\s+(?:עובד|מנהל|מפתח|כותב|עוסק)|context|background|situation/i,
+          I18N.background,
+        ).test(p.text)
       ) {
         matched.push("background");
         pts += 0.3;
@@ -233,10 +239,14 @@ const DIMS: Record<string, DimensionDef> = {
     tip: 'הוסף מגבלות שליליות: "אל ת…", "ללא…", "בלי…"',
     test: (p) => {
       if (hasNegativeConstraints(p)) {
-        const hasTone = /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי/i.test(
-          p.text,
-        );
-        const hasLang = /שפה|language|בעברית|באנגלית|in\s+(?:hebrew|english)/i.test(p.text);
+        const hasTone = i18n(
+          /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי/i,
+          I18N.tone,
+        ).test(p.text);
+        const hasLang = i18n(
+          /שפה|language|בעברית|באנגלית|in\s+(?:hebrew|english)/i,
+          I18N.language,
+        ).test(p.text);
         if (hasTone && hasLang)
           return { ratio: 1, matched: ["negative constraints", "tone", "language"], missing: [] };
         if (hasTone || hasLang)
@@ -251,7 +261,10 @@ const DIMS: Record<string, DimensionDef> = {
           missing: ["tone spec", "language spec"],
         };
       }
-      const hasToneOnly = /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי/i.test(p.text);
+      const hasToneOnly = i18n(
+        /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי/i,
+        I18N.tone,
+      ).test(p.text);
       if (hasToneOnly)
         return { ratio: 0.25, matched: ["tone mentioned"], missing: ["explicit do/don't rules"] };
       return { ratio: 0, matched: [], missing: ["do/don't rules"] };
@@ -327,10 +340,10 @@ const DIMS: Record<string, DimensionDef> = {
     tip: 'הוסף בלוק דוגמה מופרד: "דוגמה: ..."',
     test: (p) => {
       if (hasExampleBlock(p)) return { ratio: 1, matched: ["example block"], missing: [] };
-      const hasMention =
-        /דוגמה|לדוגמה|לצורך\s+הדגמה|example|sample|template|תבנית|כמו\s+ל|כמו\s+זה|למשל/i.test(
-          p.text,
-        );
+      const hasMention = i18n(
+        /דוגמה|לדוגמה|לצורך\s+הדגמה|example|sample|template|תבנית|כמו\s+ל|כמו\s+זה|למשל/i,
+        I18N.exampleMention,
+      ).test(p.text);
       if (hasMention)
         return { ratio: 0.4, matched: ["example mentioned"], missing: ["full example block"] };
       return { ratio: 0, matched: [], missing: ["concrete example"] };
@@ -345,10 +358,12 @@ const DIMS: Record<string, DimensionDef> = {
       if (!hasMeasurableQuantity(p)) {
         return { ratio: 0, matched: [], missing: ["success metric"] };
       }
-      const hasMin = /לפחות|מינימום|at\s+least|minimum/i.test(p.text);
-      const hasMax = /מקסימום|לכל\s+היותר|up\s+to|at\s+most|עד\s+\d+/i.test(p.text);
-      const hasRange =
-        /בין\s+\d+\s+ל|between\s+\d+\s+and|\d+[-–]\d+\s*(מילים|words|items|פריטים)/i.test(p.text);
+      const hasMin = i18n(/לפחות|מינימום|at\s+least|minimum/i, I18N.min).test(p.text);
+      const hasMax = i18n(/מקסימום|לכל\s+היותר|up\s+to|at\s+most|עד\s+\d+/i, I18N.max).test(p.text);
+      const hasRange = i18n(
+        /בין\s+\d+\s+ל|between\s+\d+\s+and|\d+[-–]\d+\s*(מילים|words|items|פריטים)/i,
+        I18N.range,
+      ).test(p.text);
       if (hasRange || (hasMin && hasMax))
         return { ratio: 1, matched: ["measurable range"], missing: [] };
       if (hasMin || hasMax)
@@ -449,9 +464,10 @@ const DIMS: Record<string, DimensionDef> = {
         pts += 0.6;
       } else missing.push("sources requirement");
       if (
-        /url|http|אתר|official|ראשוני|אקדמי|peer[-\s]?reviewed|primary\s+source|journal|doi|arxiv|published\s+(?:paper|study)/i.test(
-          p.text,
-        )
+        i18n(
+          /url|http|אתר|official|ראשוני|אקדמי|peer[-\s]?reviewed|primary\s+source|journal|doi|arxiv|published\s+(?:paper|study)/i,
+          I18N.sources,
+        ).test(p.text)
       ) {
         matched.push("URL / primary sources");
         pts += 0.4;

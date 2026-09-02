@@ -2,6 +2,16 @@
  * Shared prompt parsing + signal detectors for InputScorer and prompt-dimensions.
  */
 
+import {
+  I18N,
+  I18N_SECTIONS,
+  I18N_QUANTITY,
+  I18N_EXAMPLE_LABEL_LINE,
+  I18N_ROLE_RE,
+  I18N_PROPER_NOUN_RE,
+  i18n,
+} from "./lexicon-i18n";
+
 export type SectionType =
   | "role"
   | "task"
@@ -33,7 +43,7 @@ export type Parsed = {
 const HEADING_RE = /(?:^|\n)\s*#{1,6}\s+([^\n]+)/g;
 const LABEL_RE = /(?:^|\n)\s*([\p{L}][\p{L}\p{Zs}_/\-]{1,40}?)\s*[:：\-–—]\s+/gu;
 
-const SECTION_KEYWORDS: Array<[SectionType, RegExp]> = [
+const SECTION_KEYWORDS_BASE: Array<[SectionType, RegExp]> = [
   ["role", /\b(role|persona|identity)\b|תפקיד|פרסונה|זהות/i],
   ["task", /\b(task|mission|objective)\b|משימה|מטלה|דרישה/i],
   ["audience", /\b(audience|target|readers?)\b|קהל\s?יעד|קהל|לקוחות/i],
@@ -75,6 +85,12 @@ const SECTION_KEYWORDS: Array<[SectionType, RegExp]> = [
   ],
 ];
 
+// The same headings in Arabic and Russian ("## المهمة", "## Задача").
+const SECTION_KEYWORDS: Array<[SectionType, RegExp]> = SECTION_KEYWORDS_BASE.map(([type, re]) => [
+  type,
+  I18N_SECTIONS[type] ? i18n(re, I18N_SECTIONS[type]) : re,
+]);
+
 function extractSections(text: string): Set<SectionType> {
   const found = new Set<SectionType>();
   if (!text) return found;
@@ -113,19 +129,22 @@ export const ENGLISH_ROLE_RE =
   /(?:^|\n|\.\s|:\s)you\s+are\s+(?:an?\s+)?([a-z]+(?:\s+[a-z]+){0,3})/i;
 
 export function hasRoleStatement(p: Parsed): boolean {
-  return HEBREW_ROLE_RE.test(p.text) || ENGLISH_ROLE_RE.test(p.text);
+  return HEBREW_ROLE_RE.test(p.text) || ENGLISH_ROLE_RE.test(p.text) || I18N_ROLE_RE.test(p.text);
 }
 
 export function hasRoleMention(p: Parsed): boolean {
   if (p.sections.has("role")) return true;
-  return /מומחה|יועץ|מנהל|אנליסט|מתכנת|עורך|כותב|סופר|חוקר|מעצב|אסטרטג|יועצת|מנהלת|אדריכל|רופא|עורך[-\s]דין|expert|specialist|analyst|consultant|writer|engineer|developer|designer|researcher|strategist|marketer|advisor|adviser|manager|director|scientist|doctor|lawyer|architect|editor|teacher|coach|copywriter/i.test(
-    p.text,
-  );
+  return i18n(
+    /מומחה|יועץ|מנהל|אנליסט|מתכנת|עורך|כותב|סופר|חוקר|מעצב|אסטרטג|יועצת|מנהלת|אדריכל|רופא|עורך[-\s]דין|expert|specialist|analyst|consultant|writer|engineer|developer|designer|researcher|strategist|marketer|advisor|adviser|manager|director|scientist|doctor|lawyer|architect|editor|teacher|coach|copywriter/i,
+    I18N.roleNoun,
+  ).test(p.text);
 }
 
 /** Unified task verbs — keep in sync with prompt-dimensions task scoring */
-export const TASK_VERBS_RE =
-  /כתוב|צור|בנה|נסח|הכן|תכנן|ערוך|סכם|תרגם|נתח|השווה|חקור|בצע|הסבר|תאר|פרט|סקור|בדוק|יישם|תעד|הפק|חבר|פרסם|הצע|המלץ|הנחה|פתח|שפר|write|create|build|draft|prepare|plan|edit|summarize|translate|analyze|analyse|compare|generate|design|research|explain|describe|list|outline|review|evaluate|assess|debug|refactor|document|test|implement|investigate|propose|recommend|optimize/i;
+export const TASK_VERBS_RE = i18n(
+  /כתוב|צור|בנה|נסח|הכן|תכנן|ערוך|סכם|תרגם|נתח|השווה|חקור|בצע|הסבר|תאר|פרט|סקור|בדוק|יישם|תעד|הפק|חבר|פרסם|הצע|המלץ|הנחה|פתח|שפר|write|create|build|draft|prepare|plan|edit|summarize|translate|analyze|analyse|compare|generate|design|research|explain|describe|list|outline|review|evaluate|assess|debug|refactor|document|test|implement|investigate|propose|recommend|optimize/i,
+  I18N.taskVerb,
+);
 
 export function hasTaskVerb(p: Parsed): boolean {
   return TASK_VERBS_RE.test(p.text);
@@ -135,9 +154,10 @@ export function hasTaskVerbWithObject(p: Parsed): boolean {
   return (
     // Hebrew: verb + optional particle (את/ל/ב/של/עבור) + object (2+ chars)
     // "כתוב את המאמר", "צור לי רשימה", "בנה עבור הקהל" all match
-    /(?:כתוב|צור|בנה|נסח|נתח|חקור|השווה|הסבר|תאר|סקור|בדוק|יישם|הפק|חבר|פרסם|הצע|המלץ)\s+(?:(?:את|של|עבור|ל|מ)\s+)?\S{2,}/i.test(
-      p.text,
-    ) ||
+    i18n(
+      /(?:כתוב|צור|בנה|נסח|נתח|חקור|השווה|הסבר|תאר|סקור|בדוק|יישם|הפק|חבר|פרסם|הצע|המלץ)\s+(?:(?:את|של|עבור|ל|מ)\s+)?\S{2,}/i,
+      I18N.taskVerbWithObject,
+    ).test(p.text) ||
     /(?:write|create|build|analy[sz]e|research|compare|explain|describe|outline|review|evaluate|assess|refactor|implement|investigate|generate|design|draft|summari[sz]e|translate|document|test|optimi[sz]e|propose|recommend)\s+(?:an?\s+|the\s+)?\S{3,}/i.test(
       p.text,
     )
@@ -146,27 +166,34 @@ export function hasTaskVerbWithObject(p: Parsed): boolean {
 
 export function hasOutputFormat(p: Parsed): boolean {
   if (p.sections.has("format")) return true;
-  return /פורמט|מבנה|טבלה|רשימה|json|csv|markdown|bullet|כותרת|סעיפים|פסקאות|format|structure|table|list/i.test(
-    p.text,
-  );
+  return i18n(
+    /פורמט|מבנה|טבלה|רשימה|json|csv|markdown|bullet|כותרת|סעיפים|פסקאות|format|structure|table|list/i,
+    I18N.format,
+  ).test(p.text);
 }
 
 export function hasLengthSpec(p: Parsed): boolean {
-  return /\d+\s*(מילים|שורות|נקודות|פסקאות|עמודים|פריטים|words|sentences|lines|paragraphs|pages|chars|characters|tokens|bullets|items)|קצר|ארוך|מפורט|תמציתי|short|long|lengthy|detailed|verbose|brief|concise/i.test(
-    p.text,
-  );
+  return i18n(
+    /\d+\s*(מילים|שורות|נקודות|פסקאות|עמודים|פריטים|words|sentences|lines|paragraphs|pages|chars|characters|tokens|bullets|items)|קצר|ארוך|מפורט|תמציתי|short|long|lengthy|detailed|verbose|brief|concise/i,
+    I18N.length,
+  ).test(p.text);
 }
 
 export function hasNegativeConstraints(p: Parsed): boolean {
   if (p.sections.has("constraints")) return true;
-  return /אל\s+ת|ללא|בלי|אסור|אין\s+ל|avoid|don['']?t|do\s+not|never|without/i.test(p.text);
+  return i18n(
+    /אל\s+ת|ללא|בלי|אסור|אין\s+ל|avoid|don['']?t|do\s+not|never|without/i,
+    I18N.negative,
+  ).test(p.text);
 }
 
 const HEBREW_NUMBER_WORDS =
   /(?:שת[יי]ם?|שלוש(?:ה)?|ארבע(?:ה)?|חמש(?:ה)?|שש(?:ה)?|שבע(?:ה)?|שמונ(?:ה)?|תשע(?:ה)?|עשר(?:ה)?|עשרים|שלושים|ארבעים|חמישים|שישים|שבעים|שמונים|תשעים|מאה|מאתיים)/i;
 
-export const TASK_QTY_RE =
-  /(?:\d+|(?:שת[יי]ם?|שלוש(?:ה)?|ארבע(?:ה)?|חמש(?:ה)?|שש(?:ה)?|שבע(?:ה)?|שמונ(?:ה)?|תשע(?:ה)?|עשר(?:ה)?|עשרים|שלושים|ארבעים|חמישים|שישים|שבעים|שמונים|תשעים|מאה))\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|עמודים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters|tokens|pages|sections)/i;
+export const TASK_QTY_RE = i18n(
+  /(?:\d+|(?:שת[יי]ם?|שלוש(?:ה)?|ארבע(?:ה)?|חמש(?:ה)?|שש(?:ה)?|שבע(?:ה)?|שמונ(?:ה)?|תשע(?:ה)?|עשר(?:ה)?|עשרים|שלושים|ארבעים|חמישים|שישים|שבעים|שמונים|תשעים|מאה))\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|עמודים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters|tokens|pages|sections)/i,
+  I18N_QUANTITY,
+);
 
 // HEBREW_NUMBER_WORDS is internal only
 
@@ -181,15 +208,22 @@ export function hasLooseNumber(p: Parsed): boolean {
 export function hasExampleBlock(p: Parsed): boolean {
   if (p.sections.has("examples")) return true;
   if (/["""״].{10,}["""״]/.test(p.text)) return true;
-  if (/(?:^|\n)\s*(?:דוגמה|לדוגמה|example|e\.g\.)\s*[:：]/i.test(p.text)) return true;
+  if (
+    i18n(/(?:^|\n)\s*(?:דוגמה|לדוגמה|example|e\.g\.)\s*[:：]/i, I18N_EXAMPLE_LABEL_LINE).test(
+      p.text,
+    )
+  )
+    return true;
   return false;
 }
 
 export function hasSpecificityProperNouns(p: Parsed): boolean {
   // English capitalized proper nouns
   if (/\b[A-Z][a-z]{2,}\b/.test(p.text)) return true;
-  // Quoted text (any script) — "פרויקט X", ״שם מוצר״, "Brand Name"
-  if (/["""״].{2,}["""״]/.test(p.text)) return true;
+  // Quoted text (any script) — "פרויקט X", ״שם מוצר״, "Brand Name", «Бренд»
+  if (/["""״«».{2,}["""״«»]/.test(p.text)) return true;
+  // Arabic and Russian entity markers, plus a capitalised Russian word mid-sentence
+  if (I18N_PROPER_NOUN_RE.test(p.text)) return true;
   // Hebrew entity markers: חברת X, עיר X, מדינת X, פרוייקט X — possessive construct + Hebrew word
   if (
     /(?:חברת|מדינת|עיר|פרויקט|פרוייקט|מוצר|ארגון|פלטפורמת|שירות|אתר|אפליקציית)\s+[א-ת]{2,}/i.test(
@@ -220,9 +254,10 @@ export function countBuzzwords(p: Parsed): number {
 }
 
 export function hasHedges(p: Parsed): boolean {
-  return /אולי|אפשר|אם\s+אפשר|בערך|נדמה|ייתכן|לא\s+בטוח\s+(?:אם|מה|איך|כיצד)|יכול\s+להיות\s+ש|נראה\s+לי\s+ש|maybe|perhaps|possibly|probably|might|could\s+be|somewhat|kind\s+of|sort\s+of|i\s+think|i\s+guess|it\s+seems/i.test(
-    p.text,
-  );
+  return i18n(
+    /אולי|אפשר|אם\s+אפשר|בערך|נדמה|ייתכן|לא\s+בטוח\s+(?:אם|מה|איך|כיצד)|יכול\s+להיות\s+ש|נראה\s+לי\s+ש|maybe|perhaps|possibly|probably|might|could\s+be|somewhat|kind\s+of|sort\s+of|i\s+think|i\s+guess|it\s+seems/i,
+    I18N.hedge,
+  ).test(p.text);
 }
 
 /**
@@ -264,16 +299,18 @@ export function hasContradictions(p: Parsed): boolean {
 
 export function hasSourcesRequirement(p: Parsed): boolean {
   if (p.sections.has("sources")) return true;
-  return /מקורות|צטט|ציטוט|מאמר|מחקר\s+(?:מדעי|אקדמי)|מחקרים|ביבליוגרפיה|cite|citation|url|reference|בבליוגרפי|אימות|fact.?check|verify|verification|journal|doi|arxiv|published\s+(?:paper|study|research)/i.test(
-    p.text,
-  );
+  return i18n(
+    /מקורות|צטט|ציטוט|מאמר|מחקר\s+(?:מדעי|אקדמי)|מחקרים|ביבליוגרפיה|cite|citation|url|reference|בבליוגרפי|אימות|fact.?check|verify|verification|journal|doi|arxiv|published\s+(?:paper|study|research)/i,
+    I18N.sources,
+  ).test(p.text);
 }
 
 export function hasMethodology(p: Parsed): boolean {
   if (p.sections.has("method")) return true;
-  return /שלבים|מתודולוגיה|שיטה|שיטות|צעדים|תוכנית\s+עבודה|סדר\s+פעולות|framework|steps|method|גישה|תהליך|protocol|procedure/i.test(
-    p.text,
-  );
+  return i18n(
+    /שלבים|מתודולוגיה|שיטה|שיטות|צעדים|תוכנית\s+עבודה|סדר\s+פעולות|framework|steps|method|גישה|תהליך|protocol|procedure/i,
+    I18N.method,
+  ).test(p.text);
 }
 
 export function hasConfidenceProtocol(p: Parsed): boolean {
@@ -323,7 +360,10 @@ export function hasFailureModes(p: Parsed): boolean {
 }
 
 export function hasImageSubject(p: Parsed): boolean {
-  return p.wordCount >= 3 && /\b([א-ת]{3,}|[A-Za-z]{3,})\b/.test(p.text);
+  // No \b here: word boundaries are ASCII-only in JS, so a Hebrew, Arabic or
+  // Cyrillic word never sat "between" boundaries and pure-Hebrew image prompts
+  // scored zero on subject.
+  return p.wordCount >= 3 && /[א-ת]{3,}|[A-Za-z]{3,}|[؀-ۿ]{3,}|[а-яё]{3,}/i.test(p.text);
 }
 
 export function hasImageStyle(p: Parsed): boolean {
@@ -366,9 +406,10 @@ export function hasImageNegative(p: Parsed): boolean {
 
 /** Chain-of-thought / step-by-step reasoning instructions */
 export function hasChainOfThought(p: Parsed): boolean {
-  return /(?:let'?s\s+)?think\s+step[\s-]by[\s-]step|chain[\s-]of[\s-]thought|step[\s-]by[\s-]step\s+(?:reasoning|thinking|analysis)|think\s+through|reason\s+through|שלב\s+אחר\s+שלב|נחשוב\s+שלב|תחשוב\s+שלב|צעד\s+אחר\s+צעד|פרק\s+לשלבים|נתח\s+שלב/i.test(
-    p.text,
-  );
+  return i18n(
+    /(?:let'?s\s+)?think\s+step[\s-]by[\s-]step|chain[\s-]of[\s-]thought|step[\s-]by[\s-]step\s+(?:reasoning|thinking|analysis)|think\s+through|reason\s+through|שלב\s+אחר\s+שלב|נחשוב\s+שלב|תחשוב\s+שלב|צעד\s+אחר\s+צעד|פרק\s+לשלבים|נתח\s+שלב/i,
+    I18N.chainOfThought,
+  ).test(p.text);
 }
 
 export function hasVideoMotion(p: Parsed): boolean {

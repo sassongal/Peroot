@@ -11,6 +11,7 @@ import {
   SCRIPT_MATCH_MIN,
   OUTPUT_LANGUAGES,
   isOutputLanguage,
+  watermarkFor,
 } from "../output-language";
 
 describe("detectScriptLanguage", () => {
@@ -92,5 +93,25 @@ describe("the language table", () => {
     expect(isOutputLanguage("arabic")).toBe(true);
     expect(isOutputLanguage("klingon")).toBe(false);
     expect(isOutputLanguage(null)).toBe(false);
+  });
+});
+
+describe("watermarkFor", () => {
+  it("signs in the prompt's own language", () => {
+    expect(watermarkFor("כתוב פוסט על שיווק דיגיטלי לעסקים קטנים")).toContain("נוצר עם Peroot");
+    expect(
+      watermarkFor("Write a LinkedIn post about digital marketing for small businesses"),
+    ).toContain("Created with Peroot");
+    expect(watermarkFor("اكتب منشوراً عن التسويق الرقمي للشركات الصغيرة")).toContain("Peroot");
+    expect(watermarkFor("Напиши пост о цифровом маркетинге для малого бизнеса")).toContain(
+      "Создано с помощью Peroot",
+    );
+  });
+
+  it("falls back to Hebrew when the script is undecided, and always carries the URL", () => {
+    const short = watermarkFor("ok");
+    expect(short).toContain("נוצר עם Peroot");
+    expect(short.startsWith("\n\n")).toBe(true);
+    for (const l of OUTPUT_LANGUAGES) expect(l.watermark).toContain("www.peroot.space");
   });
 });

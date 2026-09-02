@@ -10,6 +10,7 @@ import { DateBadge } from "@/components/ui/DateBadge";
 import { fromSharedPromptRow } from "@/lib/prompt-entity";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { promptCreativeWorkSchema } from "@/lib/schema";
+import { textLanguage } from "@/lib/output-language";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -28,6 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const description = data?.prompt?.slice(0, 160) || "פרומפט שנוצר עם Peroot";
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+  // The page chrome is Hebrew, but the shared prompt itself may be Arabic,
+  // Russian or English, and the preview card should say so.
+  const language = textLanguage(data?.prompt ?? "");
 
   return {
     title,
@@ -41,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url: `${siteUrl}/p/${id}`,
       siteName: "Peroot",
-      locale: "he_IL",
+      locale: language.ogLocale,
       type: "article",
     },
     alternates: {
@@ -88,6 +92,9 @@ export default async function SharedPromptPage({ params }: Props) {
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+  // Direction and language follow the prompt's own script, not the UI's:
+  // a Russian prompt reads left-to-right inside a Hebrew page.
+  const language = textLanguage(prompt.prompt ?? "");
 
   return (
     <>
@@ -120,7 +127,7 @@ export default async function SharedPromptPage({ params }: Props) {
               <span className="text-[10px] text-(--text-muted)">נוצר עם Peroot</span>
             </div>
 
-            <div className="p-6 flex flex-col gap-4" dir="rtl">
+            <div className="p-6 flex flex-col gap-4" dir={language.dir} lang={language.tag}>
               <DateBadge mode="inline" entity={entity} />
               <BeforeAfterSplit
                 original={prompt.original_input || ""}

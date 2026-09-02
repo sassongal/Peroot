@@ -15,68 +15,70 @@
  * be bundled into any server bundle.
  */
 
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  Image,
-  StyleSheet,
-  Font,
-} from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image, StyleSheet, Font } from "@react-pdf/renderer";
+import { textLanguage } from "@/lib/output-language";
 
-// Register Noto Sans Hebrew (regular + bold). Self-hosted so the export is
-// immune to Google Fonts CDN hash rotations.
+// Register the three script families (regular + bold each). Self-hosted so
+// the export is immune to Google Fonts CDN hash rotations. react-pdf fetches
+// a family only when a rendered Text uses it, so a Hebrew export still costs
+// one font, and an Arabic or Russian prompt (languages spec B5) gets glyphs
+// instead of the empty boxes it used to get from the Hebrew face.
 let fontRegistered = false;
 function ensureFontRegistered() {
   if (fontRegistered) return;
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  Font.register({
-    family: 'NotoHebrew',
-    fonts: [
-      {
-        src: `${origin}/fonts/NotoSansHebrew-Regular.ttf`,
-        fontWeight: 'normal',
-      },
-      {
-        src: `${origin}/fonts/NotoSansHebrew-Bold.ttf`,
-        fontWeight: 'bold',
-      },
-    ],
-  });
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const register = (family: string, file: string) =>
+    Font.register({
+      family,
+      fonts: [
+        { src: `${origin}/fonts/${file}-Regular.ttf`, fontWeight: "normal" },
+        { src: `${origin}/fonts/${file}-Bold.ttf`, fontWeight: "bold" },
+      ],
+    });
+  register("NotoHebrew", "NotoSansHebrew");
+  register("NotoArabic", "NotoNaskhArabic");
+  register("NotoSans", "NotoSans");
   Font.registerHyphenationCallback((word) => [word]);
   fontRegistered = true;
 }
 
+/** Font family and alignment for one block of prompt text, by its script. */
+function textStyle(text: string): { fontFamily: string; textAlign: "left" | "right" } {
+  const lang = textLanguage(text);
+  const fontFamily =
+    lang.code === "arabic" ? "NotoArabic" : lang.code === "hebrew" ? "NotoHebrew" : "NotoSans";
+  return { fontFamily, textAlign: lang.dir === "rtl" ? "right" : "left" };
+}
+
 // Brand palette — mirrors the amber accent used in the web UI.
 const BRAND = {
-  amber50: '#fffbeb',
-  amber100: '#fef3c7',
-  amber200: '#fde68a',
-  amber400: '#fbbf24',
-  amber500: '#f59e0b',
-  amber600: '#d97706',
-  amber700: '#b45309',
-  amber900: '#78350f',
-  ink: '#0f172a',
-  inkSoft: '#334155',
-  muted: '#64748b',
-  line: '#e5e7eb',
-  offWhite: '#fafafa',
+  amber50: "#fffbeb",
+  amber100: "#fef3c7",
+  amber200: "#fde68a",
+  amber400: "#fbbf24",
+  amber500: "#f59e0b",
+  amber600: "#d97706",
+  amber700: "#b45309",
+  amber900: "#78350f",
+  ink: "#0f172a",
+  inkSoft: "#334155",
+  muted: "#64748b",
+  line: "#e5e7eb",
+  offWhite: "#fafafa",
 };
 
 const PAGE_PADDING = 44;
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: 'NotoHebrew',
+    fontFamily: "NotoHebrew",
     paddingTop: 0,
     paddingBottom: PAGE_PADDING,
     paddingHorizontal: PAGE_PADDING,
     fontSize: 11,
     lineHeight: 1.6,
     color: BRAND.ink,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   // --- Header band ---
   headerBand: {
@@ -87,14 +89,14 @@ const styles = StyleSheet.create({
     backgroundColor: BRAND.amber50,
     borderBottomWidth: 2,
     borderBottomColor: BRAND.amber400,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 24,
   },
   brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   brandLogo: {
     width: 38,
@@ -102,11 +104,11 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   brandText: {
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   brandName: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: BRAND.amber700,
     letterSpacing: -0.3,
   },
@@ -117,12 +119,12 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   metaCol: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   metaDate: {
     fontSize: 10,
     color: BRAND.amber900,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   metaUrl: {
     fontSize: 9,
@@ -132,17 +134,17 @@ const styles = StyleSheet.create({
   },
   // --- Title + score hero ---
   titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 18,
     gap: 12,
   },
   title: {
     flex: 1,
     fontSize: 19,
-    fontWeight: 'bold',
-    textAlign: 'right',
+    fontWeight: "bold",
+    textAlign: "right",
     lineHeight: 1.3,
     color: BRAND.ink,
   },
@@ -153,13 +155,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   scoreBig: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: BRAND.amber700,
   },
   scoreSlash: {
@@ -174,9 +176,9 @@ const styles = StyleSheet.create({
   },
   scoreDelta: {
     fontSize: 10,
-    fontWeight: 'bold',
-    color: '#065f46',
-    backgroundColor: '#d1fae5',
+    fontWeight: "bold",
+    color: "#065f46",
+    backgroundColor: "#d1fae5",
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -186,11 +188,11 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 9,
     color: BRAND.muted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1.2,
     marginBottom: 6,
-    textAlign: 'right',
-    fontWeight: 'bold',
+    textAlign: "right",
+    fontWeight: "bold",
   },
   // --- Before / After ---
   beforeBox: {
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
   beforeText: {
     fontSize: 10,
     color: BRAND.muted,
-    textAlign: 'right',
+    textAlign: "right",
   },
   afterBox: {
     backgroundColor: BRAND.amber50,
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
   afterText: {
     fontSize: 12,
     color: BRAND.ink,
-    textAlign: 'right',
+    textAlign: "right",
     lineHeight: 1.7,
   },
   // --- Breakdown ---
@@ -228,18 +230,18 @@ const styles = StyleSheet.create({
     borderColor: BRAND.line,
     borderRadius: 8,
     padding: 14,
-    backgroundColor: '#fcfcfd',
+    backgroundColor: "#fcfcfd",
   },
   breakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 3.5,
   },
   breakdownLabel: {
     fontSize: 10,
     color: BRAND.inkSoft,
-    textAlign: 'right',
+    textAlign: "right",
     flex: 1,
   },
   breakdownBar: {
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: BRAND.line,
     marginHorizontal: 10,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   breakdownBarFill: {
     height: 6,
@@ -258,8 +260,8 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: BRAND.muted,
     width: 40,
-    textAlign: 'left',
-    fontWeight: 'bold',
+    textAlign: "left",
+    fontWeight: "bold",
   },
   strengthsBox: {
     borderBottomWidth: 1,
@@ -270,28 +272,28 @@ const styles = StyleSheet.create({
   chipLine: {
     fontSize: 9.5,
     color: BRAND.inkSoft,
-    textAlign: 'right',
+    textAlign: "right",
     marginTop: 3,
     lineHeight: 1.5,
   },
   chipLineGood: {
-    color: '#065f46',
+    color: "#065f46",
   },
   chipLineWarn: {
     color: BRAND.amber900,
   },
   // --- Footer ---
   footer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 22,
     left: PAGE_PADDING,
     right: PAGE_PADDING,
     borderTopWidth: 1,
     borderTopColor: BRAND.line,
     paddingTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   footerText: {
     fontSize: 8,
@@ -300,7 +302,7 @@ const styles = StyleSheet.create({
   footerBrand: {
     fontSize: 8,
     color: BRAND.amber700,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
@@ -322,21 +324,21 @@ export interface PromptPdfDocumentProps {
 }
 
 function barColor(pct: number): string {
-  if (pct >= 70) return '#10b981'; // emerald
+  if (pct >= 70) return "#10b981"; // emerald
   if (pct >= 40) return BRAND.amber500;
-  return '#ef4444'; // rose
+  return "#ef4444"; // rose
 }
 
 function formatHeDate(iso?: string): string {
-  if (!iso) return new Date().toLocaleDateString('he-IL');
+  if (!iso) return new Date().toLocaleDateString("he-IL");
   try {
-    return new Date(iso).toLocaleDateString('he-IL', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(iso).toLocaleDateString("he-IL", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   } catch {
-    return new Date().toLocaleDateString('he-IL');
+    return new Date().toLocaleDateString("he-IL");
   }
 }
 
@@ -354,15 +356,14 @@ export function PromptPdfDocument({
 
   const hasBefore = original.trim().length > 0;
   const logoUrl =
-    typeof window !== 'undefined'
+    typeof window !== "undefined"
       ? `${window.location.origin}/Peroot-hero.png`
-      : '/Peroot-hero.png';
-  const delta =
-    score && score.before != null ? score.after - score.before : null;
+      : "/Peroot-hero.png";
+  const delta = score && score.before != null ? score.after - score.before : null;
 
   return (
     <Document
-      title={title || 'Peroot Prompt'}
+      title={title || "Peroot Prompt"}
       author="Peroot"
       subject="AI Prompt Export"
       creator="peroot.space"
@@ -392,9 +393,7 @@ export function PromptPdfDocument({
               <Text style={styles.scoreBig}>{score.after}</Text>
               <Text style={styles.scoreSlash}>/</Text>
               <Text style={styles.scoreMax}>100</Text>
-              {delta != null && delta > 0 ? (
-                <Text style={styles.scoreDelta}>+{delta}</Text>
-              ) : null}
+              {delta != null && delta > 0 ? <Text style={styles.scoreDelta}>+{delta}</Text> : null}
             </View>
           ) : null}
         </View>
@@ -404,17 +403,16 @@ export function PromptPdfDocument({
           <>
             <Text style={styles.sectionLabel}>פירוק הציון</Text>
             <View style={styles.breakdownBox}>
-              {(strengths && strengths.length > 0) ||
-              (weaknesses && weaknesses.length > 0) ? (
+              {(strengths && strengths.length > 0) || (weaknesses && weaknesses.length > 0) ? (
                 <View style={styles.strengthsBox}>
                   {strengths && strengths.length > 0 ? (
                     <Text style={[styles.chipLine, styles.chipLineGood]}>
-                      ✓ מה עובד: {strengths.slice(0, 3).join(' · ')}
+                      ✓ מה עובד: {strengths.slice(0, 3).join(" · ")}
                     </Text>
                   ) : null}
                   {weaknesses && weaknesses.length > 0 ? (
                     <Text style={[styles.chipLine, styles.chipLineWarn]}>
-                      ! איך לשפר: {weaknesses.slice(0, 3).join(' · ')}
+                      ! איך לשפר: {weaknesses.slice(0, 3).join(" · ")}
                     </Text>
                   ) : null}
                 </View>
@@ -449,26 +447,23 @@ export function PromptPdfDocument({
           <>
             <Text style={styles.sectionLabel}>לפני</Text>
             <View style={styles.beforeBox}>
-              <Text style={styles.beforeText}>{original}</Text>
+              <Text style={[styles.beforeText, textStyle(original)]}>{original}</Text>
             </View>
           </>
         ) : null}
 
         <Text style={styles.sectionLabel}>אחרי</Text>
         <View style={styles.afterBox}>
-          <Text style={styles.afterText}>{enhanced}</Text>
+          <Text style={[styles.afterText, textStyle(enhanced)]}>{enhanced}</Text>
         </View>
 
         <View style={styles.footer} fixed>
           <Text style={styles.footerText}>
-            נוצר עם <Text style={styles.footerBrand}>Peroot</Text> ·
-            peroot.space
+            נוצר עם <Text style={styles.footerBrand}>Peroot</Text> · peroot.space
           </Text>
           <Text
             style={styles.footerText}
-            render={({ pageNumber, totalPages }) =>
-              `${pageNumber} / ${totalPages}`
-            }
+            render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
           />
         </View>
       </Page>

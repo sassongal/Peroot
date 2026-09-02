@@ -25,6 +25,7 @@ import {
   hasPolicies,
   hasFailureModes,
 } from "./prompt-parse";
+import { I18N, I18N_QUANTITY, I18N_ROLE_RE, i18n } from "./lexicon-i18n";
 
 // ---------------------------------------------------------------------------
 // Domain detection — used by both EnhancedScorer and InputScorer
@@ -42,34 +43,39 @@ export function detectPromptDomain(t: string): PromptDomain {
   // Creative check runs BEFORE technical so "screenplay script" / "fiction story" don't mis-classify.
   // screenplay/תסריט are creative-exclusive; "script" alone is ambiguous so excluded from creative check.
   if (
-    /\bstory\b|poem|fiction|creative writing|\bcharacter\b|novel|narrative|\bplot\b|\bscene\b|\bdialogue\b|screenplay|סיפור|שיר|דמות|תסריט|דיאלוג|סצנה|יצירתי/i.test(
-      t,
-    )
+    i18n(
+      /\bstory\b|poem|fiction|creative writing|\bcharacter\b|novel|narrative|\bplot\b|\bscene\b|\bdialogue\b|screenplay|סיפור|שיר|דמות|תסריט|דיאלוג|סצנה|יצירתי/i,
+      I18N.domainCreative,
+    ).test(t)
   )
     return "creative";
   // Technical: excludes "script" (too ambiguous), relies on unambiguous dev keywords
   if (
-    /\bcode\b|function\b|api\b|debug\b|\berror\b|sql\b|typescript|javascript|python|\bcomponent\b|\bclass\b|method\b|endpoint|database|\bquery\b|npm\b|package\b|\bimport\b|\bexport\b|interface\b|\basync\b|\bawait\b|promise\b|\bhook\b|useState|useEffect|פונקציה|קוד|מסד נתונים/i.test(
-      t,
-    )
+    i18n(
+      /\bcode\b|function\b|api\b|debug\b|\berror\b|sql\b|typescript|javascript|python|\bcomponent\b|\bclass\b|method\b|endpoint|database|\bquery\b|npm\b|package\b|\bimport\b|\bexport\b|interface\b|\basync\b|\bawait\b|promise\b|\bhook\b|useState|useEffect|פונקציה|קוד|מסד נתונים/i,
+      I18N.domainTechnical,
+    ).test(t)
   )
     return "technical";
   if (
-    /blog|linkedin|instagram|facebook|email|newsletter|post\b|social|landing\s*page|\bad\b|\bads\b|campaign|copywriting|\bcontent\b|marketing|caption|תוכן|בלוג|פוסט|מייל|ניוזלטר|מודעה|שיווק|קמפיין/i.test(
-      t,
-    )
+    i18n(
+      /blog|linkedin|instagram|facebook|email|newsletter|post\b|social|landing\s*page|\bad\b|\bads\b|campaign|copywriting|\bcontent\b|marketing|caption|תוכן|בלוג|פוסט|מייל|ניוזלטר|מודעה|שיווק|קמפיין/i,
+      I18N.domainContent,
+    ).test(t)
   )
     return "content";
   if (
-    /research|analysis|\bdata\b|study\b|report\b|statistics|literature|academic|survey|findings|evidence|analyze|מחקר|ניתוח|נתונים|דוח|סטטיסטיקה|אקדמי|עדויות/i.test(
-      t,
-    )
+    i18n(
+      /research|analysis|\bdata\b|study\b|report\b|statistics|literature|academic|survey|findings|evidence|analyze|מחקר|ניתוח|נתונים|דוח|סטטיסטיקה|אקדמי|עדויות/i,
+      I18N.domainResearch,
+    ).test(t)
   )
     return "research";
   if (
-    /how[\s-]to|tutorial|guide\b|step[\s-]by[\s-]step|instructions|walkthrough|explain|teach|course|lesson|מדריך|שלב|הסבר|לימוד|הוראות/i.test(
-      t,
-    )
+    i18n(
+      /how[\s-]to|tutorial|guide\b|step[\s-]by[\s-]step|instructions|walkthrough|explain|teach|course|lesson|מדריך|שלב|הסבר|לימוד|הוראות/i,
+      I18N.domainInstruction,
+    ).test(t)
   )
     return "instruction";
   return "general";
@@ -317,23 +323,29 @@ function scoreRole(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "role
     /\b(expert|specialist|analyst|consultant|writer|developer|engineer|designer|researcher|strategist|marketer|advisor|manager|director|coach|teacher|architect|editor|copywriter|journalist|scientist|doctor|lawyer|therapist|professor|instructor|tutor|mentor|trainer|senior|junior|lead|principal|assistant|professional|practitioner|reviewer|auditor|planner|programmer|coder)\b/i;
   const englishRoleMatches = ENGLISH_ROLE_RE.test(t) && ENGLISH_ROLE_NOUN_RE.test(t);
 
-  if (HEBREW_ROLE_RE.test(t) || englishRoleMatches || extendedHebrewRole.test(t)) {
+  if (
+    HEBREW_ROLE_RE.test(t) ||
+    englishRoleMatches ||
+    extendedHebrewRole.test(t) ||
+    I18N_ROLE_RE.test(t)
+  ) {
     matched.push("פרסונה מוגדרת בפתיחה");
-    if (/\d+\s+(שנות|שנים|years)|מוסמך|בכיר|פרימיום|senior|lead/i.test(t)) {
+    if (i18n(/\d+\s+(שנות|שנים|years)|מוסמך|בכיר|פרימיום|senior|lead/i, I18N.credentials).test(t)) {
       matched.push("ניסיון / הסמכה");
       return { key, maxPoints, score: 10, matched, missing };
     }
     // "אתה מומחה ב-X" / "אתה מתמחה ב-X" — meaningful role, give 7 not 3
-    if (/מומחה\s+ב|מתמחה\s+ב|specialist\s+in|expert\s+in/i.test(t)) {
+    if (i18n(/מומחה\s+ב|מתמחה\s+ב|specialist\s+in|expert\s+in/i, I18N.specialization).test(t)) {
       matched.push("התמחות מוגדרת");
       return { key, maxPoints, score: 8, matched, missing: ["שנות ניסיון"] };
     }
     return { key, maxPoints, score: 7, matched, missing: ["שנות ניסיון או התמחות ספציפית"] };
   }
   if (
-    /מומחה|יועץ|מנהל|אנליסט|מתכנת|עורך|כותב|סופר|חוקר|מעצב|אסטרטג|יועצת|מנהלת|אדריכל|רופא|עורך[-\s]דין|מורה|מאמן|פסיכולוג|עיתונאי|expert|specialist|analyst|consultant|writer|engineer|developer|designer|researcher|strategist|marketer|advisor|manager|director|scientist|doctor|lawyer|architect|editor|teacher|coach|copywriter/i.test(
-      t,
-    )
+    i18n(
+      /מומחה|יועץ|מנהל|אנליסט|מתכנת|עורך|כותב|סופר|חוקר|מעצב|אסטרטג|יועצת|מנהלת|אדריכל|רופא|עורך[-\s]דין|מורה|מאמן|פסיכולוג|עיתונאי|expert|specialist|analyst|consultant|writer|engineer|developer|designer|researcher|strategist|marketer|advisor|manager|director|scientist|doctor|lawyer|architect|editor|teacher|coach|copywriter/i,
+      I18N.roleNoun,
+    ).test(t)
   ) {
     return { key, maxPoints, score: 4, matched: ["אזכור תפקיד"], missing: ['משפט "אתה …" מפורש'] };
   }
@@ -350,9 +362,10 @@ function scoreTask(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "task
   }
   const matched = ["פועל פעולה"];
   if (
-    /(?:כתוב|צור|בנה|נסח|הפק|חבר|פרסם)\s+(?:(?:את|ל|עבור)\s+)?\S+|write\s+a\s+\S+|create\s+a\s+\S+/i.test(
-      t,
-    ) ||
+    i18n(
+      /(?:כתוב|צור|בנה|נסח|הפק|חבר|פרסם)\s+(?:(?:את|ל|עבור)\s+)?\S+|write\s+a\s+\S+|create\s+a\s+\S+/i,
+      I18N.taskVerbWithObject,
+    ).test(t) ||
     hasTaskVerbWithObject(p)
   ) {
     matched.push("אובייקט משימה");
@@ -371,25 +384,28 @@ function scoreContext(
   const missing: string[] = [];
   let pts = 0;
   if (
-    /קהל יעד|לקוחות|משתמשים|audience|target|persona|עבור|בשביל|מיועד\s+ל|פונה\s+ל|מדבר\s+אל|written\s+for|intended\s+for/i.test(
-      t,
-    )
+    i18n(
+      /קהל יעד|לקוחות|משתמשים|audience|target|persona|עבור|בשביל|מיועד\s+ל|פונה\s+ל|מדבר\s+אל|written\s+for|intended\s+for/i,
+      I18N.audience,
+    ).test(t)
   ) {
     matched.push("קהל יעד");
     pts += 4;
   } else missing.push("קהל יעד");
   if (
-    /מטרה|יעד|לצורך|בכדי|כדי\s+[לש]|כך\s+ש|שיוכל|מטרתי|goal|objective|so\s+that|in\s+order\s+to/i.test(
-      t,
-    )
+    i18n(
+      /מטרה|יעד|לצורך|בכדי|כדי\s+[לש]|כך\s+ש|שיוכל|מטרתי|goal|objective|so\s+that|in\s+order\s+to/i,
+      I18N.goal,
+    ).test(t)
   ) {
     matched.push("מטרה");
     pts += 3;
   } else missing.push("מטרה");
   if (
-    /רקע|הקשר|מצב|אנחנו|הצוות|בחברה|בפרוייקט|בתחום|אני\s+(?:עובד|מנהל|מפתח|כותב|עוסק)|context|background|situation/i.test(
-      t,
-    ) ||
+    i18n(
+      /רקע|הקשר|מצב|אנחנו|הצוות|בחברה|בפרוייקט|בתחום|אני\s+(?:עובד|מנהל|מפתח|כותב|עוסק)|context|background|situation/i,
+      I18N.background,
+    ).test(t) ||
     p.sections.has("context")
   ) {
     matched.push("רקע");
@@ -420,7 +436,7 @@ function scoreSpecificity(
     missing.push("מספרים שמגדירים כמות (מילים, פריטים …)");
   } else missing.push("מספרים קונקרטיים");
 
-  if (/[""״]|למשל|לדוגמה|for\s+example|e\.g\./i.test(t)) {
+  if (i18n(/[""״]|למשל|לדוגמה|for\s+example|e\.g\./i, "[«»]", I18N.exampleMention).test(t)) {
     matched.push("דוגמאות");
     pts += 4;
   } else missing.push("דוגמאות");
@@ -439,25 +455,28 @@ function scoreFormat(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "fo
   const missing: string[] = [];
   let pts = 0;
   if (
-    /פורמט|מבנה|טבלה|עמודות|רשימה|ממוספר|לא\s*ממוספר|bullet|markdown|json|csv|xml|html|תבנית|סעיפים|כותרות|פרקים|שורות\s+של|מחולק\s+ל/i.test(
-      t,
-    )
+    i18n(
+      /פורמט|מבנה|טבלה|עמודות|רשימה|ממוספר|לא\s*ממוספר|bullet|markdown|json|csv|xml|html|תבנית|סעיפים|כותרות|פרקים|שורות\s+של|מחולק\s+ל/i,
+      I18N.format,
+    ).test(t)
   ) {
     matched.push("פורמט פלט");
     pts += 5;
   } else missing.push("פורמט פלט");
   if (
-    /אורך|מילים|שורות|פסקאות|תווים|words|sentences|paragraphs|characters|short|long|brief|concise|קצר|ארוך|תמציתי|מפורט|מורחב|תקציר/i.test(
-      t,
-    )
+    i18n(
+      /אורך|מילים|שורות|פסקאות|תווים|words|sentences|paragraphs|characters|short|long|brief|concise|קצר|ארוך|תמציתי|מפורט|מורחב|תקציר/i,
+      I18N.length,
+    ).test(t)
   ) {
     matched.push("אורך");
     pts += 3;
   } else missing.push("אורך");
   if (
-    /כותרת|כותרות|סעיפים|חלקים|פרק|מבוא|תקציר|סיכום|מסקנות|header|section|intro|summary|conclusion|breakdown|חלק\s+ראשון|חלק\s+שני/i.test(
-      t,
-    )
+    i18n(
+      /כותרת|כותרות|סעיפים|חלקים|פרק|מבוא|תקציר|סיכום|מסקנות|header|section|intro|summary|conclusion|breakdown|חלק\s+ראשון|חלק\s+שני/i,
+      I18N.sectionWords,
+    ).test(t)
   ) {
     matched.push("מבנה סעיפים");
     pts += 2;
@@ -475,12 +494,14 @@ function scoreConstraints(
   const missing: string[] = [];
   if (
     p.sections.has("constraints") &&
-    /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי|ישיר|עדין|חד|נחרץ|אישי|אובייקטיבי|נייטרלי|חם|קר/i.test(
-      t,
-    ) &&
-    /שפה|language|בעברית|באנגלית|בערבית|בצרפתית|בספרדית|בגרמנית|בלבד|רק\s+ב|only\s+in|in\s+(?:hebrew|english|arabic|french|spanish|german)/i.test(
-      t,
-    )
+    i18n(
+      /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי|ישיר|עדין|חד|נחרץ|אישי|אובייקטיבי|נייטרלי|חם|קר/i,
+      I18N.tone,
+    ).test(t) &&
+    i18n(
+      /שפה|language|בעברית|באנגלית|בערבית|בצרפתית|בספרדית|בגרמנית|בלבד|רק\s+ב|only\s+in|in\s+(?:hebrew|english|arabic|french|spanish|german)/i,
+      I18N.language,
+    ).test(t)
   ) {
     return {
       key,
@@ -492,29 +513,37 @@ function scoreConstraints(
   }
   let pts = 0;
   // Dedicated section header (##הנחיות / ##מגבלות) counts as strong constraints signal
-  if (/##\s*(הנחיות|מגבלות|constraints|instructions|rules|הגבלות)/i.test(t)) {
+  if (
+    i18n(
+      /##\s*(הנחיות|מגבלות|constraints|instructions|rules|הגבלות)/i,
+      I18N.constraintsHeader,
+    ).test(t)
+  ) {
     matched.push("כותרת מגבלות");
     pts += 4;
   } else if (
-    /אל\s+ת|אסור|ללא|בלי|אין\s+ל|שלא\s+|לא\s+לכלול|לא\s+להזכיר|הימנע|מבלי|ללא\s+שימוש|אין\s+להשתמש|don'?t|avoid|never|without|refrain|exclude/i.test(
-      t,
-    )
+    i18n(
+      /אל\s+ת|אסור|ללא|בלי|אין\s+ל|שלא\s+|לא\s+לכלול|לא\s+להזכיר|הימנע|מבלי|ללא\s+שימוש|אין\s+להשתמש|don'?t|avoid|never|without|refrain|exclude/i,
+      I18N.negative,
+    ).test(t)
   ) {
     matched.push("מגבלות שליליות");
     pts += 4;
   } else missing.push("מגבלות שליליות");
   if (
-    /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי|ישיר|עדין|חד|נחרץ|אישי|אובייקטיבי|נייטרלי|חם|קר/i.test(
-      t,
-    )
+    i18n(
+      /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי|ישיר|עדין|חד|נחרץ|אישי|אובייקטיבי|נייטרלי|חם|קר/i,
+      I18N.tone,
+    ).test(t)
   ) {
     matched.push("טון");
     pts += 3;
   } else missing.push("טון");
   if (
-    /שפה|language|בעברית|באנגלית|בערבית|בצרפתית|בספרדית|בגרמנית|בלבד|רק\s+ב|only\s+in|in\s+(?:hebrew|english|arabic|french|spanish|german)/i.test(
-      t,
-    )
+    i18n(
+      /שפה|language|בעברית|באנגלית|בערבית|בצרפתית|בספרדית|בגרמנית|בלבד|רק\s+ב|only\s+in|in\s+(?:hebrew|english|arabic|french|spanish|german)/i,
+      I18N.language,
+    ).test(t)
   ) {
     matched.push("שפה");
     pts += 3;
@@ -552,9 +581,10 @@ function scoreChannel(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "c
   const key = "channel";
   const maxPoints = 6;
   if (
-    /מייל|email|landing|מודעה|ad|לינקדאין|linkedin|פייסבוק|facebook|אינסטגרם|instagram|טיקטוק|tiktok|sms|וואטסאפ|whatsapp|בלוג|blog|newsletter|ניוזלטר|אתר|website|יוטיוב|youtube|טוויטר|twitter|podcast/i.test(
-      t,
-    )
+    i18n(
+      /מייל|email|landing|מודעה|ad|לינקדאין|linkedin|פייסבוק|facebook|אינסטגרם|instagram|טיקטוק|tiktok|sms|וואטסאפ|whatsapp|בלוג|blog|newsletter|ניוזלטר|אתר|website|יוטיוב|youtube|טוויטר|twitter|podcast/i,
+      I18N.channel,
+    ).test(t)
   ) {
     return { key, maxPoints, score: 6, matched: ["פלטפורמה מצוינת"], missing: [] };
   }
@@ -576,10 +606,12 @@ function scoreExamples(
       missing: [],
     };
   }
-  if (/דוגמה לפלט|output\s+example|expected\s+output|כמו\s+זה/i.test(t)) {
+  if (i18n(/דוגמה לפלט|output\s+example|expected\s+output|כמו\s+זה/i, I18N.outputExample).test(t)) {
     return { key, maxPoints, score: 6, matched: ["דוגמאות פלט מפורשות"], missing: [] };
   }
-  if (/דוגמה|לדוגמה|למשל|example|sample|template|תבנית|e\.g\./i.test(t)) {
+  if (
+    i18n(/דוגמה|לדוגמה|למשל|example|sample|template|תבנית|e\.g\./i, I18N.exampleMention).test(t)
+  ) {
     return { key, maxPoints, score: 3, matched: ["אזכור דוגמה"], missing: ["בלוק דוגמה מלא"] };
   }
   return { key, maxPoints, score: 0, matched: [], missing: ["few-shot / דוגמה"] };
@@ -614,6 +646,13 @@ function scoreClarity(
     "somewhat",
     "kind of",
     "sort of",
+    "ربما",
+    "لست متأكد",
+    "إن أمكن",
+    "возможно",
+    "наверное",
+    "не уверен",
+    "если можно",
   ];
   const hedgeCount = hedges.filter((h) => new RegExp(h, "i").test(t)).length;
   if (hedgeCount > 0) {
@@ -657,10 +696,10 @@ function scoreClarity(
       "unique",
     ];
     const buzzwordHits = buzzwords.filter((b) => new RegExp(b, "i").test(t)).length;
-    const hasConcreteSpec =
-      /\d+\s*(מילים|שורות|בתים|עמודות|נקודות|פסקאות|words|lines|stanzas|items|points|bullets|sentences)/i.test(
-        t,
-      );
+    const hasConcreteSpec = i18n(
+      /\d+\s*(מילים|שורות|בתים|עמודות|נקודות|פסקאות|words|lines|stanzas|items|points|bullets|sentences)/i,
+      I18N_QUANTITY,
+    ).test(t);
     if (buzzwordHits >= 3 && !hasConcreteSpec) {
       pts -= 5;
       missing.push(
@@ -669,7 +708,7 @@ function scoreClarity(
     }
   }
 
-  if (/^(כתוב|צור|בנה|נסח|write|create|build|generate)\s/im.test(t)) {
+  if (i18n(/^(כתוב|צור|בנה|נסח|write|create|build|generate)\s/im, I18N.imperativeOpener).test(t)) {
     matched.push("פתיחה בציווי חד");
   }
   return { key, maxPoints, score: Math.max(0, pts), matched, missing };
@@ -684,25 +723,29 @@ function scoreGroundedness(
   const missing: string[] = [];
   let pts = 0;
   if (
-    /צטט|מקור|ציין\s*מקור|הסתמך\s*על|בהתבסס\s*על|לפי|עיגן|בסס\s*על|cite|source|reference|based\s+on|according\s+to|grounded\s+in/i.test(
-      t,
-    )
+    i18n(
+      /צטט|מקור|ציין\s*מקור|הסתמך\s*על|בהתבסס\s*על|לפי|עיגן|בסס\s*על|cite|source|reference|based\s+on|according\s+to|grounded\s+in/i,
+      I18N.sources,
+      I18N.grounding,
+    ).test(t)
   ) {
     matched.push("דרישת מקורות");
     pts += 3;
   } else missing.push("דרישת מקור / ציטוט");
   if (
-    /אם\s+לא\s+בטוח|אל\s+תמציא|לא\s+ידוע\s+לך|הודה\s+שאינ|ציין\s+אי.ודאות|במקרה\s+של\s+אי.ודאות|אם\s+אינ\s+בטוח|don'?t\s+fabricate|if\s+unsure|i\s+don'?t\s+know|admit\s+(?:when\s+)?uncertain|say\s+(?:you\s+)?don'?t\s+know|acknowledge\s+(?:when\s+)?uncertain|flag\s+uncertainty/i.test(
-      t,
-    )
+    i18n(
+      /אם\s+לא\s+בטוח|אל\s+תמציא|לא\s+ידוע\s+לך|הודה\s+שאינ|ציין\s+אי.ודאות|במקרה\s+של\s+אי.ודאות|אם\s+אינ\s+בטוח|don'?t\s+fabricate|if\s+unsure|i\s+don'?t\s+know|admit\s+(?:when\s+)?uncertain|say\s+(?:you\s+)?don'?t\s+know|acknowledge\s+(?:when\s+)?uncertain|flag\s+uncertainty/i,
+      I18N.uncertainty,
+    ).test(t)
   ) {
     matched.push("רשות לאי-ודאות");
     pts += 3;
   } else missing.push("רשות לאי-ודאות");
   if (
-    /עובדות|עובדתי|מאומת|מוכח|אמיתי|fact|ground|אמת|verify|verified|factual|accurate|evidence.based|מבוסס\s+על\s+ראיות|בדוק/i.test(
-      t,
-    )
+    i18n(
+      /עובדות|עובדתי|מאומת|מוכח|אמיתי|fact|ground|אמת|verify|verified|factual|accurate|evidence.based|מבוסס\s+על\s+ראיות|בדוק/i,
+      I18N.facts,
+    ).test(t)
   ) {
     matched.push("עיגון בעובדות");
     pts += 2;
@@ -783,16 +826,19 @@ function scoreMeasurability(
   // Catch both digit and Hebrew number words (עשר פריטים, שלוש פסקאות, etc.)
   if (
     TASK_QTY_RE.test(t) ||
-    /\d+\s*(פריטים|נקודות|שורות|פסקאות|bullets|items|sentences|paragraphs|points)/i.test(t)
+    i18n(
+      /\d+\s*(פריטים|נקודות|שורות|פסקאות|bullets|items|sentences|paragraphs|points)/i,
+      I18N_QUANTITY,
+    ).test(t)
   ) {
     matched.push("כמות מדידה");
     pts += 3;
   } else missing.push("קריטריון כמותי");
-  if (/מקסימום|לכל היותר|up\s+to|at\s+most|תקרה|ceiling|limit/i.test(t)) {
+  if (i18n(/מקסימום|לכל היותר|up\s+to|at\s+most|תקרה|ceiling|limit/i, I18N.max).test(t)) {
     matched.push("תקרה עליונה");
     pts += 2;
   }
-  if (/מינימום|לפחות|at\s+least|minimum|תחתית/i.test(t)) {
+  if (i18n(/מינימום|לפחות|at\s+least|minimum|תחתית/i, I18N.min).test(t)) {
     matched.push("רצפה תחתונה");
     pts += 1;
   }
@@ -816,18 +862,20 @@ function scoreFramework(
   const sectionHeaders = (t.match(/^##\s+\S/gm) || []).length;
 
   if (
-    /תפקיד|משימה|שלבים|הגבלות|טון|פורמט פלט|קהל יעד|מטרה|הקשר|הוראות|סגנון|מגבלות|פורמט|מבנה|דרישות/.test(
-      t,
-    )
+    i18n(
+      /תפקיד|משימה|שלבים|הגבלות|טון|פורמט פלט|קהל יעד|מטרה|הקשר|הוראות|סגנון|מגבלות|פורמט|מבנה|דרישות/i,
+      I18N.frameworkWords,
+    ).test(t)
   ) {
     matched.push("אלמנטי מסגרת בעברית");
   }
   // Chain-of-thought / structured reasoning instructions — bonus signal
   const cotDetected = p
     ? hasChainOfThought(p)
-    : /(?:let'?s\s+)?think\s+step[\s-]by[\s-]step|chain[\s-]of[\s-]thought|שלב\s+אחר\s+שלב|נחשוב\s+שלב|צעד\s+אחר\s+צעד/i.test(
-        t,
-      );
+    : i18n(
+        /(?:let'?s\s+)?think\s+step[\s-]by[\s-]step|chain[\s-]of[\s-]thought|שלב\s+אחר\s+שלב|נחשוב\s+שלב|צעד\s+אחר\s+צעד/i,
+        I18N.chainOfThought,
+      ).test(t);
   if (cotDetected) {
     matched.push("הנחיית Chain-of-Thought");
   }
@@ -947,12 +995,12 @@ export function scoreEnhancedResearchDimensions(
   const p = parse(t);
   // research_sources (16 pts)
   const sourcePts = hasSourcesRequirement(p) ? 10 : 0;
-  const urlPts =
-    /url|http|אתר|official|ראשוני|אקדמי|primary\s+source|peer[-\s]?reviewed|journal|doi|arxiv|published\s+(?:paper|study|research)/i.test(
-      t,
-    )
-      ? 6
-      : 0;
+  const urlPts = i18n(
+    /url|http|אתר|official|ראשוני|אקדמי|primary\s+source|peer[-\s]?reviewed|journal|doi|arxiv|published\s+(?:paper|study|research)/i,
+    I18N.sources,
+  ).test(t)
+    ? 6
+    : 0;
   const researchSources: DimensionScoreChunk = {
     key: "research_sources",
     maxPoints: 16,
@@ -1035,7 +1083,10 @@ export function scoreEnhancedAgentDimensions(t: string, wordCount: number): Dime
   const p = parse(t);
   // tools (12 pts) — graded: basic mention vs detailed API/function listing
   const toolsBasic = hasToolsSpec(p) ? 6 : 0;
-  const toolsDetail = /api\b|function\s+call|integration|tool\s+use|יכולות|ממשק|endpoint/i.test(t)
+  const toolsDetail = i18n(
+    /api\b|function\s+call|integration|tool\s+use|יכולות|ממשק|endpoint/i,
+    I18N.tools,
+  ).test(t)
     ? 6
     : 0;
   const tools: DimensionScoreChunk = {

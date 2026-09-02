@@ -23,13 +23,53 @@ export interface OutputLanguageDef {
   voice: VoiceLang;
   /** BCP-47 tag for `lang` attributes. */
   tag: string;
+  /** Open Graph locale for a page whose main content is in this language. */
+  ogLocale: string;
+  /** The "created with Peroot" line appended to copied and shared text. */
+  watermark: string;
 }
 
 export const OUTPUT_LANGUAGES: readonly OutputLanguageDef[] = [
-  { code: "hebrew", native: "עברית", he: "עברית", dir: "rtl", voice: "he-IL", tag: "he" },
-  { code: "english", native: "English", he: "אנגלית", dir: "ltr", voice: "en-US", tag: "en" },
-  { code: "arabic", native: "العربية", he: "ערבית", dir: "rtl", voice: "ar-SA", tag: "ar" },
-  { code: "russian", native: "Русский", he: "רוסית", dir: "ltr", voice: "ru-RU", tag: "ru" },
+  {
+    code: "hebrew",
+    native: "עברית",
+    he: "עברית",
+    dir: "rtl",
+    voice: "he-IL",
+    tag: "he",
+    ogLocale: "he_IL",
+    watermark: "- נוצר עם Peroot | www.peroot.space",
+  },
+  {
+    code: "english",
+    native: "English",
+    he: "אנגלית",
+    dir: "ltr",
+    voice: "en-US",
+    tag: "en",
+    ogLocale: "en_US",
+    watermark: "- Created with Peroot | www.peroot.space",
+  },
+  {
+    code: "arabic",
+    native: "العربية",
+    he: "ערבית",
+    dir: "rtl",
+    voice: "ar-SA",
+    tag: "ar",
+    ogLocale: "ar_AR",
+    watermark: "- تم إنشاؤه مع Peroot | www.peroot.space",
+  },
+  {
+    code: "russian",
+    native: "Русский",
+    he: "רוסית",
+    dir: "ltr",
+    voice: "ru-RU",
+    tag: "ru",
+    ogLocale: "ru_RU",
+    watermark: "- Создано с помощью Peroot | www.peroot.space",
+  },
 ] as const;
 
 const BY_CODE = new Map(OUTPUT_LANGUAGES.map((l) => [l.code, l]));
@@ -121,3 +161,23 @@ export function scriptMatchShare(text: string, language: OutputLanguage): number
 
 /** Below this share the output is in the wrong language, whatever it says. */
 export const SCRIPT_MATCH_MIN = 0.7;
+
+/**
+ * The language a finished text is written in, for anything that has to
+ * follow the text rather than the UI: the copy watermark, a share page's
+ * `dir`, the PDF font. Hebrew when the script is undecided.
+ */
+export function textLanguage(text: string): OutputLanguageDef {
+  return outputLanguageDef(detectScriptLanguage(text).language ?? "hebrew");
+}
+
+/**
+ * The watermark to append when a free user copies or shares a prompt.
+ *
+ * A Russian prompt with a Hebrew signature under it looks like a template
+ * someone forgot to fill in, so the line follows the prompt's own language.
+ * Returns the blank line and the signature together, ready to concatenate.
+ */
+export function watermarkFor(text: string): string {
+  return `\n\n${textLanguage(text).watermark}`;
+}

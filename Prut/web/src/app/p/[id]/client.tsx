@@ -3,6 +3,7 @@
 import { Copy, Check, Share2, Link } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { watermarkFor } from "@/lib/output-language";
 import { SendToModelBar } from "@/components/features/prompt-improver/SendToModelBar";
 import {
   ChatGPTIcon,
@@ -32,7 +33,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
 
   const handleCopyPrompt = async () => {
     try {
-      await navigator.clipboard.writeText(prompt + "\n\n- נוצר עם Peroot | www.peroot.space");
+      await navigator.clipboard.writeText(prompt + watermarkFor(prompt));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -69,9 +70,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
   const telegramText = useMemo(
     () =>
       encodeURIComponent(
-        prompt.slice(0, 200) +
-          (prompt.length > 200 ? "..." : "") +
-          "\n\n- נוצר עם Peroot | www.peroot.space",
+        prompt.slice(0, 200) + (prompt.length > 200 ? "..." : "") + watermarkFor(prompt),
       ),
     [prompt],
   );

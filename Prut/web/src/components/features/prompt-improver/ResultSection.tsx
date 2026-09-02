@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { watermarkFor } from "@/lib/output-language";
 import {
   AlertTriangle,
   BookOpen,
@@ -418,7 +419,7 @@ export function ResultSection({
                 <button
                   onClick={() => {
                     const text = encodeURIComponent(
-                      displayCompletion + "\n\n- נוצר עם Peroot | www.peroot.space",
+                      displayCompletion + watermarkFor(displayCompletion),
                     );
                     window.open(`https://wa.me/?text=${text}`, "_blank");
                   }}

@@ -148,16 +148,99 @@ const STOPWORDS = new Set([
   "not",
   "but",
   "please",
+  // Arabic
+  "من",
+  "في",
+  "على",
+  "إلى",
+  "الى",
+  "عن",
+  "مع",
+  "هذا",
+  "هذه",
+  "ذلك",
+  "التي",
+  "الذي",
+  "أن",
+  "ان",
+  "لا",
+  "ما",
+  "هو",
+  "هي",
+  "هم",
+  "أنا",
+  "انا",
+  "أنت",
+  "انت",
+  "نحن",
+  "كان",
+  "كل",
+  "أو",
+  "او",
+  "ثم",
+  "لكن",
+  "حتى",
+  "كيف",
+  "متى",
+  "أين",
+  "لماذا",
+  "يجب",
+  "يمكن",
+  // Russian
+  "это",
+  "что",
+  "как",
+  "для",
+  "при",
+  "или",
+  "она",
+  "они",
+  "оно",
+  "вы",
+  "мы",
+  "ты",
+  "его",
+  "ему",
+  "ней",
+  "нет",
+  "да",
+  "не",
+  "но",
+  "все",
+  "всё",
+  "так",
+  "уже",
+  "ещё",
+  "еще",
+  "где",
+  "когда",
+  "почему",
+  "нужно",
+  "можно",
+  "также",
+  "чтобы",
+  "если",
+  "был",
+  "была",
+  "были",
+  "есть",
+  "который",
+  "которая",
+  "которые",
+  "промпт",
 ]);
 
 export function tokenize(text: string): string[] {
   if (!text) return [];
-  // Split on whitespace + punctuation; keep Hebrew (\u0590-\u05FF) and
-  // Latin letters + digits. Strip Hebrew niqqud (\u05B0-\u05C7) first.
+  // Split on whitespace + punctuation; keep Hebrew (\u0590-\u05FF), Arabic
+  // (\u0600-\u06FF, \u0750-\u077F), Cyrillic (\u0400-\u04FF) and Latin
+  // letters + digits. Strip Hebrew niqqud (\u05B0-\u05C7) and Arabic
+  // tashkeel (\u064B-\u065F, \u0670) first: "كِتَاب" and "كتاب" are one word.
   return text
     .toLowerCase()
     .replace(/[֑-ׇ]/g, "") // shared niqqud range (see lib/hebrew-search normalizeHebrew)
-    .split(/[^\u0590-\u05FFa-z0-9]+/i)
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .split(/[^\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u0400-\u04FFa-z0-9]+/i)
     .filter((t) => t.length >= 3 && !STOPWORDS.has(t));
 }
 

@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { trackPromptCopy } from "@/lib/analytics";
+import { watermarkFor } from "@/lib/output-language";
 import { markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import { getApiPath } from "@/lib/api-path";
 import { recordUsageSignal } from "@/lib/prompt-usage";
@@ -56,7 +57,7 @@ export function useResultActions({
   const handleCopyText = useCallback(
     async (text: string, withWatermark?: boolean) => {
       const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
-      const finalText = shouldWatermark ? `${text}\n\n- נוצר עם Peroot | www.peroot.space` : text;
+      const finalText = shouldWatermark ? `${text}${watermarkFor(text)}` : text;
       await navigator.clipboard.writeText(finalText);
       dispatch({ type: "SET_COPIED", payload: true });
       setTimeout(() => dispatch({ type: "SET_COPIED", payload: false }), 2000);

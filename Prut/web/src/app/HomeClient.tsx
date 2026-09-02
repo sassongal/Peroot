@@ -42,6 +42,7 @@ import {
   isOutputLanguage,
   outputLanguageDef,
   scriptMatchShare,
+  watermarkFor,
 } from "@/lib/output-language";
 import { trackOutputLanguageSelected, trackOutputLanguageMismatch } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/client";
@@ -1116,7 +1117,7 @@ function PageContent() {
   const handleCopyText = useCallback(
     async (text: string, withWatermark?: boolean) => {
       const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
-      const finalText = shouldWatermark ? `${text}\n\n- נוצר עם Peroot | www.peroot.space` : text;
+      const finalText = shouldWatermark ? `${text}${watermarkFor(text)}` : text;
       // The product's main copy action. An unguarded rejection here skipped
       // the copied state, the usage signal AND the analytics event, and showed
       // the user nothing at all.

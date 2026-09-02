@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildGraphData } from "../graph-utils";
+import { buildGraphData, tokenize } from "../graph-utils";
 import type { PersonalPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { computeInsights } from "../graph-utils";
@@ -165,5 +165,34 @@ describe("computeInsights", () => {
     });
     const { recentIds } = computeInsights([exactlySeven], [], new Map([["p1", 70]]));
     expect(recentIds.has("p1")).toBe(false);
+  });
+});
+
+describe("tokenize, four scripts", () => {
+  it("keeps Arabic words and drops Arabic stopwords and tashkeel", () => {
+    const tokens = tokenize("اكتب مقالاً عن التسويق الرقمي في إسرائيل، مع كِتَاب");
+    expect(tokens).toContain("التسويق");
+    expect(tokens).toContain("الرقمي");
+    expect(tokens).toContain("كتاب");
+    expect(tokens).not.toContain("في");
+    expect(tokens).not.toContain("مع");
+  });
+
+  it("keeps Russian words, case-folded, and drops Russian stopwords", () => {
+    const tokens = tokenize("Напиши Пост для маркетинга, чтобы привлечь клиентов");
+    expect(tokens).toContain("напиши");
+    expect(tokens).toContain("пост");
+    expect(tokens).toContain("маркетинга");
+    expect(tokens).not.toContain("для");
+    expect(tokens).not.toContain("чтобы");
+  });
+
+  it("still tokenizes Hebrew and English exactly as before", () => {
+    expect(tokenize("כתוב פוסט על שיווק ב-LinkedIn")).toEqual([
+      "כתוב",
+      "פוסט",
+      "שיווק",
+      "linkedin",
+    ]);
   });
 });
