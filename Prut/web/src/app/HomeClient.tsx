@@ -40,6 +40,7 @@ import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import { useContextAttachments } from "@/hooks/useContextAttachments";
 import { consumePendingPrompt, setPendingPrompt } from "@/lib/pending-prompt";
+import { onboardingRole } from "@/lib/onboarding-roles";
 import { usePromptLimits } from "@/hooks/usePromptLimits";
 import { Clock, HelpCircle, Link2 } from "lucide-react";
 import { TopNavBar } from "@/components/layout/TopNavBar";
@@ -88,14 +89,6 @@ const QuotaExhaustedModal = dynamic(
 
 // First-prompt seeds keyed by the role chosen in onboarding. Each is a real,
 // improvable prompt so the new user's first "פרט" click produces an obvious win.
-const ONBOARDING_SEED_PROMPTS: Record<string, string> = {
-  marketing: "כתוב פוסט לרשתות החברתיות שמשווק את המוצר החדש שלי",
-  business: "כתוב אימייל מקצועי ללקוח פוטנציאלי שמציג את השירות שלי",
-  dev: "כתוב פונקציה בפייתון שמקבלת רשימת מספרים ומחזירה אותה ממוינת",
-  creative: "צור תיאור לתמונה של נוף הרים בזריחה בסגנון ציור שמן",
-  study: "הסבר לי בצורה פשוטה וברורה איך עובד תהליך הפוטוסינתזה",
-};
-
 const getPromptKey = (text: string) => {
   const normalized = text.trim().slice(0, 500);
   if (!normalized) return "empty";
@@ -1381,13 +1374,13 @@ function PageContent() {
   const handleOnboardingComplete = useCallback(
     async (data?: { role: string; goal: string }) => {
       try {
-        await completeOnboarding();
+        await completeOnboarding(data?.role);
         setShowOnboarding(false);
         setIsNewUser(false); // clear so the referral banner / new-user UI don't persist all session
 
         // Seed a role-relevant first prompt so activation is one click away rather
         // than a blank box. Only seed when the box is empty (never clobber typing).
-        const seed = data?.role ? ONBOARDING_SEED_PROMPTS[data.role] : undefined;
+        const seed = onboardingRole(data?.role)?.seed;
         const seeded = Boolean(seed && !inputRef.current.trim());
         if (seeded) {
           dispatch({ type: "SET_INPUT", payload: seed! });

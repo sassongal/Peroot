@@ -472,12 +472,16 @@ export function useLibrary() {
     }
   };
 
-  const completeOnboarding = async () => {
+  const completeOnboarding = async (role?: string) => {
     if (!user) return;
 
     try {
+      // The role travels to the server so it can become a memory fact; the
+      // request stays valid without one (the overlay can be skipped early).
       const response = await fetch(getApiPath("/api/user/onboarding/complete"), {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(role ? { role } : {}),
       });
 
       if (!response.ok) {

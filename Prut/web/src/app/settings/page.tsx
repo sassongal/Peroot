@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   Brain,
   Coins,
+  Fingerprint,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -32,6 +33,7 @@ import { SettingsBillingSection } from "@/components/settings/SettingsBillingSec
 import { SettingsDataSection } from "@/components/settings/SettingsDataSection";
 import { SettingsDangerSection } from "@/components/settings/SettingsDangerSection";
 import { SettingsMemorySection } from "@/components/settings/SettingsMemorySection";
+import { SettingsStyleSection } from "@/components/settings/SettingsStyleSection";
 import { SettingsConnectSection } from "@/components/settings/SettingsConnectSection";
 import { CreditsPanel } from "@/components/settings/CreditsPanel";
 import { resolveAvatarUrl, avatarFallbackUrl as uiAvatarsFallback } from "@/lib/user-avatar";
@@ -419,6 +421,7 @@ export default function SettingsPage() {
     { id: "profile", label: "פרופיל", icon: UserIcon },
     { id: "stats", label: "סטטיסטיקות", icon: BarChart3 },
     { id: "memory", label: "זיכרון AI", icon: Brain },
+    { id: "style", label: "הסגנון שלך", icon: Fingerprint },
     { id: "connect", label: "Peroot Connect", icon: Plug },
     { id: "referral", label: "הזמן חברים", icon: Gift },
     { id: "billing", label: "מנוי וחיוב", icon: CreditCard },
@@ -541,6 +544,7 @@ export default function SettingsPage() {
             )}
             {activeSection === "stats" && <SettingsStatsSection usageStats={usageStats} />}
             {activeSection === "memory" && <SettingsMemorySection />}
+            {activeSection === "style" && <SettingsStyleSection />}
             {activeSection === "connect" && <SettingsConnectSection />}
             {activeSection === "referral" && (
               <SettingsReferralSection

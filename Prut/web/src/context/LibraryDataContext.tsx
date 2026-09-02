@@ -87,7 +87,8 @@ interface LibraryDataContextType {
     plan_tier?: "free" | "pro";
     credits_balance?: number;
   }) => Promise<void>;
-  completeOnboarding: () => Promise<boolean | undefined>;
+  /** `role` is the onboarding answer; it becomes a memory fact server side. */
+  completeOnboarding: (role?: string) => Promise<boolean | undefined>;
 
   // Category management (data operations)
   addPersonalCategory: (name: string) => Promise<void>;

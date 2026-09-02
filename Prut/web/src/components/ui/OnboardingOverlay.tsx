@@ -18,6 +18,7 @@ import {
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { cn } from "@/lib/utils";
+import { ONBOARDING_ROLES } from "@/lib/onboarding-roles";
 import { getApiPath } from "@/lib/api-path";
 import { logger } from "@/lib/logger";
 import { CAPABILITY_CONFIGS, CapabilityMode, type IconName } from "@/lib/capability-mode";
@@ -34,14 +35,22 @@ const TOTAL_STEPS = 2;
 // Role picker on the finish scene. The id is handed back through onComplete so the
 // home view can seed a role-relevant first prompt into the input — turning the
 // onboarding from a decorative splash into a real activation step.
-const ROLES: { id: string; label: string; Icon: ComponentType<{ className?: string }> }[] = [
-  { id: "marketing", label: "שיווק ותוכן", Icon: MessageSquare },
-  { id: "business", label: "עסקים ויזמות", Icon: Zap },
-  { id: "dev", label: "פיתוח וקוד", Icon: Bot },
-  { id: "creative", label: "עיצוב ויצירה", Icon: Palette },
-  { id: "study", label: "לימודים והוראה", Icon: Star },
-  { id: "other", label: "משהו אחר", Icon: Rocket },
-];
+// Ids and labels come from the shared roles table, so the overlay, the seed
+// prompt and the memory fact cannot drift apart. Only the icon is presentation.
+const ROLE_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  marketing: MessageSquare,
+  business: Zap,
+  dev: Bot,
+  creative: Palette,
+  study: Star,
+  other: Rocket,
+};
+
+const ROLES = ONBOARDING_ROLES.map(({ id, label }) => ({
+  id,
+  label,
+  Icon: ROLE_ICONS[id] ?? Rocket,
+}));
 
 const ICON_BY_NAME: Record<IconName, ComponentType<{ className?: string }>> = {
   MessageSquare,

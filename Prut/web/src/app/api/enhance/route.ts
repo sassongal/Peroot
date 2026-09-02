@@ -387,6 +387,9 @@ export async function POST(req: Request) {
                 .from("user_style_personality")
                 .select("style_tokens, personality_brief, preferred_format")
                 .eq("user_id", userId)
+                // The opt-out is enforced here rather than at the consumer, so
+                // a caller cannot inject the persona by forgetting to check it.
+                .eq("injection_enabled", true)
                 .maybeSingle()
             : Promise.resolve({ data: null }),
           cachedHit

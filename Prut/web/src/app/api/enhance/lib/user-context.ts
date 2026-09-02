@@ -20,7 +20,7 @@ interface ResolveUserContextParams {
 }
 
 interface UserContextResult {
-  tier: 'free' | 'pro' | 'admin' | 'guest';
+  tier: "free" | "pro" | "admin" | "guest";
   isAdmin: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   historyRes: { data: any };
@@ -36,27 +36,27 @@ interface UserContextResult {
  * - Runs profile + history + personality queries in parallel via Promise.all.
  */
 export async function resolveUserContext(
-  params: ResolveUserContextParams
+  params: ResolveUserContextParams,
 ): Promise<UserContextResult> {
   const { userId, queryClient, isRefinement } = params;
 
   // Guest path: no userId, return early with safe defaults
   if (!userId) {
     return {
-      tier: 'guest',
+      tier: "guest",
       isAdmin: false,
       historyRes: { data: null },
       personalityRes: { data: null },
     };
   }
 
-  let tier: 'free' | 'pro' | 'admin' | 'guest' = 'free';
+  let tier: "free" | "pro" | "admin" | "guest" = "free";
   let isAdmin = false;
   let cachedHit = false;
 
   const cached = profileCache.get(userId);
   if (cached && Date.now() - cached.ts < PROFILE_CACHE_TTL) {
-    tier = cached.tier as 'free' | 'pro' | 'admin';
+    tier = cached.tier as "free" | "pro" | "admin";
     isAdmin = cached.isAdmin;
     cachedHit = true;
   }
@@ -69,45 +69,53 @@ export async function resolveUserContext(
   // Set PEROOT_LEGACY_HISTORY_RECALL=1 to revert to the use_count-ordered
   // fetch from personal_library (raw prompts only).
   const useHistoryTable = memoryFlags.useHistoryTableForRecall;
-  const historyRecallPromise = !isRefinement && memoryFlags.historyEnabled
-    ? (useHistoryTable
-        ? queryClient.from('history')
-            .select('title, prompt, enhanced_prompt')
-            .eq('user_id', userId)
-            .not('enhanced_prompt', 'is', null)
-            .order('created_at', { ascending: false })
+  const historyRecallPromise =
+    !isRefinement && memoryFlags.historyEnabled
+      ? useHistoryTable
+        ? queryClient
+            .from("history")
+            .select("title, prompt, enhanced_prompt")
+            .eq("user_id", userId)
+            .not("enhanced_prompt", "is", null)
+            .order("created_at", { ascending: false })
             .limit(3)
-        : queryClient.from('personal_library')
-            .select('title, prompt')
-            .eq('user_id', userId)
-            .order('use_count', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(3))
-    : Promise.resolve({ data: null });
+        : queryClient
+            .from("personal_library")
+            .select("title, prompt")
+            .eq("user_id", userId)
+            .order("use_count", { ascending: false })
+            .order("created_at", { ascending: false })
+            .limit(3)
+      : Promise.resolve({ data: null });
 
   const [profileRes, historyRes, personalityRes, adminRoleRes] = await Promise.all([
     cachedHit
       ? Promise.resolve({ data: null })
-      : queryClient.from('profiles').select('plan_tier').eq('id', userId).maybeSingle(),
+      : queryClient.from("profiles").select("plan_tier").eq("id", userId).maybeSingle(),
     historyRecallPromise,
     !isRefinement && memoryFlags.personalityEnabled
-      ? queryClient.from('user_style_personality')
-          .select('style_tokens, personality_brief, preferred_format')
-          .eq('user_id', userId)
+      ? queryClient
+          .from("user_style_personality")
+          .select("style_tokens, personality_brief, preferred_format")
+          .eq("user_id", userId)
+          // The per-user opt-out (Settings, "הסגנון שלך") is enforced in the
+          // query, so an opted-out persona cannot reach an engine at all.
+          .eq("injection_enabled", true)
           .maybeSingle()
       : Promise.resolve({ data: null }),
     cachedHit
       ? Promise.resolve({ data: null })
-      : queryClient.from('user_roles')
-          .select('role')
-          .eq('user_id', userId)
-          .eq('role', 'admin')
+      : queryClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "admin")
           .maybeSingle(),
   ]);
 
   // Process profile & tier (from DB if not cached)
   if (!cachedHit && profileRes.data) {
-    tier = (profileRes.data.plan_tier as 'free' | 'pro' | 'admin') || 'free';
+    tier = (profileRes.data.plan_tier as "free" | "pro" | "admin") || "free";
     isAdmin = !!adminRoleRes?.data || isAdmin;
 
     // Store in cache

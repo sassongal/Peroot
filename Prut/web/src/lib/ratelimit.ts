@@ -151,6 +151,14 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(60, "1 m"),
     prefix: "@peroot/ratelimit:questions",
   }),
+  // Persona re-analysis (Settings → "הסגנון שלך"). Each run is an AI call over
+  // the user's library, and the persona only moves as the library grows, so a
+  // handful a day is generous.
+  personaRefresh: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, "24 h"),
+    prefix: "@peroot/ratelimit:persona-refresh",
+  }),
   faqChat: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(10, "1 m"),
@@ -188,6 +196,7 @@ type RateLimitTier =
   | "publicPromptFetch"
   | "passwordReset"
   | "questions"
+  | "personaRefresh"
   | "faqChat"
   | "usageEvents";
 
