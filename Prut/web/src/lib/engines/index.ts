@@ -6,16 +6,32 @@ import { ImageEngine } from "./image-engine";
 import { AgentEngine } from "./agent-engine";
 import { VideoEngine } from "./video-engine";
 import { createClient } from "../supabase/server";
+import { buildStandardTemplates, hasNativeStandardTemplate } from "./standard-locales";
 
 // Cache for engine configs to reduce DB hits
 const engineCache: Record<string, { config: EngineConfig; timestamp: number }> = {};
 const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
-export async function getEngine(mode: CapabilityMode): Promise<PromptEngine> {
+/**
+ * The engine for a mode, with the templates for the requested output
+ * language.
+ *
+ * Hebrew (the default) uses the `prompt_engines` row. For the standard
+ * engine in English, Arabic or Russian the row's Hebrew demonstrations are
+ * replaced by the native templates in `standard-locales.ts` (languages spec
+ * B3.5); the row's other fields, and the global identity, still apply. The
+ * research and agent engines keep the Hebrew template plus the override.
+ */
+export async function getEngine(
+  mode: CapabilityMode,
+  outputLanguage?: string,
+): Promise<PromptEngine> {
   const now = Date.now();
+  const useNative = mode === CapabilityMode.STANDARD && hasNativeStandardTemplate(outputLanguage);
+  const cacheKey = useNative ? `${mode}:${outputLanguage}` : mode;
 
-  if (engineCache[mode] && now - engineCache[mode].timestamp < CACHE_TTL) {
-    return createEngineInstance(mode, engineCache[mode].config);
+  if (engineCache[cacheKey] && now - engineCache[cacheKey].timestamp < CACHE_TTL) {
+    return createEngineInstance(mode, engineCache[cacheKey].config);
   }
 
   const supabase = await createClient();
@@ -45,13 +61,16 @@ export async function getEngine(mode: CapabilityMode): Promise<PromptEngine> {
     .eq("is_active", true)
     .maybeSingle();
 
-  const engineConfig: EngineConfig | undefined = config
+  const nativeTemplates = useNative ? buildStandardTemplates(outputLanguage) : null;
+
+  let engineConfig: EngineConfig | undefined = config
     ? {
         mode: parseCapabilityMode(config.mode),
         name: config.name,
         description: config.description,
-        system_prompt_template: config.system_prompt_template,
-        user_prompt_template: config.user_prompt_template,
+        system_prompt_template:
+          nativeTemplates?.system_prompt_template ?? config.system_prompt_template,
+        user_prompt_template: nativeTemplates?.user_prompt_template ?? config.user_prompt_template,
         output_format_instruction: config.output_format_instruction,
         default_params: config.default_params,
         is_active: config.is_active,
@@ -60,8 +79,20 @@ export async function getEngine(mode: CapabilityMode): Promise<PromptEngine> {
       }
     : undefined;
 
+  // No row (or the DB is unreachable): the native templates still apply on
+  // top of the code default, so a Russian request never falls back to the
+  // Hebrew demonstrations by accident.
+  if (!engineConfig && nativeTemplates) {
+    const fallback = createEngineInstance(mode) as unknown as { config: EngineConfig };
+    engineConfig = {
+      ...fallback.config,
+      ...nativeTemplates,
+      global_system_identity: globalIdentity,
+    };
+  }
+
   if (engineConfig) {
-    engineCache[mode] = { config: engineConfig, timestamp: now };
+    engineCache[cacheKey] = { config: engineConfig, timestamp: now };
   }
 
   return createEngineInstance(mode, engineConfig);
@@ -85,7 +116,9 @@ function createEngineInstance(mode: CapabilityMode, config?: EngineConfig): Prom
 
 export function invalidateEngineCache(mode?: CapabilityMode) {
   if (mode) {
-    delete engineCache[mode];
+    for (const key of Object.keys(engineCache)) {
+      if (key === mode || key.startsWith(`${mode}:`)) delete engineCache[key];
+    }
   } else {
     // Clear all
     Object.keys(engineCache).forEach((key) => delete engineCache[key]);

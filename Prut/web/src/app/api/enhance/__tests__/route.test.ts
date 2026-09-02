@@ -1198,7 +1198,7 @@ describe("POST /api/enhance", () => {
       const res = await POST(req);
 
       expect(res.status).toBe(200);
-      expect(getEngine).toHaveBeenCalledWith("IMAGE_GENERATION");
+      expect(getEngine).toHaveBeenCalledWith("IMAGE_GENERATION", undefined);
     });
 
     it("passes task agent to the gateway for AGENT_BUILDER mode (pro user)", async () => {

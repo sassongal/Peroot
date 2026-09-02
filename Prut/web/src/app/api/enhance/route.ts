@@ -605,7 +605,7 @@ export async function POST(req: Request) {
     }
 
     // 4. Engine Selection & Generation
-    const engine = await getEngine(mode);
+    const engine = await getEngine(mode, output_language);
 
     // Apply model profile when the extension provides an explicit slug
     // (e.g. "gpt-5", "claude-sonnet-4", "gemini-2.5"). Non-blocking on miss —
