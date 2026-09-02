@@ -10,35 +10,44 @@
  * plain hyphen (a range, "300-500"); any other en dash becomes a comma.
  */
 export function stripAiDashes(text: string): string {
-  return text
-    .replace(/\s*\u2014\s*/g, ", ")
-    .replace(/(\d)\s*\u2013\s*(\d)/g, "$1-$2")
-    .replace(/\s*\u2013\s*/g, ", ")
-    .replace(/, ,/g, ",");
+  return (
+    text
+      // Russian zero copula: "Вы — эксперт" reads naturally as "Вы эксперт",
+      // where a comma would not. Pronoun subjects only; \b is ASCII-only, so
+      // the boundary is spelled out.
+      .replace(
+        /(^|[\s(«"'])(Вы|вы|Ты|ты|Это|это|Он|он|Она|она|Они|они|Мы|мы|Я|я)\s*\u2014\s*/g,
+        "$1$2 ",
+      )
+      .replace(/\s*\u2014\s*/g, ", ")
+      .replace(/(\d)\s*\u2013\s*(\d)/g, "$1-$2")
+      .replace(/\s*\u2013\s*/g, ", ")
+      .replace(/, ,/g, ",")
+  );
 }
 
 /**
  * The same scrub for a text stream, chunk by chunk.
  *
- * A chunk may end in the whitespace that precedes a dash in the next chunk,
- * so a run of trailing whitespace is held back and prepended to the next
- * chunk before scrubbing; the held text is flushed at the end.
+ * A dash pattern can straddle chunks ("Вы " then "— эксперт"), and the
+ * Russian copula rule needs the word before the dash, so the last token of
+ * every chunk, with any trailing spaces and dash, is held back and
+ * prepended to the next chunk. The reader sees the stream one word late,
+ * never a dash. A run with no whitespace at all is not held beyond 64
+ * characters so a long unbroken string cannot stall the stream.
  */
 export function createDashScrubStream(): TransformStream<string, string> {
   let held = "";
+  const TAIL = /(\S+\s*[\u2013\u2014]?\s*)$/;
   return new TransformStream<string, string>({
     transform(chunk, controller) {
       const text = held + chunk;
-      const m = /\s+$/.exec(text);
-      if (m && m.index > 0) {
-        held = m[0];
-        controller.enqueue(stripAiDashes(text.slice(0, m.index)));
-      } else if (m) {
-        held = text;
-      } else {
-        held = "";
-        controller.enqueue(stripAiDashes(text));
-      }
+      const m = TAIL.exec(text);
+      let cut = m ? m.index : text.length;
+      if (text.length - cut > 64) cut = text.length - 64;
+      held = text.slice(cut);
+      const out = text.slice(0, cut);
+      if (out) controller.enqueue(stripAiDashes(out));
     },
     flush(controller) {
       if (held) controller.enqueue(stripAiDashes(held));

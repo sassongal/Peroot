@@ -186,7 +186,10 @@ function PageContent() {
   // after mount, and first-time visitors get their browser's language.
   const [outputLanguage, setOutputLanguageState] = useState<OutputLanguage>("hebrew");
   const setOutputLanguage = useCallback(
-    (next: OutputLanguage, source: "picker" | "suggestion" | "auto" | "restored" = "picker") => {
+    (
+      next: OutputLanguage,
+      source: "picker" | "suggestion" | "auto" | "restored" | "landing" = "picker",
+    ) => {
       setOutputLanguageState(next);
       try {
         localStorage.setItem(OUTPUT_LANGUAGE_STORAGE_KEY, next);
@@ -232,6 +235,28 @@ function PageContent() {
   }, [user]);
   useEffect(() => {
     try {
+      // Arrived from a language landing page (/en, /ar, /ru): the CTA
+      // carries ?lang=, which wins over anything stored, and is then
+      // removed from the address bar so a reload or share does not
+      // re-apply it.
+      const url = new URL(window.location.href);
+      const fromLanding = url.searchParams.get("lang");
+      const landingLanguage: OutputLanguage | null =
+        fromLanding === "en"
+          ? "english"
+          : fromLanding === "ar"
+            ? "arabic"
+            : fromLanding === "ru"
+              ? "russian"
+              : fromLanding === "he"
+                ? "hebrew"
+                : null;
+      if (landingLanguage) {
+        url.searchParams.delete("lang");
+        window.history.replaceState(window.history.state, "", url.toString());
+        queueMicrotask(() => setOutputLanguage(landingLanguage, "landing"));
+        return;
+      }
       const stored = localStorage.getItem(OUTPUT_LANGUAGE_STORAGE_KEY);
       if (isOutputLanguage(stored)) {
         queueMicrotask(() => setOutputLanguageState(stored));

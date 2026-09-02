@@ -44,6 +44,7 @@ export default async function BlogPage() {
     .from("blog_posts")
     .select("slug, title, excerpt, category, read_time, published_at, thumbnail_url")
     .eq("status", "published")
+    .eq("lang", "he")
     .order("published_at", { ascending: false });
 
   return (

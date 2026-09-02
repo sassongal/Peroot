@@ -8,13 +8,14 @@ export async function GET() {
   const { createClient } = await import("@supabase/supabase-js");
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
   const { data: posts } = await supabase
     .from("blog_posts")
     .select("title, slug, excerpt, published_at, category")
     .eq("status", "published")
+    .eq("lang", "he")
     .order("published_at", { ascending: false })
     .limit(50);
 

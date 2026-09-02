@@ -39,6 +39,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/examples`, changeFrequency: "weekly", priority: 0.85 },
     { url: `${baseUrl}/about`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/whats-new`, changeFrequency: "weekly", priority: 0.6 },
+    ...(["en", "ar", "ru"] as const).map((l) => ({
+      url: `${baseUrl}/${l}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+      alternates: {
+        languages: {
+          he: baseUrl,
+          en: `${baseUrl}/en`,
+          ar: `${baseUrl}/ar`,
+          ru: `${baseUrl}/ru`,
+          "x-default": baseUrl,
+        },
+      },
+    })),
     { url: `${baseUrl}/blog`, changeFrequency: "weekly", priority: 0.85 },
     { url: `${baseUrl}/templates`, changeFrequency: "weekly", priority: 0.85 },
     { url: `${baseUrl}/connect`, changeFrequency: "monthly", priority: 0.8 },
@@ -91,6 +105,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("blog_posts")
       .select("slug, updated_at")
       .eq("status", "published")
+      .eq("lang", "he")
       .order("published_at", { ascending: false });
 
     const blogEntries: MetadataRoute.Sitemap = (posts ?? []).map((post) => ({

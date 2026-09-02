@@ -18,6 +18,7 @@ export async function GET() {
       .from("blog_posts")
       .select("slug, title, excerpt, category, read_time, published_at, thumbnail_url, tags")
       .eq("status", "published")
+      .eq("lang", "he")
       .order("published_at", { ascending: false });
 
     if (error) {

@@ -14,9 +14,16 @@ async function collect(res: Response): Promise<string> {
 }
 
 describe("stripAiDashes", () => {
-  it("turns an em dash into a comma, including the Russian copula", () => {
-    expect(stripAiDashes(`Вы ${EM} старший стратег`)).toBe("Вы, старший стратег");
+  it("turns an em dash into a comma", () => {
     expect(stripAiDashes(`הפלט ${EM} רשימה`)).toBe("הפלט, רשימה");
+    expect(stripAiDashes(`Цель поста ${EM} вызвать интерес`)).toBe("Цель поста, вызвать интерес");
+  });
+
+  it("drops the Russian copula dash after a pronoun instead of adding a comma", () => {
+    expect(stripAiDashes(`Вы ${EM} старший стратег`)).toBe("Вы старший стратег");
+    expect(stripAiDashes(`## Роль\nВы ${EM} эксперт. Это ${EM} важно.`)).toBe(
+      "## Роль\nВы эксперт. Это важно.",
+    );
   });
 
   it("keeps an en dash between digits as a plain hyphen range", () => {
@@ -47,7 +54,7 @@ describe("createDashScrubStream", () => {
     for (const c of chunks) await writer.write(c);
     await writer.close();
     await reading;
-    expect(out.join("")).toBe("Вы, старший стратег по контенту");
+    expect(out.join("")).toBe("Вы старший стратег по контенту");
   });
 });
 
@@ -66,7 +73,7 @@ describe("scrubDashesInResponse", () => {
     );
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toContain("text/plain");
-    expect(await collect(res)).toBe("## Роль\nВы, эксперт, 10-12 лет");
+    expect(await collect(res)).toBe("## Роль\nВы эксперт, 10-12 лет");
   });
 
   it("accepts string chunks too", async () => {
@@ -77,5 +84,42 @@ describe("scrubDashesInResponse", () => {
       },
     });
     expect(await collect(scrubDashesInResponse(new Response(body)))).toBe("a, b");
+  });
+});
+
+describe("createDashScrubStream, chunk shapes", () => {
+  async function run(chunks: string[]): Promise<string> {
+    const out: string[] = [];
+    const stream = createDashScrubStream();
+    const writer = stream.writable.getWriter();
+    const reader = stream.readable.getReader();
+    const reading = (async () => {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        out.push(value);
+      }
+    })();
+    for (const c of chunks) await writer.write(c);
+    await writer.close();
+    await reading;
+    return out.join("");
+  }
+
+  it("keeps the pronoun and the dash together however the split falls", async () => {
+    expect(await run(["Вы", ` ${EM} эксперт`])).toBe("Вы эксперт");
+    expect(await run([`Вы ${EM}`, " эксперт"])).toBe("Вы эксперт");
+    expect(await run(["Вы ", EM, " эксперт"])).toBe("Вы эксперт");
+  });
+
+  it("does not stall a long unbroken run", async () => {
+    const long = "x".repeat(500);
+    expect(await run([long, " y"])).toBe(`${long} y`);
+  });
+
+  it("passes plain text through unchanged", async () => {
+    expect(await run(["## Задача\n", "Напишите ", "пост, 150-200 слов."])).toBe(
+      "## Задача\nНапишите пост, 150-200 слов.",
+    );
   });
 });

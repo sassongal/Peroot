@@ -173,7 +173,7 @@ export function trackCheckoutOpened(plan: "pro_monthly" | "pro_yearly") {
  */
 export function trackOutputLanguageSelected(
   language: string,
-  source: "picker" | "suggestion" | "auto" | "restored",
+  source: "picker" | "suggestion" | "auto" | "restored" | "landing",
 ) {
   posthog.capture("output_language_selected", { language, source });
 }

@@ -79,8 +79,13 @@ export const metadata: Metadata = {
     types: {
       "application/rss+xml": "/feed.xml",
     },
+    // The home page and the three language landings form one hreflang
+    // cluster (languages spec B7.19). The landings carry the same map.
     languages: {
       "he-IL": "/",
+      en: "/en",
+      ar: "/ar",
+      ru: "/ru",
       "x-default": "/",
     },
   },

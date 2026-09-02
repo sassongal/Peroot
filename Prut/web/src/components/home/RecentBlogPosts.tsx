@@ -25,6 +25,7 @@ async function RecentBlogPostsContent() {
     .from("blog_posts")
     .select("slug, title, excerpt, category, read_time, published_at")
     .eq("status", "published")
+    .eq("lang", "he")
     .order("published_at", { ascending: false })
     .limit(3);
 
