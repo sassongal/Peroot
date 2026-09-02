@@ -290,6 +290,15 @@ export default function SettingsPage() {
         .eq("id", user.id)
         .single();
 
+      // Achievements were exported as a hardcoded [] while the rows existed in
+      // user_achievements, so a data-export request returned less than the
+      // account actually holds. Read them through the user's own client, which
+      // RLS already scopes to this account.
+      const { data: achievementRows } = await supabase
+        .from("user_achievements")
+        .select("achievement_id, unlocked_at")
+        .eq("user_id", user.id);
+
       const exportData = {
         exportDate: new Date().toISOString(),
         userId: user.id,
@@ -317,7 +326,7 @@ export default function SettingsPage() {
         history: history,
         library: personalLibrary,
         favorites: favorites,
-        achievements: [],
+        achievements: achievementRows ?? [],
         activityLogs: activityLogs.map((log) => ({
           id: log.id,
           action: log.action,

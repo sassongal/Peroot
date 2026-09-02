@@ -7,6 +7,7 @@ import { X, LogIn, Sparkles, Clock } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { CountdownTimer } from "./CountdownTimer";
+import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
 
 interface QuotaExhaustedModalProps {
   isOpen: boolean;
@@ -15,6 +16,10 @@ interface QuotaExhaustedModalProps {
   variant: "guest" | "free";
   /** ISO string / Date — when the rolling window refreshes */
   refreshAt: string | Date | null;
+  /** True when a result is on screen that can still be refined for free. */
+  canRefine?: boolean;
+  /** Close the wall and take the user to the free refinement controls. */
+  onRefine?: () => void;
 }
 
 export function QuotaExhaustedModal({
@@ -22,6 +27,8 @@ export function QuotaExhaustedModal({
   onClose,
   variant,
   refreshAt,
+  canRefine = false,
+  onRefine,
 }: QuotaExhaustedModalProps) {
   const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
   useScrollLock(isOpen);
@@ -40,7 +47,7 @@ export function QuotaExhaustedModal({
   const title = isGuest ? "כדי ליצור צריך חשבון" : "המכסה היומית הסתיימה";
   const body = isGuest
     ? "ההרשמה חינמית ופותחת את כל המנועים, מחקר, תמונה, וידאו ובניית סוכנים, ואת כל ספריות הפרומפטים."
-    : "ניצלת את המכסה היומית שלך. שדרג ל-Pro ל-150 פרומפטים בחודש, ללא הגבלת מנועים.";
+    : `ניצלת את המכסה היומית שלך. שדרג ל-Pro ל${creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש, ללא הגבלת מנועים.`;
   const primaryHref = isGuest ? "/login" : "/pricing";
   const primaryLabel = isGuest ? "הירשם בחינם" : "שדרג ל-Pro";
   const PrimaryIcon = isGuest ? LogIn : Sparkles;
@@ -65,7 +72,7 @@ export function QuotaExhaustedModal({
         </button>
 
         <div className="flex flex-col items-center text-center gap-6">
-          <div className="w-16 h-16 rounded-full bg-linear-to-br from-amber-500/10 to-yellow-500/10 flex items-center justify-center border border-(--glass-border)">
+          <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center border border-(--glass-border)">
             <Clock className="w-8 h-8 text-amber-500" />
           </div>
 
@@ -88,9 +95,20 @@ export function QuotaExhaustedModal({
               <PrimaryIcon className="w-5 h-5" />
               {primaryLabel}
             </ButtonLink>
+            {/* Refining the result already on screen costs nothing, so a user
+                out of credits is not out of options. The wall never said so. */}
+            {canRefine && (
+              <button
+                onClick={onRefine}
+                className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-[10px] border border-amber-500/30 bg-amber-500/8 text-amber-800 dark:text-amber-200 text-sm font-medium hover:bg-amber-500/15 transition-colors min-h-[44px]"
+              >
+                <Sparkles className="w-4 h-4" />
+                חדדו את התוצאה הקיימת, ללא קרדיט
+              </button>
+            )}
             <button
               onClick={onClose}
-              className="w-full py-3 px-5 text-(--text-muted) hover:text-(--text-primary) text-sm transition-colors"
+              className="w-full py-3 px-5 min-h-[44px] text-(--text-muted) hover:text-(--text-primary) text-sm transition-colors"
             >
               סגור
             </button>

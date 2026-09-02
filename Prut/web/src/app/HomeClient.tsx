@@ -1659,6 +1659,15 @@ function PageContent() {
         variant={quotaModal?.variant ?? "free"}
         refreshAt={quotaModal?.refreshAt ?? null}
         onClose={() => setQuotaModal(null)}
+        // A result already on screen can still be refined for free, so being
+        // out of credits is not being out of options.
+        canRefine={!!ps.completion?.trim()}
+        onRefine={() => {
+          setQuotaModal(null);
+          document
+            .getElementById("quick-refine-actions")
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }}
       />
       <HomeViewChrome
         viewMode={mobileActiveTab}

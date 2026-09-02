@@ -14,6 +14,7 @@ import {
   Plus,
   RotateCcw,
   Share2,
+  Sparkles,
   RefreshCw,
   Star,
 } from "lucide-react";
@@ -498,12 +499,23 @@ export function ResultSection({
             {/* Quick refine actions */}
             {onQuickRefine && completion.trim() && !isLoading && (
               <div
-                className="flex flex-col gap-2 pt-2 mt-2 border-t border-(--glass-border)"
+                id="quick-refine-actions"
+                className="flex flex-col gap-2 pt-2 mt-2 border-t border-(--glass-border) scroll-mt-24"
                 dir="rtl"
               >
-                <span className="text-[10px] font-medium text-(--text-muted)">
-                  חידוד מהיר על בסיס התוצאה, בלי קרדיט נוסף:
-                </span>
+                {/* The free-refinement loop is the compensation for a small
+                    daily quota, and it was announced in 10px grey. It is the
+                    cheapest way for a free user to keep working, so it says so
+                    plainly. */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-[11px] font-semibold text-amber-800 dark:text-amber-200">
+                    <Sparkles className="w-3 h-3" aria-hidden />
+                    ללא קרדיט
+                  </span>
+                  <span className="text-xs text-(--text-secondary)">
+                    חדדו את התוצאה שוב ושוב, חינם
+                  </span>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {QUICK_REFINE_ACTIONS.map((action) => (
                     <button
