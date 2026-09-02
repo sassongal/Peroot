@@ -1,17 +1,24 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/anon";
 import { fetchAllActiveLibraryPrompts } from "@/lib/public-library";
 import { logger } from "@/lib/logger";
 
 /**
  * GET /api/library/prompts
  *
- * Fetches ALL active public library prompts (batched — no silent row cap).
+ * The whole active public catalogue (batched, so no silent row cap).
+ *
+ * Deliberately cookie free. The SSR client reads cookies, which makes the
+ * route dynamic, and a dynamic route's `s-maxage` is a header the CDN never
+ * gets to act on: this endpoint advertised a one hour shared cache and was
+ * re-queried on every visit. The catalogue is identical for everyone, so it is
+ * fetched as the anonymous role and cached once for all of them.
  */
+export const revalidate = 3600;
+
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const prompts = await fetchAllActiveLibraryPrompts(supabase);
+    const prompts = await fetchAllActiveLibraryPrompts(createAnonClient());
 
     return NextResponse.json(prompts, {
       headers: {

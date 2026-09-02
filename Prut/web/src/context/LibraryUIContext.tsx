@@ -128,7 +128,7 @@ interface LibraryUIContextType {
   editingUseCase: string;
   setEditingUseCase: (val: string) => void;
   startEditingPersonalPrompt: (prompt: PersonalPrompt) => void;
-  saveEditingPersonalPrompt: () => Promise<void>;
+  saveEditingPersonalPrompt: (title?: string, useCase?: string) => Promise<void>;
   cancelEditingPersonalPrompt: () => void;
 
   // Styling state
@@ -136,8 +136,8 @@ interface LibraryUIContextType {
   editingStylePromptId: string | null;
   styleDraft: string;
   setStyleDraft: (val: string) => void;
-  openStyleEditor: (prompt: PersonalPrompt) => void;
-  saveStylePrompt: (id: string) => Promise<void>;
+  openStyleEditor: (prompt: PersonalPrompt) => string;
+  saveStylePrompt: (id: string, draft?: string) => Promise<void>;
   closeStyleEditor: () => void;
 
   // Memory Palace
@@ -319,22 +319,31 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
     setEditingUseCase("");
   }, []);
 
-  const saveEditingPersonalPrompt = useCallback(async () => {
-    if (!editingPersonalId) return;
-    try {
-      await data.updatePrompt(editingPersonalId, {
-        title: editingTitle,
-        use_case: editingUseCase,
-      });
-      toast.success("הפרומפט עודכן");
-      setEditingPersonalId(null);
-      setEditingTitle("");
-      setEditingUseCase("");
-    } catch (e) {
-      console.error("Failed to update prompt:", e);
-      toast.error("שגיאה בעדכון הפרומפט");
-    }
-  }, [editingPersonalId, editingTitle, editingUseCase, data]);
+  /**
+   * `title` / `useCase` are passed by the card, which keeps the draft in local
+   * state. They used to live here, so every keystroke in an inline editor
+   * produced a new context value and re-rendered every card in the library.
+   * The context state is still honoured when a caller passes nothing.
+   */
+  const saveEditingPersonalPrompt = useCallback(
+    async (title?: string, useCase?: string) => {
+      if (!editingPersonalId) return;
+      try {
+        await data.updatePrompt(editingPersonalId, {
+          title: title ?? editingTitle,
+          use_case: useCase ?? editingUseCase,
+        });
+        toast.success("הפרומפט עודכן");
+        setEditingPersonalId(null);
+        setEditingTitle("");
+        setEditingUseCase("");
+      } catch (e) {
+        console.error("Failed to update prompt:", e);
+        toast.error("שגיאה בעדכון הפרומפט");
+      }
+    },
+    [editingPersonalId, editingTitle, editingUseCase, data],
+  );
 
   // --- Styling State ---
   const [promptStyles, setPromptStyles] = useState<Record<string, string>>({});
@@ -371,10 +380,17 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
     }
   }, [data.personalLibrary]);
 
+  /**
+   * Returns the text the editor should start from. Only this provider knows
+   * the saved styling, and returning it lets the card keep its draft in local
+   * state instead of typing into the shared context.
+   */
   const openStyleEditor = useCallback(
     (prompt: PersonalPrompt) => {
+      const seed = promptStyles[prompt.id] || prompt.prompt;
       setEditingStylePromptId(prompt.id);
-      setStyleDraft(promptStyles[prompt.id] || prompt.prompt);
+      setStyleDraft(seed);
+      return seed;
     },
     [promptStyles],
   );
@@ -385,10 +401,11 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
   }, []);
 
   const saveStylePrompt = useCallback(
-    async (id: string) => {
+    async (id: string, draft?: string) => {
+      const text = draft ?? styleDraft;
       try {
         setPromptStyles((prev) => {
-          const next = { ...prev, [id]: styleDraft };
+          const next = { ...prev, [id]: text };
           const key = user?.id ? `${STYLE_STORAGE_KEY}_${user.id}` : STYLE_STORAGE_KEY;
           localStorage.setItem(key, JSON.stringify(next));
           return next;
@@ -396,7 +413,7 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
 
         const prompt = data.personalLibrary.find((p) => p.id === id);
         if (prompt) {
-          await data._updatePromptContent(id, prompt.prompt, styleDraft);
+          await data._updatePromptContent(id, prompt.prompt, text);
         }
 
         toast.success("עיצוב נשמר");

@@ -68,16 +68,10 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
     handleToggleFavorite,
     bumpPersonalLibraryLastUsed,
     editingPersonalId,
-    editingTitle,
-    setEditingTitle,
-    editingUseCase,
-    setEditingUseCase,
     startEditingPersonalPrompt,
     saveEditingPersonalPrompt,
     cancelEditingPersonalPrompt,
     editingStylePromptId,
-    styleDraft,
-    setStyleDraft,
     openStyleEditor,
     saveStylePrompt,
     closeStyleEditor,
@@ -120,6 +114,14 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
 
   const isExpanded = expandedIds.has(prompt.id);
   const isEditing = editingPersonalId === prompt.id;
+
+  // Draft text is local to the card being edited. It used to live in the
+  // shared library context, so a single keystroke here rebuilt that context
+  // value and re-rendered every other card in the list: with a few hundred
+  // saved prompts, typing a title was visibly laggy.
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftUseCase, setDraftUseCase] = useState("");
+  const [draftStyle, setDraftStyle] = useState("");
   const [showOriginal, setShowOriginal] = useState(false);
   const isDragging = draggingPersonalId === prompt.id;
   const isDragOver = dragOverPersonalId === prompt.id && draggingPersonalId !== prompt.id;
@@ -132,6 +134,17 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
       ? "הסר ממועדפים מקומיים"
       : "הוסף למועדפים במכשיר זה, התחבר לסנכרון בענן";
   const isStyling = editingStylePromptId === prompt.id;
+
+  // Seeded when an editor opens, not mirrored from context in an effect.
+  function beginEditing() {
+    setDraftTitle(prompt.title);
+    setDraftUseCase(prompt.use_case ?? "");
+    startEditingPersonalPrompt(prompt);
+  }
+
+  function beginStyling() {
+    setDraftStyle(openStyleEditor(prompt));
+  }
   const styledMarkup = getStyledPromptMarkup(prompt);
   const isSelected = selectedIds.has(prompt.id);
   const isMenuOpen = openMenuId === prompt.id;
@@ -558,7 +571,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     {/* Group 2: Edit */}
                     <button
                       onClick={() => {
-                        startEditingPersonalPrompt(prompt);
+                        beginEditing();
                         setOpenMenuId(null);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
@@ -567,7 +580,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     </button>
                     <button
                       onClick={() => {
-                        openStyleEditor(prompt);
+                        beginStyling();
                         setOpenMenuId(null);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/10 hover:text-(--text-primary)"
@@ -695,21 +708,21 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
             <div className="space-y-3">
               <input
                 dir="rtl"
-                value={editingTitle}
-                onChange={(e) => setEditingTitle(e.target.value)}
+                value={draftTitle}
+                onChange={(e) => setDraftTitle(e.target.value)}
                 className="w-full bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2 px-3 text-sm text-(--text-primary) focus:outline-none focus:border-black/15 dark:border-white/30"
                 placeholder="כותרת לפרומפט"
               />
               <textarea
                 dir="rtl"
-                value={editingUseCase}
-                onChange={(e) => setEditingUseCase(e.target.value)}
+                value={draftUseCase}
+                onChange={(e) => setDraftUseCase(e.target.value)}
                 className="w-full h-16 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2 px-3 text-sm text-(--text-secondary) focus:outline-none focus:border-black/15 dark:border-white/30 resize-none"
                 placeholder="תיאור קצר"
               />
               <div className="flex items-center gap-2">
                 <button
-                  onClick={saveEditingPersonalPrompt}
+                  onClick={() => saveEditingPersonalPrompt(draftTitle, draftUseCase)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-xs rounded-lg font-medium hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Check className="w-3.5 h-3.5" /> שמור
@@ -930,8 +943,8 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     <textarea
                       ref={styleTextareaRef}
                       dir="rtl"
-                      value={styleDraft}
-                      onChange={(e) => setStyleDraft(e.target.value)}
+                      value={draftStyle}
+                      onChange={(e) => setDraftStyle(e.target.value)}
                       className={cn(
                         "w-full bg-(--glass-bg) border border-(--glass-border) rounded-xl p-4 text-sm text-(--text-primary) leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors",
                         styleEditorExpanded ? "h-[50vh] resize-y" : "h-32 resize-y",
@@ -940,7 +953,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                     />
                     <div className="mt-3 flex items-center justify-between">
                       <span className="text-[10px] text-(--text-muted)">
-                        {styleDraft.length} תווים
+                        {draftStyle.length} תווים
                       </span>
                       <div className="flex items-center gap-2">
                         <button
@@ -954,7 +967,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                         </button>
                         <button
                           onClick={() => {
-                            saveStylePrompt(prompt.id);
+                            saveStylePrompt(prompt.id, draftStyle);
                             setStyleEditorExpanded(false);
                           }}
                           className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
@@ -1003,7 +1016,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                   className="p-1.5! min-h-0! min-w-0! w-7! h-7!"
                 />
                 <button
-                  onClick={() => openStyleEditor(prompt)}
+                  onClick={beginStyling}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Wand2 className="w-3 h-3" /> עיצוב
@@ -1021,7 +1034,7 @@ function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProp
                   <History className="w-3 h-3" /> גרסאות
                 </button>
                 <button
-                  onClick={() => startEditingPersonalPrompt(prompt)}
+                  onClick={beginEditing}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Pencil className="w-3 h-3" /> ערוך

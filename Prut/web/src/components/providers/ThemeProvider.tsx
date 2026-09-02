@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 
 type Theme = "dark" | "light";
 
@@ -51,13 +51,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     });
   }, []);
 
+  // A fresh object here re-rendered every theme consumer on every render of
+  // this provider, which sits at the root of the tree.
+  const value = useMemo(
+    () => ({ theme: mounted ? theme : ("dark" as Theme), toggleTheme }),
+    [mounted, theme, toggleTheme],
+  );
+
   // Render children immediately so SSR output matches the server-rendered html
   // (which has className="dark"). The useEffect above reconciles on the client.
-  return (
-    <ThemeContext.Provider value={{ theme: mounted ? theme : "dark", toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 function applyTheme(theme: Theme) {
