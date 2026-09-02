@@ -26,6 +26,7 @@ import {
   Sparkles,
   SearchCheck,
   MessageSquare,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -56,6 +57,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     // ── Content ──
     { name: "תוכן", href: "/admin/content", icon: Factory },
     { name: "מודרציה", href: "/admin/moderation", icon: GitBranch },
+    { name: "מה חדש", href: "/admin/whats-new", icon: Megaphone },
     // ── System ──
     { name: t.admin.layout.engines, href: "/admin/engines", icon: Cpu },
     { name: "מאגר סקילים", href: "/admin/skills", icon: Sparkles },
