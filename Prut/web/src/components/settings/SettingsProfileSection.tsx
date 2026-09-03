@@ -2,7 +2,8 @@
 "use client";
 
 import type { User } from "@supabase/supabase-js";
-import { Calendar, Check, Crown, Languages, Loader2, Mail, Zap } from "lucide-react";
+import { Calendar, Check, Crown, Languages, Loader2, Mail, Moon, Sun, Zap } from "lucide-react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { OutputLanguagePicker } from "@/components/features/prompt-improver/OutputLanguagePicker";
 import type { OutputLanguage } from "@/lib/output-language";
 import { formatDateHe } from "@/lib/dates/format";
@@ -50,6 +51,7 @@ export function SettingsProfileSection({
   isSavingLanguage,
   onOpenBilling,
 }: SettingsProfileSectionProps) {
+  const { theme, toggleTheme } = useTheme();
   const used = credits ? Math.max(0, credits.dailyLimit - credits.balance) : 0;
   const usedPct = credits && credits.dailyLimit > 0 ? (used / credits.dailyLimit) * 100 : 0;
 
@@ -199,6 +201,51 @@ export function SettingsProfileSection({
           disabled={isSavingLanguage}
           className="max-w-full"
         />
+      </div>
+
+      {/* Appearance: the same switch as in the header, where people look for it */}
+      <div className="p-4 sm:p-5 bg-(--glass-bg) rounded-2xl border border-(--glass-border) space-y-3">
+        <h3 className="font-semibold text-(--text-primary) flex items-center gap-2">
+          {theme === "dark" ? (
+            <Moon className="w-4 h-4 text-amber-500" aria-hidden="true" />
+          ) : (
+            <Sun className="w-4 h-4 text-amber-500" aria-hidden="true" />
+          )}
+          מראה
+        </h3>
+        <div role="radiogroup" aria-label="מראה" className="grid grid-cols-2 gap-2 max-w-xs">
+          {(
+            [
+              { id: "dark", label: "כהה", icon: Moon },
+              { id: "light", label: "בהיר", icon: Sun },
+            ] as const
+          ).map((opt) => {
+            const active = theme === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => {
+                  if (!active) toggleTheme();
+                }}
+                className={cn(
+                  "cursor-pointer inline-flex items-center justify-center gap-2 min-h-[44px] rounded-xl border text-sm font-medium transition-colors",
+                  active
+                    ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                    : "bg-(--surface-panel) text-(--text-secondary) border-(--glass-border) hover:text-(--text-primary)",
+                )}
+              >
+                <opt.icon className="w-4 h-4" aria-hidden="true" />
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-(--text-muted)">
+          נשמר בדפדפן הזה. אפשר להחליף גם מהכפתור בכותרת.
+        </p>
       </div>
 
       {/* Credits today */}

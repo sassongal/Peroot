@@ -107,7 +107,7 @@ export default async function ContactPage() {
                   התוכנית החינמית כוללת {creditsPhrase(freeDaily)} ביום וגישה לספריית{" "}
                   {PROMPT_LIBRARY_COUNT} הפרומפטים. תוכנית Pro (₪
                   {PLANS.pro.price}/חודש) כוללת {creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש, גישה לכל
-                  המנועים המתקדמים, שיפור איטרטיבי, ספרייה אישית ללא הגבלה, וסנכרון מלא עם תוסף
+                  המנועים המתקדמים, שיפור איטרטיבי, ספרייה אישית ללא הגבלה, וכל המצבים גם בתוסף
                   Chrome.
                 </div>
               </details>

@@ -8,7 +8,7 @@ import {
 } from "@/lib/output-language";
 import { trackOutputLanguageSelected } from "@/lib/analytics";
 import { logger } from "@/lib/logger";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -145,6 +145,103 @@ export default function SettingsPage() {
   const [redeemCode, setRedeemCode] = useState("");
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [usageStats, setUsageStats] = useState<UsageStatsState | null>(null);
+  const statsRequested = useRef(false);
+  const [isSigningOutEverywhere, setIsSigningOutEverywhere] = useState(false);
+
+  /**
+   * The four activity queries used to run on every visit to any tab. They
+   * run once, the first time the stats tab opens (or an export needs them).
+   */
+  const loadUsageStats = useCallback(
+    async (userId: string): Promise<UsageStatsState | null> => {
+      if (statsRequested.current) return usageStats;
+      statsRequested.current = true;
+      try {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const enhanceActions = ["Prmpt Enhance", "Prmpt Refine"];
+        const [
+          { count: totalCount },
+          { count: monthCount },
+          { count: weekCount },
+          { data: recentActivity },
+        ] = await Promise.all([
+          supabase
+            .from("activity_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .in("action", enhanceActions),
+          supabase
+            .from("activity_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .in("action", enhanceActions)
+            .gte("created_at", startOfMonth),
+          supabase
+            .from("activity_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .in("action", enhanceActions)
+            .gte("created_at", startOfWeek),
+          supabase
+            .from("activity_logs")
+            .select("created_at, details")
+            .eq("user_id", userId)
+            .in("action", enhanceActions)
+            .order("created_at", { ascending: false })
+            .limit(100),
+        ]);
+
+        const catCounts: Record<string, number> = {};
+        const dayCounts: Record<string, number> = {};
+        let streak = 0;
+        (recentActivity || []).forEach(
+          (log: { created_at: string; details: { mode?: string } | null }) => {
+            const mode = log.details?.mode || "standard";
+            catCounts[mode] = (catCounts[mode] || 0) + 1;
+            const day = log.created_at.slice(0, 10);
+            dayCounts[day] = (dayCounts[day] || 0) + 1;
+          },
+        );
+        const today = new Date();
+        for (let i = 0; i < 30; i++) {
+          const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+          const key = d.toISOString().slice(0, 10);
+          if (dayCounts[key]) streak++;
+          else if (i > 0) break;
+        }
+        const topCategories = Object.entries(catCounts)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 3)
+          .map(([category, count]) => ({ category, count }));
+        const recentDays = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+          const key = d.toISOString().slice(0, 10);
+          recentDays.push({ date: key, count: dayCounts[key] || 0 });
+        }
+        const next: UsageStatsState = {
+          totalEnhancements: totalCount || 0,
+          thisMonth: monthCount || 0,
+          thisWeek: weekCount || 0,
+          streak,
+          topCategories,
+          recentDays,
+        };
+        setUsageStats(next);
+        return next;
+      } catch (err) {
+        statsRequested.current = false;
+        logger.error("[settings] usage stats failed", err);
+        return null;
+      }
+    },
+    [supabase, usageStats],
+  );
+  useEffect(() => {
+    if (activeSection === "stats" && user) void loadUsageStats(user.id);
+  }, [activeSection, user, loadUsageStats]);
 
   useEffect(() => {
     async function getUser() {
@@ -185,84 +282,6 @@ export default function SettingsPage() {
             balance: profile?.credits_balance ?? 0,
             dailyLimit: resolveDailyLimit(settings?.daily_free_limit, QUOTA_FALLBACK.freeDaily),
             refreshedAt: profile?.credits_refreshed_at ?? null,
-          });
-
-          const now = new Date();
-          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-          const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-          const [
-            { count: totalCount },
-            { count: monthCount },
-            { count: weekCount },
-            { data: recentActivity },
-          ] = await Promise.all([
-            supabase
-              .from("activity_logs")
-              .select("*", { count: "exact", head: true })
-              .eq("user_id", user.id)
-              .in("action", ["Prmpt Enhance", "Prmpt Refine"]),
-            supabase
-              .from("activity_logs")
-              .select("*", { count: "exact", head: true })
-              .eq("user_id", user.id)
-              .in("action", ["Prmpt Enhance", "Prmpt Refine"])
-              .gte("created_at", startOfMonth),
-            supabase
-              .from("activity_logs")
-              .select("*", { count: "exact", head: true })
-              .eq("user_id", user.id)
-              .in("action", ["Prmpt Enhance", "Prmpt Refine"])
-              .gte("created_at", startOfWeek),
-            supabase
-              .from("activity_logs")
-              .select("created_at, details")
-              .eq("user_id", user.id)
-              .in("action", ["Prmpt Enhance", "Prmpt Refine"])
-              .order("created_at", { ascending: false })
-              .limit(100),
-          ]);
-
-          const catCounts: Record<string, number> = {};
-          const dayCounts: Record<string, number> = {};
-          let streak = 0;
-
-          (recentActivity || []).forEach(
-            (log: { created_at: string; details: { mode?: string } | null }) => {
-              const mode = log.details?.mode || "standard";
-              catCounts[mode] = (catCounts[mode] || 0) + 1;
-              const day = log.created_at.slice(0, 10);
-              dayCounts[day] = (dayCounts[day] || 0) + 1;
-            },
-          );
-
-          const today = new Date();
-          for (let i = 0; i < 30; i++) {
-            const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-            const key = d.toISOString().slice(0, 10);
-            if (dayCounts[key]) streak++;
-            else if (i > 0) break;
-          }
-
-          const topCategories = Object.entries(catCounts)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 3)
-            .map(([category, count]) => ({ category, count }));
-
-          const recentDays = [];
-          for (let i = 6; i >= 0; i--) {
-            const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-            const key = d.toISOString().slice(0, 10);
-            recentDays.push({ date: key, count: dayCounts[key] || 0 });
-          }
-
-          setUsageStats({
-            totalEnhancements: totalCount || 0,
-            thisMonth: monthCount || 0,
-            thisWeek: weekCount || 0,
-            streak,
-            topCategories,
-            recentDays,
           });
 
           try {
@@ -332,6 +351,7 @@ export default function SettingsPage() {
   const handleExportData = async () => {
     setIsExporting(true);
     try {
+      const stats = usageStats ?? (await loadUsageStats(user.id));
       const { data: rawActivityLogs } = await supabase
         .from("activity_logs")
         .select("id, action, entity_type, created_at, details")
@@ -370,14 +390,14 @@ export default function SettingsPage() {
           emailConfirmed: !!user.email_confirmed_at,
           lastSignIn: user.last_sign_in_at || null,
         },
-        usageStats: usageStats
+        usageStats: stats
           ? {
-              totalEnhancements: usageStats.totalEnhancements,
-              thisMonth: usageStats.thisMonth,
-              thisWeek: usageStats.thisWeek,
-              streakDays: usageStats.streak,
-              topCategories: usageStats.topCategories,
-              recentDailyActivity: usageStats.recentDays,
+              totalEnhancements: stats.totalEnhancements,
+              thisMonth: stats.thisMonth,
+              thisWeek: stats.thisWeek,
+              streakDays: stats.streak,
+              topCategories: stats.topCategories,
+              recentDailyActivity: stats.recentDays,
             }
           : null,
         history: history,
@@ -444,6 +464,19 @@ export default function SettingsPage() {
     } catch {
       toast.error("שגיאה במחיקת החשבון");
       setIsDeleting(false);
+    }
+  };
+
+  const handleSignOutEverywhere = async () => {
+    setIsSigningOutEverywhere(true);
+    try {
+      const { error } = await supabase.auth.signOut({ scope: "global" });
+      if (error) throw error;
+      window.location.href = "/login";
+    } catch (err) {
+      logger.error("[settings] global sign out failed", err);
+      toast.error("ההתנתקות נכשלה, נסו שוב");
+      setIsSigningOutEverywhere(false);
     }
   };
 
@@ -676,6 +709,8 @@ export default function SettingsPage() {
                 setConfirmEmail={setConfirmEmail}
                 onDeleteAccount={handleDeleteAccount}
                 isDeleting={isDeleting}
+                onSignOutEverywhere={handleSignOutEverywhere}
+                isSigningOutEverywhere={isSigningOutEverywhere}
               />
             )}
           </div>

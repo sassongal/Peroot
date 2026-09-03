@@ -15,11 +15,12 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { CHROME_STORE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "תוסף Chrome לשדרוג פרומפטים מכל אתר",
   description:
-    "סמנו טקסט בכל אתר, לחצו לחיצה ימנית וקבלו פרומפט מקצועי: Gmail, Google Docs, לינקדאין ועוד. תוסף Chrome עברי-first עם סנכרון מלא לחשבון פירוט.",
+    "סמנו טקסט בכל אתר, לחצו לחיצה ימנית וקבלו פרומפט מקצועי: Gmail, Google Docs, לינקדאין ועוד. תוסף Chrome עברי-first, מסונכרן לחשבון פירוט: אותה ספרייה, אותם קרדיטים, אותה שפת פלט.",
   alternates: { canonical: "/extension" },
   openGraph: {
     title: "תוסף Chrome של Peroot | שדרגו פרומפטים מכל אתר",
@@ -123,7 +124,7 @@ export default function ExtensionPage() {
               title="תוסף Chrome של"
               highlight="Peroot"
               subtitle="שדרגו פרומפטים ישירות מכל אתר - בלי לעבור לאפליקציה. לחיצה ימנית על כל טקסט, וקבלו פרומפט מקצועי תוך שניות."
-              badge="בקרוב"
+              badge={CHROME_STORE_URL ? "זמין בחנות Chrome" : "בקרוב"}
               badgeIcon={<Sparkles className="w-4 h-4" />}
               size="large"
               align="center"
@@ -256,10 +257,22 @@ export default function ExtensionPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-              <ButtonLink href="/?notify=extension" size="lg">
-                <Chrome className="w-5 h-5" />
-                עדכנו אותי
-              </ButtonLink>
+              {CHROME_STORE_URL ? (
+                <ButtonLink
+                  href={CHROME_STORE_URL}
+                  size="lg"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Chrome className="w-5 h-5" />
+                  התקנה מחנות Chrome
+                </ButtonLink>
+              ) : (
+                <ButtonLink href="/?notify=extension" size="lg">
+                  <Chrome className="w-5 h-5" />
+                  עדכנו אותי
+                </ButtonLink>
+              )}
               <Link
                 href="/"
                 className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl border border-border text-foreground font-medium hover:bg-secondary transition-colors"

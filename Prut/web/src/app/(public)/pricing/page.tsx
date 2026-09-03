@@ -99,7 +99,7 @@ const COMPARISON_FEATURES = [
     icon: Zap,
   },
   {
-    name: "תמיכה בעדיפות",
+    name: "תמיכה אישית במייל",
     free: false,
     pro: true,
     icon: Headphones,

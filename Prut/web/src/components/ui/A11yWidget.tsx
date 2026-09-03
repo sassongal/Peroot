@@ -301,7 +301,10 @@ export function A11yWidget() {
         aria-label="פתח כלי נגישות (Alt+A)"
         aria-keyshortcuts="Alt+A"
         className={[
-          "fixed bottom-6 start-6 z-40 flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-all",
+          // On phones the bottom tab bar owns the bottom edge and the middle of the
+          // screen is content, so the button sits just above the bar, in the start
+          // corner. On wider screens it keeps the corner it always had.
+          "fixed start-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:start-6 md:bottom-6 z-40 flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-all",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400",
           hasActivePrefs
             ? "bg-amber-500 text-black hover:bg-amber-400"

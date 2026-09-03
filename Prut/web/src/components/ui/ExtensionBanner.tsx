@@ -2,8 +2,8 @@
 
 import { Chrome, X } from "lucide-react";
 import { useState, useEffect } from "react";
-
-const CHROME_STORE_URL = "#"; // Replace with actual Chrome Web Store URL when approved
+import Link from "next/link";
+import { CHROME_STORE_URL } from "@/lib/constants";
 
 export function ExtensionBanner() {
   const [dismissed, setDismissed] = useState(false);
@@ -27,23 +27,29 @@ export function ExtensionBanner() {
     <div className="hidden md:flex items-center justify-center gap-3 px-4 py-2 bg-linear-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 border-b border-amber-500/10 text-sm relative">
       <Chrome className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
       <span className="text-(--text-secondary)">תוסף Chrome חדש -</span>
-      <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/80 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-        בקרוב
-      </span>
-      <span className="text-(--text-secondary)">שדרג טקסטים ישירות מכל אתר</span>
-      <a
-        href={CHROME_STORE_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="px-4 py-2 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-300 font-semibold text-xs hover:bg-amber-500/25 transition-colors cursor-pointer"
-        onClick={(e) => {
-          if (CHROME_STORE_URL === "#") {
-            e.preventDefault();
-          }
-        }}
-      >
-        הורד תוסף
-      </a>
+      {CHROME_STORE_URL ? null : (
+        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+          בקרוב
+        </span>
+      )}
+      <span className="text-(--text-secondary)">שדרוג ישירות בתוך ChatGPT, Claude ו-Gemini</span>
+      {CHROME_STORE_URL ? (
+        <a
+          href={CHROME_STORE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 py-2 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-300 font-semibold text-xs hover:bg-amber-500/25 transition-colors"
+        >
+          התקנת התוסף
+        </a>
+      ) : (
+        <Link
+          href="/extension"
+          className="px-4 py-2 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-300 font-semibold text-xs hover:bg-amber-500/25 transition-colors"
+        >
+          מה זה נותן
+        </Link>
+      )}
       <button
         onClick={handleDismiss}
         className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-(--text-muted) hover:text-(--text-secondary) transition-colors"

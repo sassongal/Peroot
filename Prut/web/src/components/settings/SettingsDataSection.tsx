@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Download, History, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, Download, History, Loader2, LogOut, Trash2 } from "lucide-react";
 
 interface SettingsDataSectionProps {
   onExportData: () => void;
@@ -17,6 +17,9 @@ interface SettingsDataSectionProps {
   setConfirmEmail: (v: string) => void;
   onDeleteAccount: () => void;
   isDeleting: boolean;
+  /** Ends every session of this account, on every device, then returns to login. */
+  onSignOutEverywhere: () => void;
+  isSigningOutEverywhere: boolean;
 }
 
 const DELETE_PHRASE = "מחק את החשבון";
@@ -41,6 +44,8 @@ export function SettingsDataSection({
   setConfirmEmail,
   onDeleteAccount,
   isDeleting,
+  onSignOutEverywhere,
+  isSigningOutEverywhere,
 }: SettingsDataSectionProps) {
   const historyLine =
     historyLength === 0
@@ -113,6 +118,32 @@ export function SettingsDataSection({
         </button>
       </div>
 
+      <div className="p-4 sm:p-5 bg-(--glass-bg) rounded-2xl border border-(--glass-border) space-y-3">
+        <div className="flex items-start gap-3">
+          <LogOut className="w-5 h-5 text-(--text-muted) mt-0.5 shrink-0" aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-(--text-primary)">התנתקות מכל המכשירים</h3>
+            <p className="text-sm text-(--text-muted)">
+              סוגרת את החשבון בכל דפדפן, טלפון ותוסף שבהם הוא פתוח, כולל זה. שימושי אחרי שימוש במחשב
+              לא שלכם.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onSignOutEverywhere}
+          disabled={isSigningOutEverywhere}
+          className="cursor-pointer w-full flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl border border-(--glass-border) bg-(--surface-panel) text-(--text-primary) font-medium text-sm hover:border-amber-500/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSigningOutEverywhere ? (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <LogOut className="w-4 h-4" aria-hidden="true" />
+          )}
+          <span>התנתקות מכל המכשירים</span>
+        </button>
+      </div>
+
       <div
         className="p-4 sm:p-5 bg-red-500/5 rounded-2xl border border-red-500/20 space-y-4"
         aria-labelledby="settings-delete-heading"
@@ -147,6 +178,19 @@ export function SettingsDataSection({
           </button>
         ) : (
           <div className="space-y-3 p-4 bg-(--surface-panel) rounded-xl border border-(--glass-border)">
+            <button
+              type="button"
+              onClick={onExportData}
+              disabled={isExporting}
+              className="cursor-pointer w-full flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200 font-medium text-sm hover:bg-amber-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Download className="w-4 h-4" aria-hidden="true" />
+              )}
+              <span>קודם להוריד עותק של הנתונים</span>
+            </button>
             <label className="block space-y-1">
               <span className="text-sm text-(--text-secondary)">
                 כתובת האימייל של החשבון, לאישור

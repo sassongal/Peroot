@@ -1,3 +1,10 @@
+/**
+ * The Chrome Web Store listing. Null until the listing is approved; every
+ * surface that points at the store (banner, extension page, footer) reads
+ * this one value, so publishing is a one-line change.
+ */
+export const CHROME_STORE_URL: string | null = null;
+
 export const CATEGORY_OPTIONS = [
   { id: "None", label: "ללא" },
   { id: "General", label: "כללי" },
