@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import type { ContextAttachment } from "@/lib/context/types";
 import { AttachmentCard } from "./AttachmentCard";
 
@@ -28,7 +27,6 @@ export function ContextChips({
   onRetryFile,
   onRetryImage,
   tokenLimit,
-  tier,
 }: ContextChipsProps) {
   if (attachments.length === 0) return null;
 
@@ -38,9 +36,6 @@ export function ContextChips({
   );
   const effectiveLimit = tokenLimit ?? 8_000;
   const isOverLimit = totalTokens > effectiveLimit;
-  const readyCount = attachments.filter((a) => a.status === "ready").length;
-  const loadingCount = attachments.filter((a) => a.status === "loading").length;
-  const errorCount = attachments.filter((a) => a.status === "error").length;
 
   return (
     <div dir="rtl" className="flex flex-col gap-3">
@@ -66,43 +61,14 @@ export function ContextChips({
         ))}
       </div>
 
-      {/* Status Summary */}
-      <div className="flex items-center gap-3 text-[10px] flex-wrap">
-        {readyCount > 0 && !isOverLimit && (
-          <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            {readyCount === 1 ? "הקונטקסט נקלט" : `${readyCount} פריטים נקלטו`}
-            {totalTokens > 0 && ` · ${formatTokenCount(totalTokens)} tokens`}
-          </span>
-        )}
-
-        {loadingCount > 0 && (
-          <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            {loadingCount === 1 ? "מעבד..." : `מעבד ${loadingCount} פריטים...`}
-          </span>
-        )}
-
-        {errorCount > 0 && (
-          <span className="text-red-400 font-medium flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            {errorCount === 1 ? "שגיאה אחת" : `${errorCount} שגיאות`}
-          </span>
-        )}
-
-        {isOverLimit && (
-          <span className="text-red-400 font-bold">
-            יותר מדי context, הסירו קובץ (מקסימום {formatTokenCount(effectiveLimit)} tokens)
-          </span>
-        )}
-
-        {/* Limits hint */}
-        {attachments.length > 0 && (
-          <span className="text-[var(--text-muted)]">קובץ עד 10MB · תמונה עד 5MB</span>
-        )}
-
-        {tier === "free" && <span className="text-[var(--text-muted)]">1 העלאה ביום (חינם)</span>}
-      </div>
+      {/* The upload state itself lives on the tools button now
+          (attachment-summary); only the one thing that needs an action
+          stays here. */}
+      {isOverLimit && (
+        <p className="text-[11px] text-red-500 font-bold">
+          יותר מדי context, הסירו קובץ (מקסימום {formatTokenCount(effectiveLimit)} tokens)
+        </p>
+      )}
     </div>
   );
 }

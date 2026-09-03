@@ -1,7 +1,8 @@
 "use client";
 
+import type { AttachmentSummary } from "@/lib/context/attachment-summary";
 import { useRef, useEffect, useState, useMemo, Dispatch, SetStateAction } from "react";
-import { Wand2, Mic, MicOff, Paperclip, Globe, ImageIcon, Zap, Plus } from "lucide-react";
+import { Wand2, Mic, MicOff, Paperclip, Globe, ImageIcon, Zap, Plus, Loader2 } from "lucide-react";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
@@ -67,7 +68,8 @@ interface PromptInputProps {
   onAddFiles?: (files: File[]) => Promise<void>;
   onAddUrl?: (url: string) => void;
   onAddImage?: (file: File) => void;
-  hasAttachments?: boolean;
+  /** Live upload state, shown on the tools button (see attachment-summary). */
+  attachmentStatus?: AttachmentSummary;
   // Target model
   targetModel: TargetModel;
   setTargetModel: (model: TargetModel) => void;
@@ -195,7 +197,7 @@ export function PromptInput({
   onAddFiles,
   onAddUrl,
   onAddImage,
-  hasAttachments,
+  attachmentStatus,
   targetModel,
   setTargetModel,
   voiceLang,
@@ -658,17 +660,40 @@ export function PromptInput({
                   )}
                 />
                 <span>כלים</span>
-                {!showTools && !toolsSeen && (
+                {/* The dot is the upload status (owner ask, 2026-09-02):
+                    spinning gold while a file, image or link is being read,
+                    green with the count when everything is in, red when
+                    something failed. The quiet "tools exist" hint only shows
+                    while nothing is attached. */}
+                {attachmentStatus && attachmentStatus.state !== "idle" ? (
                   <span
-                    className="absolute -top-1 -start-1 w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"
-                    aria-hidden="true"
-                  />
-                )}
-                {hasAttachments && !showTools && (
-                  <span
-                    className="absolute -top-0.5 -start-0.5 w-2 h-2 rounded-full bg-amber-400"
-                    title="יש קבצים מצורפים"
-                  />
+                    role="status"
+                    aria-live="polite"
+                    aria-label={attachmentStatus.label}
+                    title={attachmentStatus.label}
+                    className={cn(
+                      "absolute -top-1.5 -start-1.5 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-(--surface-panel)",
+                      attachmentStatus.state === "loading" && "bg-amber-400 text-black",
+                      attachmentStatus.state === "ready" && "bg-emerald-500 text-white",
+                      attachmentStatus.state === "error" && "bg-red-500 text-white",
+                    )}
+                  >
+                    {attachmentStatus.state === "loading" ? (
+                      <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
+                    ) : attachmentStatus.state === "error" ? (
+                      "!"
+                    ) : (
+                      attachmentStatus.ready
+                    )}
+                  </span>
+                ) : (
+                  !showTools &&
+                  !toolsSeen && (
+                    <span
+                      className="absolute -top-1 -start-1 w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"
+                      aria-hidden="true"
+                    />
+                  )
                 )}
               </button>
               {showTools && (
@@ -859,11 +884,6 @@ export function PromptInput({
                         <ImageIcon className="w-4 h-4" />
                       </button>
                     </>
-                  )}
-
-                  {/* Attachment indicator dot */}
-                  {hasAttachments && (
-                    <div className="w-2 h-2 rounded-full bg-amber-400" title="יש קבצים מצורפים" />
                   )}
                 </div>
               )}

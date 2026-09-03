@@ -1,5 +1,6 @@
 "use client";
 
+import { summarizeAttachments } from "@/lib/context/attachment-summary";
 import { memo, type SetStateAction } from "react";
 import { Clock, ArrowRight } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -211,7 +212,7 @@ export const InputSection = memo<InputSectionProps>(
           onAddFiles={onAddFiles}
           onAddUrl={onAddUrl}
           onAddImage={onAddImage}
-          hasAttachments={contextAttachments.length > 0}
+          attachmentStatus={summarizeAttachments(contextAttachments)}
           targetModel={targetModel}
           setTargetModel={setTargetModel}
           voiceLang={voiceLang}

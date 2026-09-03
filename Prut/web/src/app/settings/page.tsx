@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  OUTPUT_LANGUAGE_STORAGE_KEY,
+  isOutputLanguage,
+  outputLanguageDef,
+  type OutputLanguage,
+} from "@/lib/output-language";
+import { trackOutputLanguageSelected } from "@/lib/analytics";
+import { logger } from "@/lib/logger";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -15,7 +23,6 @@ import {
   AlertTriangle,
   LayoutDashboard,
   Brain,
-  Coins,
   Fingerprint,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -44,23 +51,27 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialSection = searchParams.get("tab") || "profile";
+  // "credits" used to be its own tab; it lives under billing now, and old
+  // links (quota modal, emails) still land in the right place.
+  const resolveTab = (tab: string | null) => (tab === "credits" ? "billing" : tab || "profile");
+  const initialSection = resolveTab(searchParams.get("tab"));
   const billingSuccessParam = searchParams.get("success") === "true";
   const [activeSection, setActiveSection] = useState<string>(initialSection);
 
   // Keep the section in the URL (shareable, refresh-safe) and follow the URL
   // when it changes (back/forward, external links into a specific tab).
   useEffect(() => {
-    setActiveSection(searchParams.get("tab") || "profile");
+    setActiveSection(resolveTab(searchParams.get("tab")));
   }, [searchParams]);
   const selectSection = (id: string) => {
     setActiveSection(id);
     router.replace(id === "profile" ? "/settings" : `/settings?tab=${id}`, { scroll: false });
   };
   const [isAdmin, setIsAdmin] = useState(false);
-  const [shareLanguage, setShareLanguage] = useState<"hebrew" | "english" | "arabic" | "russian">(
-    "hebrew",
-  );
+  // The user's preferred output language: shown and edited in the profile,
+  // and the language the referral invitation is written in.
+  const [preferredLanguage, setPreferredLanguage] = useState<OutputLanguage>("hebrew");
+  const [isSavingLanguage, setIsSavingLanguage] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
@@ -73,6 +84,33 @@ export default function SettingsPage() {
   const savedNameRef = useRef("");
 
   const supabase = useMemo(() => createClient(), []);
+
+  const handlePreferredLanguage = async (next: OutputLanguage) => {
+    if (!user || next === preferredLanguage) return;
+    const previous = preferredLanguage;
+    setPreferredLanguage(next);
+    setIsSavingLanguage(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ preferred_output_language: next })
+        .eq("id", user.id);
+      if (error) throw error;
+      try {
+        localStorage.setItem(OUTPUT_LANGUAGE_STORAGE_KEY, next);
+      } catch {
+        /* private mode */
+      }
+      trackOutputLanguageSelected(next, "picker");
+      toast.success(`שפת הפלט המועדפת: ${outputLanguageDef(next).he}`);
+    } catch (err) {
+      logger.error("[settings] preferred language save failed", err);
+      setPreferredLanguage(previous);
+      toast.error("שמירת השפה נכשלה, נסו שוב");
+    } finally {
+      setIsSavingLanguage(false);
+    }
+  };
   const { history, clearHistory } = useHistory();
   const { personalLibrary } = useLibrary();
   const { favorites } = useFavorites();
@@ -137,7 +175,7 @@ export default function SettingsPage() {
           setDisplayName(loadedName);
           savedNameRef.current = loadedName.trim();
           const lang = profile?.preferred_output_language;
-          if (lang === "english" || lang === "arabic" || lang === "russian") setShareLanguage(lang);
+          if (isOutputLanguage(lang)) setPreferredLanguage(lang);
           setCredits({
             balance: profile?.credits_balance ?? 0,
             dailyLimit: resolveDailyLimit(settings?.daily_free_limit, QUOTA_FALLBACK.freeDaily),
@@ -436,8 +474,7 @@ export default function SettingsPage() {
     { id: "style", label: "הסגנון שלך", icon: Fingerprint },
     { id: "connect", label: "Peroot Connect", icon: Plug },
     { id: "referral", label: "הזמן חברים", icon: Gift },
-    { id: "billing", label: "מנוי וחיוב", icon: CreditCard },
-    { id: "credits", label: "קרדיטים", icon: Coins },
+    { id: "billing", label: "מנוי וקרדיטים", icon: CreditCard },
     { id: "data", label: "נתונים ופרטיות", icon: Shield },
     { id: "danger", label: "אזור מסוכן", icon: AlertTriangle },
   ];
@@ -547,11 +584,12 @@ export default function SettingsPage() {
                 setDisplayName={setDisplayName}
                 onSaveDisplayName={handleSaveDisplayName}
                 isSavingName={isSavingName}
-                historyLength={history.length}
-                personalLibraryLength={personalLibrary.length}
-                favoritesLength={favorites.length}
                 credits={credits}
                 isPro={isPro}
+                preferredLanguage={preferredLanguage}
+                onPreferredLanguageChange={handlePreferredLanguage}
+                isSavingLanguage={isSavingLanguage}
+                onOpenBilling={() => selectSection("billing")}
               />
             )}
             {activeSection === "stats" && <SettingsStatsSection usageStats={usageStats} />}
@@ -561,7 +599,7 @@ export default function SettingsPage() {
             {activeSection === "referral" && (
               <SettingsReferralSection
                 referral={referral}
-                language={shareLanguage}
+                language={preferredLanguage}
                 referralLoaded={referralLoaded}
                 referralCopied={referralCopied}
                 onReferralCopied={setReferralCopied}
@@ -572,14 +610,16 @@ export default function SettingsPage() {
               />
             )}
             {activeSection === "billing" && (
-              <SettingsBillingSection
-                billingSuccess={billingSuccess}
-                isPro={isPro}
-                subscription={subscription}
-                portalUrl={portalUrl}
-              />
+              <div className="space-y-10">
+                <SettingsBillingSection
+                  billingSuccess={billingSuccess}
+                  isPro={isPro}
+                  subscription={subscription}
+                  portalUrl={portalUrl}
+                />
+                <CreditsPanel />
+              </div>
             )}
-            {activeSection === "credits" && <CreditsPanel />}
             {activeSection === "data" && (
               <SettingsDataSection
                 onExportData={handleExportData}
