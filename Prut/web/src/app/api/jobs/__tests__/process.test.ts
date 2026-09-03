@@ -1,13 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// Truthy persona → the worker awards style_explorer only when analysis ran.
+// style_analysis is the only job type left since achievements were removed.
 const analyzeUserStyle = vi.fn().mockResolvedValue({ tokens: [] });
-const award = vi.fn().mockResolvedValue(undefined);
-const checkAll = vi.fn().mockResolvedValue(undefined);
 vi.mock("@/lib/intelligence/personality-analyzer", () => ({ analyzeUserStyle }));
-vi.mock("@/lib/intelligence/achievement-tracker", () => ({
-  AchievementTracker: { award, checkAll },
-}));
 
 const rpc = vi.fn();
 const update = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
@@ -50,9 +45,7 @@ describe("jobs worker (batch)", () => {
         error: null,
       })
       .mockResolvedValueOnce({
-        data: [
-          { j_id: "2", j_type: "achievement_check", j_payload: { userId: "u2" }, j_attempts: 0 },
-        ],
+        data: [{ j_id: "2", j_type: "style_analysis", j_payload: { userId: "u2" }, j_attempts: 0 }],
         error: null,
       })
       .mockResolvedValueOnce({ data: [], error: null });
@@ -62,8 +55,7 @@ describe("jobs worker (batch)", () => {
 
     expect(body).toMatchObject({ processed: 2, completed: 2, failed: 0 });
     expect(analyzeUserStyle).toHaveBeenCalledWith("u1");
-    expect(award).toHaveBeenCalledWith("u1", "style_explorer", expect.anything());
-    expect(checkAll).toHaveBeenCalledWith("u2", expect.anything());
+    expect(analyzeUserStyle).toHaveBeenCalledWith("u2");
     // both jobs marked completed
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ status: "completed" }));
     expect(update).toHaveBeenCalledTimes(2);
@@ -93,7 +85,7 @@ describe("jobs worker (batch)", () => {
   });
 
   it("exhausted attempts mark the job failed (no infinite retry)", async () => {
-    checkAll.mockRejectedValueOnce(new Error("boom"));
+    analyzeUserStyle.mockRejectedValueOnce(new Error("boom"));
     rpc
       // The referral sweep runs first on every invocation.
       .mockResolvedValueOnce({
@@ -101,9 +93,7 @@ describe("jobs worker (batch)", () => {
         error: null,
       })
       .mockResolvedValueOnce({
-        data: [
-          { j_id: "9", j_type: "achievement_check", j_payload: { userId: "u9" }, j_attempts: 5 },
-        ],
+        data: [{ j_id: "9", j_type: "style_analysis", j_payload: { userId: "u9" }, j_attempts: 5 }],
         error: null,
       })
       .mockResolvedValueOnce({ data: [], error: null });

@@ -72,6 +72,9 @@ interface PromptInputProps {
   attachmentStatus?: AttachmentSummary;
   // Target model
   targetModel: TargetModel;
+  /** Tone the engines write in; the extension has had this control since v2. */
+  tone?: string;
+  setTone?: (tone: string) => void;
   setTargetModel: (model: TargetModel) => void;
   // Voice language (lifted to parent so HomeClient can derive outputLanguage)
   /** Speech-recognition locale, derived by the parent from the input text. */
@@ -112,6 +115,16 @@ function looksLikeUrl(text: string): boolean {
     return false;
   }
 }
+
+// The five tones the engines know (src/lib/engines/base-engine.ts). Same ids
+// as the Chrome extension so a preference means the same thing everywhere.
+const TONE_OPTIONS = [
+  { id: "Professional", label: "מקצועי" },
+  { id: "Casual", label: "יומיומי" },
+  { id: "Creative", label: "יצירתי" },
+  { id: "Persuasive", label: "משכנע" },
+  { id: "Academic", label: "אקדמי" },
+] as const;
 
 const EXAMPLES_BY_MODE: Record<string, string[]> = {
   [CapabilityMode.STANDARD]: [
@@ -199,6 +212,8 @@ export function PromptInput({
   onAddImage,
   attachmentStatus,
   targetModel,
+  tone,
+  setTone,
   setTargetModel,
   voiceLang,
   outputLanguage,
@@ -659,7 +674,7 @@ export function PromptInput({
                     showTools && "rotate-45",
                   )}
                 />
-                <span>כלים</span>
+                <span>קובץ · קול · מודל</span>
                 {/* The dot is the upload status (owner ask, 2026-09-02):
                     spinning gold while a file, image or link is being read,
                     green with the count when everything is in, red when
@@ -730,6 +745,35 @@ export function PromptInput({
                       onChange={setTargetModel}
                       disabled={isLoading}
                     />
+                  )}
+                  {setTone && (
+                    <div
+                      className="flex items-center gap-1 flex-wrap"
+                      role="radiogroup"
+                      aria-label="טון הכתיבה"
+                    >
+                      {TONE_OPTIONS.map((opt) => {
+                        const active = (tone || "Professional") === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() => setTone(opt.id)}
+                            disabled={isLoading}
+                            className={cn(
+                              "px-2.5 min-h-[36px] rounded-full text-xs font-medium border transition-colors cursor-pointer",
+                              active
+                                ? "bg-amber-500/15 border-amber-500/40 text-amber-800 dark:text-amber-200"
+                                : "bg-(--glass-bg) border-(--glass-border) text-(--text-muted) hover:text-(--text-primary)",
+                            )}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
 
                   {/* File upload */}
@@ -890,7 +934,7 @@ export function PromptInput({
             </div>
 
             {!inputVal.trim() && !isListening && (
-              <div className="px-6 pb-4 relative z-20 animate-in fade-in duration-300">
+              <div className="order-last px-6 pb-5 pt-1 relative z-20 animate-in fade-in duration-300">
                 <div
                   className="text-xs text-(--text-muted) uppercase tracking-widest mb-3 text-start"
                   dir="rtl"

@@ -32,6 +32,8 @@ const LINK_GROUPS: Array<{
       { href: "/guide", he: "מדריך הפרומפטים", en: "Prompt Guide" },
       { href: "/guides", he: "מדריכי פלטפורמות", en: "Platform Guides" },
       { href: "/examples", he: "דוגמאות", en: "Examples" },
+      { href: "/glossary", he: "מילון מונחים", en: "Glossary" },
+      { href: "/compare/chatgpt-vs-claude", he: "ChatGPT מול Claude", en: "ChatGPT vs Claude" },
       { href: "/blog", he: "בלוג", en: "Blog" },
     ],
   },

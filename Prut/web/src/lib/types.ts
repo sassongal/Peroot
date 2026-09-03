@@ -88,19 +88,3 @@ export type LibraryPrompt = {
   updated_at?: string;
   last_used_at?: string | null;
 };
-
-interface Achievement {
-  id: string;
-  name_he: string;
-  description_he: string;
-  icon: string;
-  category: string;
-  points: number;
-}
-
-interface UserAchievement {
-  user_id: string;
-  achievement_id: string;
-  unlocked_at: string;
-  achievement?: Achievement;
-}

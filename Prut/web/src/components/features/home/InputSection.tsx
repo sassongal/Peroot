@@ -82,6 +82,8 @@ interface InputSectionProps {
   // Target model
   targetModel: TargetModel;
   setTargetModel: (model: TargetModel) => void;
+  tone: string;
+  setTone: (tone: string) => void;
 
   // Voice language
   voiceLang: VoiceLang;
@@ -148,6 +150,8 @@ export const InputSection = memo<InputSectionProps>(
     contextTier,
     targetModel,
     setTargetModel,
+    tone,
+    setTone,
     voiceLang,
     outputLanguage,
     setOutputLanguage,
@@ -215,6 +219,8 @@ export const InputSection = memo<InputSectionProps>(
           attachmentStatus={summarizeAttachments(contextAttachments)}
           targetModel={targetModel}
           setTargetModel={setTargetModel}
+          tone={tone}
+          setTone={setTone}
           voiceLang={voiceLang}
           outputLanguage={outputLanguage}
           setOutputLanguage={setOutputLanguage}

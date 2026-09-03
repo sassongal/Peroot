@@ -43,25 +43,6 @@ export async function GET(req: Request) {
     if (sweepErr) logger.error("[Worker] referral sweep failed:", sweepErr);
     else if (sweep && (sweep.granted > 0 || sweep.activated > 0)) {
       logger.info("[Worker] referral sweep:", sweep);
-      // A grant is the inviter's moment: queue an achievement check for
-      // every inviter whose friend was just activated (inviter_first).
-      if (sweep.granted > 0) {
-        const since = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-        const { data: fresh } = await supabase
-          .from("referral_redemptions")
-          .select("code_id")
-          .gte("granted_at", since);
-        const codeIds = [...new Set((fresh ?? []).map((r) => r.code_id as string))];
-        if (codeIds.length > 0) {
-          const { data: owners } = await supabase
-            .from("referral_codes")
-            .select("user_id")
-            .in("id", codeIds);
-          for (const owner of owners ?? []) {
-            await enqueueJob("achievement_check", { userId: owner.user_id as string });
-          }
-        }
-      }
     }
   } catch (e) {
     logger.error("[Worker] referral sweep threw:", e);
@@ -92,18 +73,7 @@ export async function GET(req: Request) {
         // "completed").
         if (job.j_type === "style_analysis") {
           const { analyzeUserStyle } = await import("@/lib/intelligence/personality-analyzer");
-          const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
-          if (userId) {
-            // Award only when an analysis actually happened — null means the
-            // library was too thin and nothing was analyzed.
-            const persona = await analyzeUserStyle(userId);
-            if (persona) await AchievementTracker.award(userId, "style_explorer", supabase);
-          }
-        } else if (job.j_type === "achievement_check") {
-          const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
-          if (userId) {
-            await AchievementTracker.checkAll(userId, supabase);
-          }
+          if (userId) await analyzeUserStyle(userId);
         }
         success = true;
       } catch (e: unknown) {

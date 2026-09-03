@@ -201,10 +201,10 @@ describe("withUser · rate limiting", () => {
     const deps = makeDeps();
     await withUser(
       ok,
-      { rateLimit: "free", rateLimitKey: ({ user }) => `achievement:${user!.id}` },
+      { rateLimit: "free", rateLimitKey: ({ user }) => `ext-cfg:${user!.id}` },
       deps,
     )(makeReq(), {});
-    expect(deps.checkRateLimit).toHaveBeenCalledWith("achievement:u1", "free");
+    expect(deps.checkRateLimit).toHaveBeenCalledWith("ext-cfg:u1", "free");
   });
 
   it("passes the client IP to rateLimitKey for guests", async () => {

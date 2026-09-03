@@ -359,7 +359,7 @@ and must change together. The store listing text is in
 `chrome-extension-v2.1/STORE_LISTING.md`; `CHROME_STORE_URL` in
 `src/lib/constants.ts` stays null until the listing is approved.
 
-## Background jobs (style analysis, achievements)
+## Background jobs (style analysis)
 
 `background_jobs` table → `/api/jobs/process` worker (hourly vercel.json cron
 at :30, Bearer `CRON_SECRET`), batch-drains via the `fetch_next_job` RPC.
@@ -368,6 +368,27 @@ client** (cron has no cookies — the SSR client silently reads empty under RLS
 and jobs "complete" doing nothing); handlers must **throw** on failure so the
 job retries; model JSON comes via `generateObject`+zod (free-text JSON parsing
 broke twice on fences/Hebrew quotes). `src/lib/intelligence/*`.
+
+**Achievements were removed (owner decision, 2026-09-03).** 211 badges had been
+awarded and none was ever shown. The tracker, the three `/api/*achievements*`
+routes and the `achievement_check` job type are gone; the `achievements` and
+`user_achievements` tables remain (no data loss) and `delete-account` still
+clears the user's rows. Do not re-add a badge without a surface that shows it.
+
+## Marketing truth and the free tier (2026-09-03)
+
+- The free tier is STANDARD mode only, enforced server-side in `/api/enhance`
+  (`pro_required`, 403), not just hidden in the mode picker. Pricing, PLANS
+  bullets (`src/lib/lemonsqueezy.ts`), the FAQ (`faq-data.ts`) and
+  `peroot-facts.ts` describe exactly what the code enforces. When a feature
+  changes tier, change the gate and the copy in the same commit.
+- Tone is a real control on the web now (chips in the tools drawer,
+  `peroot_last_tone` in localStorage), not only in the extension.
+- SEO content pages: `/glossary` (40 terms, DefinedTermSet) and
+  `/compare/chatgpt-vs-claude`. Both are in the sitemap and the footer's
+  "ללמוד" column; add new evergreen pages to both.
+- `/templates` ships a `TemplateSummary` per card (preview, variables), and
+  the grid reads the body through the anon RLS policy on "השתמש בתבנית".
 
 ---
 

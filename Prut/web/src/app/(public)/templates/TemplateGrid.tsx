@@ -2,22 +2,38 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Crown, Search, Variable, X } from "lucide-react";
+import { Crown, Loader2, Search, Variable, X } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { LibraryPrompt } from "@/lib/types";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { setPendingPrompt } from "@/lib/pending-prompt";
 import { hebrewFuzzyMatch, hebrewMatchScore } from "@/lib/hebrew-search";
-import { extractVariables } from "@/lib/variable-utils";
+import { createClient } from "@/lib/supabase/client";
+import { logger } from "@/lib/logger";
+
+/**
+ * What the server ships per template. The full prompt body stays on the
+ * server (it is fetched on "use"), so the page is a few hundred KB instead of
+ * ~2MB for the whole catalog.
+ */
+export interface TemplateSummary {
+  id: string;
+  title: string;
+  use_case: string;
+  category: string;
+  capability_mode?: CapabilityMode;
+  variables: string[];
+  preview: string;
+}
 
 interface TemplateGridProps {
-  templates: LibraryPrompt[];
+  templates: TemplateSummary[];
 }
 
 /** Group templates by category and return sorted groups */
-function groupByCategory(templates: LibraryPrompt[]) {
-  const groups: Record<string, LibraryPrompt[]> = {};
+function groupByCategory(templates: TemplateSummary[]) {
+  const groups: Record<string, TemplateSummary[]> = {};
   for (const t of templates) {
     const cat = t.category || "General";
     if (!groups[cat]) groups[cat] = [];
@@ -34,17 +50,36 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
   const trimmedQuery = query.trim();
   const isSearching = trimmedQuery.length > 0;
 
-  const handleUseTemplate = (template: LibraryPrompt) => {
-    setPendingPrompt({
-      id: template.id,
-      title: template.title,
-      prompt: template.prompt,
-      category: template.category,
-      is_template: true,
-      capability_mode: template.capability_mode,
-      source: "templates",
-    });
-    router.push("/?ref=templates");
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  // The card only carries a preview; the body is read here, through the same
+  // anon RLS policy that serves the catalogue, and handed to the home page.
+  const handleUseTemplate = async (template: TemplateSummary) => {
+    if (loadingId) return;
+    setLoadingId(template.id);
+    try {
+      const { data, error } = await createClient()
+        .from("public_library_prompts")
+        .select("prompt")
+        .eq("id", template.id)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (error || !data?.prompt) throw error ?? new Error("template_not_found");
+      setPendingPrompt({
+        id: template.id,
+        title: template.title,
+        prompt: data.prompt as string,
+        category: template.category,
+        is_template: true,
+        capability_mode: template.capability_mode,
+        source: "templates",
+      });
+      router.push("/?ref=templates");
+    } catch (e) {
+      logger.warn("[templates] failed to load template body", e);
+      toast.error("לא הצלחנו לטעון את התבנית, נסו שוב");
+      setLoadingId(null);
+    }
   };
 
   const categories = useMemo(() => {
@@ -64,19 +99,19 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
       : templates;
 
     if (isSearching) {
-      const scored: Array<{ template: LibraryPrompt; score: number }> = [];
+      const scored: Array<{ template: TemplateSummary; score: number }> = [];
       for (const t of pool) {
         const categoryLabel = CATEGORY_LABELS[t.category] || t.category || "";
         // Include the prompt body so a template can be found by its content, not
         // just its title/use-case, but weight body matches lowest so title and
         // use-case still dominate the ranking.
-        const haystack = `${t.title} ${t.use_case ?? ""} ${categoryLabel} ${t.prompt ?? ""}`;
+        const haystack = `${t.title} ${t.use_case} ${categoryLabel} ${t.preview}`;
         if (!hebrewFuzzyMatch(haystack, trimmedQuery)) continue;
         // Title matches are weighted 2x, they're a stronger signal of intent.
         const score =
           hebrewMatchScore(t.title, trimmedQuery) * 2 +
-          hebrewMatchScore(t.use_case ?? "", trimmedQuery) +
-          hebrewMatchScore(t.prompt ?? "", trimmedQuery) * 0.25;
+          hebrewMatchScore(t.use_case, trimmedQuery) +
+          hebrewMatchScore(t.preview, trimmedQuery) * 0.25;
         scored.push({ template: t, score });
       }
       scored.sort((a, b) => b.score - a.score);
@@ -188,7 +223,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
             {/* Cards grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {items.map((template) => {
-                const placeholders = extractVariables(template.prompt);
+                const placeholders = template.variables;
                 const isAdvanced =
                   template.capability_mode && template.capability_mode !== CapabilityMode.STANDARD;
 
@@ -236,10 +271,15 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
                     <div className="px-5 pb-4 pt-1">
                       <button
                         type="button"
-                        onClick={() => handleUseTemplate(template)}
-                        className="flex items-center justify-center w-full py-2.5 rounded-lg text-sm font-bold transition-all border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none cursor-pointer"
+                        onClick={() => void handleUseTemplate(template)}
+                        disabled={loadingId !== null}
+                        aria-busy={loadingId === template.id}
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-bold transition-all border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none cursor-pointer disabled:cursor-wait disabled:opacity-70"
                       >
-                        השתמש בתבנית
+                        {loadingId === template.id && (
+                          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                        )}
+                        {loadingId === template.id ? "טוען..." : "השתמש בתבנית"}
                       </button>
                     </div>
                   </article>

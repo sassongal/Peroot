@@ -1,7 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 
-export type JobType = "style_analysis" | "achievement_check";
+export type JobType = "style_analysis";
 
 export interface JobPayload {
   [key: string]: unknown;
@@ -17,7 +17,7 @@ export interface JobPayload {
  *
  * Dedupe: if a pending job of the same type already exists for this user, we
  * skip the insert. Both job types are per-user idempotent ("analyze user X",
- * "check user X's achievements"), so one pending job is always enough — this
+ * "analyze user X's style"), so one pending job is always enough — this
  * is what previously let 1,000+ duplicates pile up.
  */
 export async function enqueueJob(type: JobType, payload: JobPayload) {

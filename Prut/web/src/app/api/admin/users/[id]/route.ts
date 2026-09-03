@@ -15,7 +15,7 @@ const adminActionSchema = z.object({
  * GET /api/admin/users/[id]
  *
  * Returns full user details including profile, role, subscription, stats,
- * style personality, achievement count, prompt count, total API cost,
+ * style personality, prompt count, total API cost,
  * and recent activity.
  */
 export const GET = withAdmin(
@@ -35,7 +35,6 @@ export const GET = withAdmin(
         { data: subscription },
         { data: stats },
         { data: stylePersonality },
-        { count: achievementCount },
         { count: promptCount },
         { count: historyCount },
         { data: apiCostRows },
@@ -49,10 +48,6 @@ export const GET = withAdmin(
         supabase.from("subscriptions").select("*").eq("user_id", id).maybeSingle(),
         supabase.from("user_stats").select("*").eq("user_id", id).maybeSingle(),
         supabase.from("user_style_personality").select("*").eq("user_id", id).maybeSingle(),
-        supabase
-          .from("user_achievements")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", id),
         supabase
           .from("personal_library")
           .select("*", { count: "exact", head: true })
@@ -148,7 +143,6 @@ export const GET = withAdmin(
         subscription,
         stats,
         stylePersonality,
-        achievementCount: achievementCount ?? 0,
         promptCount: promptCount ?? 0,
         historyCount: historyCount ?? 0,
         totalApiCost,

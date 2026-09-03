@@ -195,7 +195,7 @@ export function pricingSchema(freeDaily: number) {
       {
         "@type": "Product",
         name: "Peroot Pro",
-        description: `${creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספרייה אישית ומועדפים ללא הגבלה, כל המצבים גם בתוסף Chrome, תמיכה אישית במייל, יום ניסיון במתנה`,
+        description: `${creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש בלי מכסה יומית, כל המצבים: מחקר מעמיק, תמונה, וידאו וסוכני AI, גם בתוסף Chrome, העתקה בלי חתימת Peroot, תמיכה אישית במייל, יום ניסיון במתנה`,
         image: `${SITE_URL}/images/peroot_logo_pack/logo_1200.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {

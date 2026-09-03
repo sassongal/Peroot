@@ -3,13 +3,18 @@ import HomeClient from "./HomeClient";
 import { HomeSEOContent } from "@/components/seo/HomeSEOContent";
 import { RecentBlogPosts } from "@/components/home/RecentBlogPosts";
 import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
+import { LANGUAGE_ALTERNATES } from "@/lib/landing/language-landings";
 
 export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Peroot (פירוט): מחולל פרומפטים בעברית חינם ל-ChatGPT ו-Claude",
   description: `מחולל הפרומפטים שהופך כל רעיון גולמי לפרומפט מדויק, עם ציון איכות, ${PROMPT_TEMPLATE_COUNT} תבניות מוכנות ו-5 מצבי יצירה. תוצאות חדות יותר ב-ChatGPT, Claude ו-Gemini, בעברית ובחינם.`,
-  alternates: { canonical: "/" },
+  // The Hebrew home is the he-IL and x-default member of the hreflang
+  // cluster. Page metadata replaces the layout's alternates wholesale, so
+  // the map has to be repeated here or the landings point at a page that
+  // never points back, and Google drops the whole cluster.
+  alternates: { canonical: "/", languages: LANGUAGE_ALTERNATES },
 };
 
 export default function HomePage() {

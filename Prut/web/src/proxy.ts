@@ -33,7 +33,6 @@ const AUTH_REQUIRED_PREFIXES = [
   "/api/user",
   "/api/favorites",
   "/api/history",
-  "/api/achievements",
   "/api/folders",
   "/api/personal-library",
   "/api/chain",

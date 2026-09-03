@@ -18,6 +18,12 @@ import {
   Tag,
   Network,
   Layers,
+  Languages,
+  Paperclip,
+  Rocket,
+  FileText,
+  Image as ImageIcon,
+  Mic,
 } from "lucide-react";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
@@ -33,7 +39,6 @@ import { CursorSpotlight } from "@/components/ui/CursorSpotlight";
 import { CtaPulse } from "@/components/ui/CtaPulse";
 import { BrandWatermark } from "@/components/ui/BrandWatermark";
 import { SupportedPlatforms } from "@/components/features/landing/SupportedPlatforms";
-import Image from "next/image";
 
 const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const _featuresOg = `${_SITE}/api/og?title=${encodeURIComponent("כל היכולות של Peroot")}&subtitle=${encodeURIComponent("5 מנועי AI, ספרייה אישית, שרשרת פרומפטים ועוד")}&category=${encodeURIComponent("פיצ'רים")}`;
@@ -61,6 +66,98 @@ export const metadata: Metadata = {
 };
 
 // ─── Inline Mockups ───────────────────────────────────────────────────────────
+
+function LanguagesMockup() {
+  const rows = [
+    { lang: "עברית", text: "כתוב פוסט לינקדאין על ההשקה", dir: "rtl" },
+    { lang: "English", text: "Write a LinkedIn post about the launch", dir: "ltr" },
+    { lang: "العربية", text: "اكتب منشور لينكد إن عن الإطلاق", dir: "rtl" },
+    { lang: "Русский", text: "Напиши пост для LinkedIn о запуске", dir: "ltr" },
+  ] as const;
+  return (
+    <div className="rounded-xl border border-border bg-background text-[11px] shadow-2xl overflow-hidden">
+      <div className="bg-secondary border-b border-border px-3 py-2 flex items-center gap-1.5">
+        <Languages className="w-3 h-3 text-amber-500" />
+        <span className="text-muted-foreground text-[10px]">שפת הפלט</span>
+      </div>
+      <div className="p-2 space-y-1.5">
+        {rows.map((r, i) => (
+          <div
+            key={r.lang}
+            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${i === 0 ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-secondary/50"}`}
+          >
+            <span className="w-14 shrink-0 text-muted-foreground">{r.lang}</span>
+            <span className="truncate text-foreground" dir={r.dir}>
+              {r.text}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ContextMockup() {
+  const items = [
+    { icon: FileText, label: "מחירון-2026.pdf", meta: "14 עמודים" },
+    { icon: Link2, label: "peroot.space/blog/...", meta: "מאמר" },
+    { icon: ImageIcon, label: "צילום-מסך.png", meta: "תמונה" },
+  ];
+  return (
+    <div className="rounded-xl border border-border bg-background text-[11px] shadow-2xl overflow-hidden">
+      <div className="bg-secondary border-b border-border px-3 py-2 flex items-center gap-1.5">
+        <Paperclip className="w-3 h-3 text-amber-500" />
+        <span className="text-muted-foreground text-[10px]">הקשר לפרומפט</span>
+      </div>
+      <div className="p-2 space-y-1.5">
+        {items.map((it) => (
+          <div
+            key={it.label}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-border bg-secondary/50"
+          >
+            <it.icon className="w-3 h-3 shrink-0 text-muted-foreground" />
+            <span className="truncate text-foreground" dir="ltr">
+              {it.label}
+            </span>
+            <span className="text-muted-foreground mr-auto shrink-0">{it.meta}</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+          </div>
+        ))}
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-dashed border-border text-muted-foreground">
+          <Mic className="w-3 h-3 shrink-0" />
+          <span>או להקליט במקום להקליד</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HandoffMockup() {
+  const targets = ["ChatGPT", "Claude", "Gemini", "Perplexity", "Grok", "Copilot"];
+  return (
+    <div className="rounded-xl border border-border bg-background text-[11px] shadow-2xl overflow-hidden">
+      <div className="bg-secondary border-b border-border px-3 py-2 flex items-center gap-1.5">
+        <Rocket className="w-3 h-3 text-amber-500" />
+        <span className="text-muted-foreground text-[10px]">הפרומפט מוכן</span>
+      </div>
+      <div className="p-3 space-y-2">
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-2.5 py-2 text-foreground leading-relaxed">
+          ## תפקיד: אסטרטג תוכן ל-B2B... ## משימה: פוסט לינקדאין של 120 מילים...
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {targets.map((t, i) => (
+            <span
+              key={t}
+              className={`px-2 py-1 rounded-full border ${i === 0 ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300" : "border-border text-muted-foreground"}`}
+            >
+              שגר ל-{t}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function LibraryMockup() {
   const folders = ["שיווק (12)", "קוד (8)", "תוכן (15)", "HR (6)"];
@@ -372,8 +469,54 @@ function SmartImproveMockup() {
 
 const WALKTHROUGH = [
   {
-    icon: FolderOpen,
+    icon: Languages,
     num: "01",
+    title: "ארבע שפות פלט",
+    subtitle: "כותבים בעברית, מקבלים בשפה של המודל או של הקהל",
+    description:
+      "עברית, אנגלית, ערבית ורוסית. פירוט מזהה באיזו שפה כתבתם ומציע להוציא בה, או שבוחרים ידנית מעל תיבת הכתיבה. הבחירה נשמרת בפרופיל ועוברת לתוסף Chrome, והפרומפט נכתב במשלב מקצועי בכל אחת מהשפות, לא בתרגום.",
+    color: "text-amber-700 dark:text-amber-300",
+    accent: "border-amber-500/20 bg-amber-500/5",
+    bullets: [
+      "זיהוי אוטומטי של שפת הקלט",
+      "משלב מקצועי בכל שפה",
+      "נשמר בפרופיל",
+      "גם בתוסף Chrome",
+    ],
+    Mockup: LanguagesMockup,
+  },
+  {
+    icon: Paperclip,
+    num: "02",
+    title: "הקשר: קבצים, תמונות, קישורים וקול",
+    subtitle: "הפרומפט יודע על מה מדובר",
+    description:
+      "מצרפים PDF, מסמך, גיליון, תמונה או קישור, ופירוט מחלץ את התוכן ומשלב אותו בפרומפט: המחירון שלכם, המאמר שרוצים לסכם, צילום המסך של הבאג. אפשר גם להקליט במקום להקליד, בעברית או בכל שפה אחרת.",
+    color: "text-emerald-700 dark:text-emerald-300",
+    accent: "border-emerald-500/20 bg-emerald-500/5",
+    bullets: [
+      "PDF, Word, Excel, טקסט",
+      "תמונות עם תיאור אוטומטי",
+      "קישורים עם חילוץ תוכן",
+      "הקלטה קולית",
+    ],
+    Mockup: ContextMockup,
+  },
+  {
+    icon: Rocket,
+    num: "03",
+    title: "שיגור ישיר למודל",
+    subtitle: "בלי העתק והדבק",
+    description:
+      "הפרומפט המשודרג נבנה לפי המודל שבחרתם, ואז נשלח אליו ממולא: ChatGPT, Claude, Gemini, Perplexity, Grok או Copilot נפתחים עם הפרומפט בתיבה. אפשר גם לשתף בקישור או בוואטסאפ, להעתיק עם חתימה או בלי, ולייצא PDF.",
+    color: "text-sky-700 dark:text-sky-300",
+    accent: "border-sky-500/20 bg-sky-500/5",
+    bullets: ["מותאם למודל היעד", "שישה יעדי שיגור", "שיתוף בקישור ובוואטסאפ", "ייצוא PDF"],
+    Mockup: HandoffMockup,
+  },
+  {
+    icon: FolderOpen,
+    num: "04",
     title: "ספרייה אישית",
     subtitle: "כל הפרומפטים שלכם, מאורגנים",
     description:
@@ -385,7 +528,7 @@ const WALKTHROUGH = [
   },
   {
     icon: Link2,
-    num: "02",
+    num: "05",
     title: "שרשרת פרומפטים",
     subtitle: "זרימת עבודה אוטומטית בלחיצה אחת",
     description:
@@ -397,7 +540,7 @@ const WALKTHROUGH = [
   },
   {
     icon: Network,
-    num: "03",
+    num: "06",
     title: "גרף הקשרים",
     subtitle: "ידע מחובר, לא רשימה שטוחה",
     description:
@@ -409,7 +552,7 @@ const WALKTHROUGH = [
   },
   {
     icon: Zap,
-    num: "04",
+    num: "07",
     title: "משתנים דינמיים",
     subtitle: "פרומפט אחד, שימושים אינסופיים",
     description:
@@ -421,7 +564,7 @@ const WALKTHROUGH = [
   },
   {
     icon: Tag,
-    num: "05",
+    num: "08",
     title: "קיטלוג אוטומטי",
     subtitle: "AI מארגן עבורכם",
     description:
@@ -433,14 +576,14 @@ const WALKTHROUGH = [
   },
   {
     icon: Sparkles,
-    num: "06",
+    num: "09",
     title: "שיפור חכם",
     subtitle: "לא מספיק? ה-AI יציע עוד",
     description:
       "אחרי כל שדרוג, ניתן לבקש הצעות שיפור נוספות מבוססות AI: ציון איכות, נקודות חולשה ואפשרויות לשכלול. תהליך איטרטיבי עד שהפרומפט מושלם ב-100%.",
     color: "text-indigo-400",
     accent: "border-indigo-500/20 bg-indigo-500/5",
-    bullets: ["ציון איכות מיידי", "הצעות ספציפיות", "שיפור איטרטיבי", "10 ממדי הערכה"],
+    bullets: ["ציון איכות מיידי", "עד שלוש שאלות דיוק", "ליטוש בצ'יפ אחד", "בחירת טון"],
     Mockup: SmartImproveMockup,
   },
 ] as const;
@@ -544,10 +687,10 @@ export default function FeaturesPage() {
               {/* Stats strip */}
               <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
                 {[
-                  { num: "5", label: "מנועי AI" },
-                  { num: "15+", label: "פלטפורמות" },
-                  { num: `${PROMPT_TEMPLATE_COUNT}`, label: "תבניות ספרייה" },
-                  { num: "∞", label: "אפשרויות שיפור" },
+                  { num: "5", label: "מצבי עבודה" },
+                  { num: "4", label: "שפות פלט" },
+                  { num: `${PROMPT_TEMPLATE_COUNT}`, label: "תבניות בספרייה" },
+                  { num: "3", label: "ערוצים: אתר, תוסף, Connect" },
                 ].map((s, i) => (
                   <ScrollReveal key={s.label} delay={i * 0.08} fromY={20}>
                     <div className="rounded-2xl border border-border bg-secondary/50 p-4 text-center">

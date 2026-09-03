@@ -240,6 +240,14 @@ export default async function BlogPostPage({ params }: Props) {
   const ogImageUrl = `${blogSiteUrl}/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`;
 
   const publishedDate = post.published_at ? formatDateHe(post.published_at) : "";
+  // Show "updated" only when the post was really revised after publication;
+  // a same-day timestamp is the publish write itself.
+  const updatedDate =
+    post.updated_at &&
+    post.published_at &&
+    new Date(post.updated_at).getTime() - new Date(post.published_at).getTime() > 86_400_000
+      ? formatDateHe(post.updated_at)
+      : "";
 
   // Enrich the HTML with id attributes on H2 headings for TOC linking
   const enrichedContent = injectH2Ids(post.content ?? "");
@@ -274,6 +282,9 @@ export default async function BlogPostPage({ params }: Props) {
                     <Calendar className="w-3 h-3" />
                     <span>{publishedDate}</span>
                   </div>
+                )}
+                {updatedDate && (
+                  <span className="text-[10px] text-muted-foreground">עודכן {updatedDate}</span>
                 )}
                 {post.read_time && (
                   <span className="text-[10px] text-muted-foreground">{post.read_time}</span>

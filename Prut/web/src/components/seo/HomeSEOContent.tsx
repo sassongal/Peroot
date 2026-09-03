@@ -75,9 +75,10 @@ export async function HomeSEOContent() {
               </p>
             </div>
             <div className="p-5 rounded-xl border border-border bg-card">
-              <h3 className="font-bold text-foreground mb-2">4 מצבי עבודה</h3>
+              <h3 className="font-bold text-foreground mb-2">5 מצבי עבודה</h3>
               <p className="text-sm text-muted-foreground">
-                טקסט, מחקר מעמיק, יצירת תמונות (DALL-E, Midjourney) וסוכני AI מותאמים.
+                טקסט, מחקר מעמיק, יצירת תמונות (Midjourney, GPT Image, FLUX), וידאו (Runway, Kling,
+                Sora, Veo) וסוכני AI.
               </p>
             </div>
             <div className="p-5 rounded-xl border border-border bg-card">

@@ -31,6 +31,30 @@ export interface DiscoveryTip {
 
 const ALL_TIPS: DiscoveryTip[] = [
   {
+    id: "tip_languages",
+    text: "אפשר לקבל את הפרומפט באנגלית, בערבית או ברוסית: בורר השפה מעל תיבת הכתיבה",
+    emoji: "🌐",
+    feature: "שפות פלט",
+    usedKey: "peroot_used_output_language",
+    minEnhances: 2,
+  },
+  {
+    id: "tip_attachments",
+    text: 'אפשר לצרף קובץ, תמונה או קישור ופירוט ישלב את התוכן בפרומפט: הכפתור "קובץ · קול · מודל"',
+    emoji: "📎",
+    feature: "צירוף הקשר",
+    usedKey: "peroot_used_attachments",
+    minEnhances: 4,
+  },
+  {
+    id: "tip_handoff",
+    text: "אחרי השדרוג אפשר לשגר את הפרומפט ישר ל-ChatGPT, Claude או Gemini, כבר ממולא",
+    emoji: "🚀",
+    feature: "שיגור למודל",
+    usedKey: "peroot_used_handoff",
+    minEnhances: 5,
+  },
+  {
     id: "tip_library",
     text: "אפשר לשמור את הפרומפט לספרייה האישית ולהשתמש בו שוב בכל עת",
     emoji: "📚",
@@ -54,27 +78,27 @@ const ALL_TIPS: DiscoveryTip[] = [
     emoji: "🔗",
     feature: "שיתוף",
     usedKey: "peroot_used_share",
-    minEnhances: 9,
+    minEnhances: 8,
     cta: "שתפו",
     ctaAction: "share",
   },
   {
     id: "tip_research",
-    text: "במצב מחקר מעמיק, פירוט מוסיף מקורות ושרשרת חשיבה לפרומפט",
+    text: "במצב מחקר מעמיק (Pro), פירוט מוסיף מקורות ושרשרת חשיבה לפרומפט",
     emoji: "🔬",
     feature: "מחקר מעמיק",
     usedKey: "peroot_used_research",
-    minEnhances: 12,
+    minEnhances: 10,
     cta: "נסו מחקר מעמיק",
     ctaAction: "research",
   },
   {
     id: "tip_image",
-    text: "פירוט יודע ליצור פרומפטים לתמונות, Midjourney, DALL-E ועוד",
+    text: "במנוי Pro פירוט יוצר פרומפטים לתמונות: Midjourney, DALL-E ועוד",
     emoji: "🎨",
     feature: "יצירת תמונות",
     usedKey: "peroot_used_image",
-    minEnhances: 15,
+    minEnhances: 12,
     cta: "נסו תמונות",
     ctaAction: "image",
   },
@@ -84,7 +108,7 @@ const ALL_TIPS: DiscoveryTip[] = [
     emoji: "🔗",
     feature: "שרשראות",
     usedKey: "peroot_used_chains",
-    minEnhances: 20,
+    minEnhances: 15,
     cta: "צרו שרשרת",
     ctaAction: "chains",
   },
@@ -94,7 +118,7 @@ const ALL_TIPS: DiscoveryTip[] = [
     emoji: "📋",
     feature: "ספרייה ציבורית",
     usedKey: "peroot_used_public_library",
-    minEnhances: 25,
+    minEnhances: 18,
     cta: "גלו את הספרייה",
     ctaAction: "public-library",
   },
@@ -103,7 +127,7 @@ const ALL_TIPS: DiscoveryTip[] = [
 const STORAGE_KEY = "peroot_discovery_tips";
 const SNOOZE_UNTIL_KEY = "peroot_discovery_snooze_until";
 const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days after dismiss
-const MIN_INTERVAL = 3; // Show tips at most every 3 enhances
+const MIN_INTERVAL = 2; // Show tips at most every 2 enhances
 
 function isSnoozed(): boolean {
   try {
@@ -182,7 +206,7 @@ export function useFeatureDiscovery() {
     saveState(state);
 
     // Not enough enhances yet
-    if (state.enhanceCount < 3) return;
+    if (state.enhanceCount < 2) return;
 
     // Too soon since last tip
     if (state.enhanceCount - state.lastShownAtEnhance < MIN_INTERVAL) return;

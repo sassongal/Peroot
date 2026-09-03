@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatGPTIcon, ClaudeIcon, GeminiIcon } from "@/components/ui/AIPlatformIcons";
 import { trackSentToModel } from "@/lib/analytics";
+import { markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import {
   HANDOFF_ORDER,
   HANDOFF_TARGETS,
@@ -54,6 +55,7 @@ export function SendToModelBar({
   const launch = async (target: HandoffTarget) => {
     const plan = planModelHandoff(target, prompt);
     trackSentToModel(target, plan.prefilled ? "prefilled" : "copied", from);
+    markFeatureUsed("peroot_used_handoff");
     if (!plan.prefilled) {
       // Copy BEFORE opening so the paste target is ready, and surface a real
       // error instead of a success toast the clipboard never earned.

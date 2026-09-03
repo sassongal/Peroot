@@ -156,11 +156,15 @@ function HomeViewChromeInner({
 
         {/* One in-app product explainer only (U2.2): the modal is gone,
             the full story lives at /features. */}
+        {/* One concrete hint instead of a generic "how it works": the three
+            things usage data said nobody found (languages, attachments,
+            handoff), with the full story one tap away. */}
         <Link
           href="/features"
-          className="text-xs md:text-sm text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
+          className="text-xs md:text-sm text-(--text-muted) hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center text-center px-3 md:px-4 leading-snug"
         >
-          איך זה עובד
+          כותבים בעברית, מקבלים גם באנגלית, בערבית או ברוסית. מצרפים קובץ או קישור. משגרים ישר
+          ל-ChatGPT. איך זה עובד
         </Link>
 
         {children}

@@ -6,6 +6,7 @@ import type { ProcessingStage } from "@/lib/context/engine/types";
 import { blockStatus } from "@/lib/context/engine/stage";
 import { PLAN_CONTEXT_LIMITS } from "@/lib/plans";
 import { getApiPath } from "@/lib/api-path";
+import { markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -178,6 +179,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
 
   const addFile = useCallback(
     async (file: File) => {
+      markFeatureUsed("peroot_used_attachments");
       if (
         countByType(attachmentsRef.current, "file") + pendingCounts.current.file >=
         limits.maxFiles
@@ -250,6 +252,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
 
   const addUrl = useCallback(
     async (url: string) => {
+      markFeatureUsed("peroot_used_attachments");
       if (
         countByType(attachmentsRef.current, "url") + pendingCounts.current.url >=
         limits.maxUrls
@@ -313,6 +316,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
 
   const addImage = useCallback(
     async (file: File) => {
+      markFeatureUsed("peroot_used_attachments");
       if (
         countByType(attachmentsRef.current, "image") + pendingCounts.current.image >=
         limits.maxImages

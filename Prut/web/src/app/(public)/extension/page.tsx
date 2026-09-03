@@ -2,15 +2,7 @@ import type { Metadata } from "next";
 import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import { PageHeading } from "@/components/ui/PageHeading";
-import {
-  ArrowRight,
-  Chrome,
-  MousePointerClick,
-  Sparkles,
-  Globe,
-  BookOpen,
-  Download,
-} from "lucide-react";
+import { Chrome, MousePointerClick, Sparkles, Globe, BookOpen, Download } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
@@ -24,8 +16,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/extension" },
   openGraph: {
     title: "תוסף Chrome של Peroot | שדרגו פרומפטים מכל אתר",
-    description:
-      "סמנו טקסט, לחצו לחיצה ימנית וקבלו פרומפט מקצועי ישירות מ-Gmail, Docs ולינקדאין. בקרוב.",
+    description: "שדרוג פרומפטים בלחיצה בתוך ChatGPT, Claude ו-Gemini, ובלחיצה ימנית בכל אתר.",
     locale: "he_IL",
     type: "website",
   },
@@ -46,8 +37,8 @@ const HOW_IT_WORKS = [
   {
     step: "2",
     icon: MousePointerClick,
-    title: "מסמנים טקסט בכל אתר",
-    desc: "בחרו כל טקסט בכל דף - מייל, מסמך, פוסט בפייסבוק. לחיצה ימנית תציג את האפשרות לשדרג.",
+    title: "כותבים בצ'אט, או מסמנים טקסט בכל אתר",
+    desc: "ב-ChatGPT, Claude ו-Gemini לוחצים על כפתור Peroot ליד תיבת הכתיבה. בכל אתר אחר: מסמנים טקסט ולחיצה ימנית.",
     color: "text-amber-400",
     bg: "bg-amber-500/10",
     border: "border-amber-500/20",
@@ -56,7 +47,7 @@ const HOW_IT_WORKS = [
     step: "3",
     icon: Sparkles,
     title: "מקבלים פרומפט מקצועי",
-    desc: "Peroot מנתח את הטקסט, מבין את הכוונה, ומחזיר פרומפט מושלם - מוכן לשימוש מיידי.",
+    desc: "Peroot מבין את הכוונה ומחזיר פרומפט מובנה, בשפה שבחרתם, ישר לתוך התיבה. שאלה או שתיים לדיוק, ואפשר לשלוח.",
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
     border: "border-emerald-500/20",
@@ -65,38 +56,38 @@ const HOW_IT_WORKS = [
 
 const KEY_FEATURES = [
   {
-    icon: MousePointerClick,
-    title: "תפריט הקשר - לחיצה ימנית",
-    description:
-      "סמנו כל טקסט בכל דף ולחצו לחיצה ימנית - Peroot מופיע ישר בתפריט. בלי לעבור לטאב אחר, בלי להפריע לזרימת העבודה שלכם.",
-    color: "text-sky-400",
-    gradient: "from-sky-500/10 to-sky-500/5",
-    border: "border-sky-500/20",
-  },
-  {
     icon: Sparkles,
-    title: "סנכרון עם חשבון Peroot",
+    title: "כפתור זהב בתוך ChatGPT, Claude ו-Gemini",
     description:
-      "מועדפים, היסטוריה וספרייה אישית - הכל מסונכרן בין התוסף לאפליקציה. מה ששמרתם בדפדפן נמצא גם ב-peroot.space.",
-    color: "text-amber-400",
+      "ליד תיבת הכתיבה מופיע כפתור Peroot. לחיצה אחת הופכת את מה שכתבתם לפרומפט מסודר: תפקיד, משימה, קהל, פורמט והגבלות. התוצאה זורמת מול העיניים ונכנסת לתיבה כשהיא מוכנה, עם שאלות דיוק בלחיצה.",
+    color: "text-amber-700 dark:text-amber-300",
     gradient: "from-amber-500/10 to-amber-500/5",
     border: "border-amber-500/20",
   },
   {
     icon: Globe,
-    title: "עובד על כל אתר",
+    title: "ארבע שפות, מותאם למודל",
     description:
-      "Gmail, Google Docs, Facebook, LinkedIn, Twitter/X, Notion, ועוד. אם יש שם טקסט - Peroot יכול לשדרג אותו.",
-    color: "text-emerald-400",
+      "עברית, אנגלית, ערבית ורוסית, או זיהוי אוטומטי לפי מה שכתבתם. הפרומפט נבנה לפי המודל שמולו אתם יושבים, והמצבים המתקדמים (מחקר, תמונה, וידאו, סוכן) זמינים למנויי Pro גם בתוסף.",
+    color: "text-sky-700 dark:text-sky-300",
+    gradient: "from-sky-500/10 to-sky-500/5",
+    border: "border-sky-500/20",
+  },
+  {
+    icon: MousePointerClick,
+    title: "לחיצה ימנית בכל אתר",
+    description:
+      "Gmail, Docs, לינקדאין, פייסבוק, Notion: סמנו טקסט, לחיצה ימנית, Peroot. שדרוג, תיקון, קיצור, הרחבה, תרגום או סיכום, בלי לעזוב את הדף.",
+    color: "text-emerald-700 dark:text-emerald-300",
     gradient: "from-emerald-500/10 to-emerald-500/5",
     border: "border-emerald-500/20",
   },
   {
     icon: Chrome,
-    title: "עיצוב עברי-first",
+    title: "מסונכרן לחשבון, בעברית ומימין לשמאל",
     description:
-      "הפאנל פותח מהצד הנכון, הטקסט קרוא מימין לשמאל, והממשק כולו נבנה לחוויה עברית. לא תרגום - מוצר שנולד בעברית.",
-    color: "text-amber-400",
+      "אותם קרדיטים, אותה שפת פלט ואותה ספרייה כמו באתר. הפרומפטים ששמרתם זמינים בתוך הצ'אט עם חיפוש, וההיסטוריה משותפת. ממשק בעברית, במצב כהה ובהיר.",
+    color: "text-amber-700 dark:text-amber-300",
     gradient: "from-amber-500/10 to-amber-500/5",
     border: "border-amber-500/20",
   },

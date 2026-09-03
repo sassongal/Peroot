@@ -59,6 +59,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/connect/docs`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/contact`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/extension`, changeFrequency: "monthly", priority: 0.85 },
+    { url: `${baseUrl}/glossary`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/compare/chatgpt-vs-claude`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/accessibility`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${baseUrl}/terms`, changeFrequency: "yearly", priority: 0.4 },
     { url: `${baseUrl}/privacy`, changeFrequency: "yearly", priority: 0.4 },

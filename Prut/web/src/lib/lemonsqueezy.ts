@@ -9,8 +9,11 @@ export const PLANS = {
     // The daily allowance is a live setting, not a plan term, so it is NOT
     // listed here. Render the free bullets with freePlanFeatures() below.
     features: [
-      `גישה לספריית ${PROMPT_LIBRARY_COUNT} פרומפטים`,
-      "שיתוף פרומפטים",
+      "שדרוג עם ציון איכות ושאלות דיוק",
+      "ארבע שפות פלט: עברית, אנגלית, ערבית, רוסית",
+      "צירוף קבצים, תמונות וקישורים לפרומפט",
+      `ספריית ${PROMPT_LIBRARY_COUNT} פרומפטים ותבניות עם משתנים`,
+      "ספרייה אישית, זיכרון AI ופרופיל סגנון",
       "תוסף Chrome: שדרוג ישירות בתוך ChatGPT, Claude ו-Gemini",
     ],
   },
@@ -25,11 +28,11 @@ export const PLANS = {
     priceYearly: 99.9,
     trialDays: 1,
     features: [
-      `${PRO_MONTHLY_CREDITS} קרדיטים בחודש`,
-      "גישה לכל המנועים המתקדמים",
-      "שיפור איטרטיבי מתקדם",
-      "ספרייה אישית + מועדפים ללא הגבלה",
-      "כל המצבים גם בתוסף Chrome: מחקר, תמונה, וידאו וסוכן",
+      `${PRO_MONTHLY_CREDITS} קרדיטים בחודש, בלי מכסה יומית`,
+      "כל המצבים: מחקר מעמיק, תמונה, וידאו וסוכני AI",
+      "כל המצבים גם בתוסף Chrome",
+      "העתקה בלי חתימת Peroot",
+      "יום ניסיון במתנה",
       "תמיכה אישית במייל, מענה תוך יום עסקים",
     ],
   },

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, ComponentType } from "react";
+import { useState, useEffect, useRef, ComponentType } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
-  Trophy,
+  Sparkles,
   Rocket,
   MessageSquare,
   Globe,
@@ -19,8 +19,6 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { cn } from "@/lib/utils";
 import { ONBOARDING_ROLES } from "@/lib/onboarding-roles";
-import { getApiPath } from "@/lib/api-path";
-import { logger } from "@/lib/logger";
 import { CAPABILITY_CONFIGS, CapabilityMode, type IconName } from "@/lib/capability-mode";
 import { useQuotaPolicy } from "@/context/QuotaPolicyContext";
 
@@ -370,7 +368,7 @@ function Scene1({ onNext }: { onNext: () => void }) {
   );
 }
 
-// ─── Scene 2 — Pioneer badge + Launch ────────────────────────────────────────
+// ─── Scene 2 — Ready badge + Launch ────────────────────────────────────────
 
 function Scene2({
   onFinish,
@@ -397,7 +395,7 @@ function Scene2({
       {/* Ambient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-72 h-72 bg-amber-500/[0.07] blur-[80px] rounded-full pointer-events-none" />
 
-      {/* Pioneer badge */}
+      {/* Ready badge */}
       <AnimatePresence>
         {badgeIn && (
           <motion.div
@@ -426,9 +424,9 @@ function Scene2({
               animate={prefersReduced ? {} : { rotate: [0, 1, -1, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
             >
-              <Trophy className="w-10 h-10 text-amber-400 mb-1" />
+              <Sparkles className="w-10 h-10 text-amber-400 mb-1" />
               <span className="text-[11px] text-amber-300/90 font-bold tracking-wide uppercase">
-                Pioneer
+                Ready
               </span>
             </motion.div>
 
@@ -453,7 +451,7 @@ function Scene2({
           מוכן להתחיל!
         </h2>
         <p className="text-white/56 max-w-[17rem] mx-auto text-[0.97rem] leading-relaxed">
-          קיבלת את תג ה-Pioneer, אחד הראשונים לפלטפורמה
+          הכל מוכן: ספרייה אישית, זיכרון AI ותוסף Chrome מחכים לך
         </p>
       </motion.div>
 
@@ -552,23 +550,13 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
 
   // The parent's onComplete handler owns the "mark complete" write
   // (completeOnboarding), so we don't POST it here too — that was a double write.
-  const awardPioneer = () =>
-    fetch(getApiPath("/api/user/achievements/award"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ achievementId: "pioneer" }),
-    }).catch((e) => logger.warn("Failed to award pioneer badge", e));
-
   const handleFinish = () => {
-    awardPioneer();
     setIsVisible(false);
     setTimeout(() => onComplete({ role, goal: "" }), 450);
   };
 
   const handleSkip = () => {
-    // Award on skip too — Scene 2 tells the user they already earned the badge.
     // Skipping before Scene 2 means no role was chosen, so nothing gets seeded.
-    awardPioneer();
     setIsVisible(false);
     setTimeout(() => onComplete({ role, goal: "" }), 280);
   };

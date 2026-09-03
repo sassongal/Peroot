@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Calendar, Clock, ArrowLeft } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/anon";
 import { Suspense } from "react";
 import { formatDateHe } from "@/lib/dates/format";
 
@@ -20,7 +20,11 @@ function truncateExcerpt(text: string | null, maxLength = 110): string {
 }
 
 async function RecentBlogPostsContent() {
-  const supabase = await createClient();
+  // Published posts are public, so read them as the anonymous role. The
+  // cookie-bound server client read the request cookies, which opted the
+  // home page out of static rendering: every visit was a cold render and
+  // `x-vercel-cache: MISS`, on the one page that matters most.
+  const supabase = createAnonClient();
   const { data: posts } = await supabase
     .from("blog_posts")
     .select("slug, title, excerpt, category, read_time, published_at")

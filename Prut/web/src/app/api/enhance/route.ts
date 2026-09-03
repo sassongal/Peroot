@@ -435,12 +435,20 @@ export async function POST(req: Request) {
       }
     }
 
-    // 1.5 Capability Mode Gating -- only guests are locked to STANDARD.
-    // Registered users (free + pro + admin) get all modes.
+    // 1.5 Capability Mode Gating. The mode picker locks the four advanced
+    // modes for free accounts and the pricing page sells them as Pro; until
+    // 2026-09-03 the route itself let any signed-in caller through, so the
+    // promise held only in the UI. Guests and free accounts get STANDARD.
     const mode = parseCapabilityMode(capability_mode);
     if (mode !== CapabilityMode.STANDARD && isGuest) {
       return NextResponse.json(
         { error: "התחבר כדי להשתמש במצב זה", code: "login_required" },
+        { status: 403 },
+      );
+    }
+    if (mode !== CapabilityMode.STANDARD && tier === "free" && !isAdmin) {
+      return NextResponse.json(
+        { error: "המצבים המתקדמים פתוחים למנויי Pro", code: "pro_required" },
         { status: 403 },
       );
     }
@@ -919,12 +927,6 @@ export async function POST(req: Request) {
                   if (actErr)
                     logger.error("[Enhance:cache-hit] Activity log insert failed:", actErr.message);
                 });
-
-              try {
-                await enqueueJob("achievement_check", { userId });
-              } catch (bgError) {
-                logger.error("[EnhanceAPI:cache-hit] achievement_check enqueue failed:", bgError);
-              }
             }
           } finally {
             await lock.release();
@@ -1238,8 +1240,6 @@ export async function POST(req: Request) {
                 if (count && count % 20 === 0) {
                   await enqueueJob("style_analysis", { userId: userId });
                 }
-
-                await enqueueJob("achievement_check", { userId: userId });
               } catch (bgError) {
                 logger.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);
               }

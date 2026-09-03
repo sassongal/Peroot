@@ -16,7 +16,9 @@ export function ExtensionBanner() {
     });
   }, []);
 
-  if (dismissed) return null;
+  // Until the listing is approved there is nothing to install; the top line
+  // of every desktop page is too valuable for "coming soon".
+  if (dismissed || !CHROME_STORE_URL) return null;
 
   const handleDismiss = () => {
     setDismissed(true);

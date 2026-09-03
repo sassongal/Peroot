@@ -132,7 +132,7 @@ export interface WithUserOptions {
   /**
    * Custom rate-limit key. Default keys on the user id (or client IP for
    * guests); override to namespace a route within a shared bucket, e.g.
-   * `({ user }) => \`achievement:${user!.id}\``.
+   * `({ user }) => \`ext-cfg:${user!.id}\``.
    */
   rateLimitKey?: (args: { user: User | null; ip: string | null }) => string;
   /**

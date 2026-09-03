@@ -196,6 +196,7 @@ function PageContent() {
       } catch {
         /* private mode */
       }
+      if (source === "picker" && next !== "hebrew") markFeatureUsed("peroot_used_output_language");
       trackOutputLanguageSelected(next, source);
       // An explicit choice follows the account to the next device. Own-row
       // update under RLS; fire-and-forget, the local state already moved.
@@ -525,6 +526,14 @@ function PageContent() {
   useEffect(() => {
     if (!ps.error) return;
     const code = lastStreamErrorRef.current?.code;
+    // A free account asked for a Pro mode (the picker locks them, so this is
+    // a stale tab or a hand-built request): say so and fall back to STANDARD,
+    // instead of the credits modal, which would be a lie about the quota.
+    if (code === "pro_required") {
+      toast.error("המצבים המתקדמים פתוחים למנויי Pro");
+      dispatch({ type: "SET_CAPABILITY", payload: CapabilityMode.STANDARD });
+      return;
+    }
     // Prefer the server's structured code; fall back to message keywords for
     // older/edge responses that don't carry one.
     const err = ps.error.toLowerCase();
@@ -560,7 +569,7 @@ function PageContent() {
       // countdown; fuzzy ones open the same modal without it (U1.9).
       setQuotaModal({ variant: "free", refreshAt: structured ? refreshAt : null });
     }
-  }, [ps.error, ps.input, user, isProPlan]);
+  }, [ps.error, ps.input, user, isProPlan, dispatch]);
 
   // Pro/admin users don't get the upgrade nudge - they need actual error feedback
   // so a silent failure doesn't leave them staring at a blank screen.
@@ -1331,6 +1340,25 @@ function PageContent() {
     setPreviousView(null);
   }, [previousView, setViewMode, router]);
 
+  // Tone: remembered per browser, same key the extension mirrors locally.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("peroot_last_tone");
+      if (saved && saved !== ps.selectedTone) dispatch({ type: "SET_TONE", payload: saved });
+    } catch {
+      /* private mode */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const handleSetTone = useCallback((tone: string) => {
+    dispatch({ type: "SET_TONE", payload: tone });
+    try {
+      localStorage.setItem("peroot_last_tone", tone);
+    } catch {
+      /* private mode */
+    }
+  }, []);
+
   const handleRestore = useCallback(
     (item: HistoryItem) => {
       dispatch({ type: "SET_INPUT", payload: item.original });
@@ -1603,14 +1631,30 @@ function PageContent() {
     (action: string) => {
       if (action === "library") saveCompletionToPersonal();
       else if (action === "share") handleShare();
-      else if (action === "research")
-        dispatch({ type: "SET_CAPABILITY", payload: CapabilityMode.DEEP_RESEARCH });
-      else if (action === "image")
-        dispatch({ type: "SET_CAPABILITY", payload: CapabilityMode.IMAGE_GENERATION });
-      else if (action === "chains") setViewMode("personal");
+      // The advanced modes are Pro (the route returns pro_required for free
+      // accounts), so the tip sends a free user to the plans, not to a locked mode.
+      else if (action === "research" || action === "image") {
+        if (!isProPlan) router.push("/pricing?ref=tip");
+        else
+          dispatch({
+            type: "SET_CAPABILITY",
+            payload:
+              action === "research"
+                ? CapabilityMode.DEEP_RESEARCH
+                : CapabilityMode.IMAGE_GENERATION,
+          });
+      } else if (action === "chains") setViewMode("personal");
       else if (action === "public-library") handleNavLibrary();
     },
-    [saveCompletionToPersonal, handleShare, dispatch, setViewMode, handleNavLibrary],
+    [
+      saveCompletionToPersonal,
+      handleShare,
+      dispatch,
+      setViewMode,
+      handleNavLibrary,
+      isProPlan,
+      router,
+    ],
   );
 
   // U1.13: the app view lives in the URL (?view=library|personal) so it is
@@ -1879,6 +1923,8 @@ function PageContent() {
             contextIsOverLimit={context.isOverLimit}
             targetModel={targetModel}
             setTargetModel={handleSetTargetModel}
+            tone={ps.selectedTone}
+            setTone={handleSetTone}
             voiceLang={voiceLang}
             outputLanguage={outputLanguage}
             setOutputLanguage={setOutputLanguage}

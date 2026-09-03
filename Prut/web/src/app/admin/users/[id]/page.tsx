@@ -112,7 +112,6 @@ interface UserDetail {
     personality_brief: string;
     preferred_format: string;
   } | null;
-  achievementCount: number;
   promptCount: number;
   totalApiCost: number;
   totalInputTokens: number;
@@ -397,7 +396,6 @@ export default function UserDetailPage() {
     subscription,
     stats,
     stylePersonality,
-    achievementCount,
     promptCount,
     totalApiCost,
     totalInputTokens,
@@ -539,7 +537,6 @@ export default function UserDetailPage() {
             icon={Zap}
             color="amber"
           />
-          <QuickStat label="Achievements" value={achievementCount} icon={Trophy} color="purple" />
           <QuickStat label="Generations" value={historyCount ?? 0} icon={Sparkles} color="blue" />
           <QuickStat
             label="Last Active"

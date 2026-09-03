@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { getQuotaPolicy } from "@/lib/quota-server";
+import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
 import Link from "next/link";
 import Image from "next/image";
 import { CopySetupPrompt } from "@/components/connect/CopySetupPrompt";
@@ -93,7 +95,8 @@ function Snippet({ title, code, note }: { title: string; code: string; note?: st
  * Peroot Connect — public landing + setup guide. Visible to everyone;
  * key creation lives in Settings (authenticated).
  */
-export default function ConnectPage() {
+export default async function ConnectPage() {
+  const quota = await getQuotaPolicy();
   return (
     <main dir="rtl" className="min-h-screen bg-[#080808] text-white">
       <div className="max-w-4xl mx-auto px-4 py-16 space-y-16">
@@ -140,7 +143,8 @@ export default function ConnectPage() {
             </Link>
           </div>
           <p className="text-xs text-slate-500">
-            זמין לכל משתמש רשום, השדרוגים נספרים מהמכסה הרגילה: חינמי 1 ליום · PRO 150 לחודש
+            זמין לכל משתמש רשום, השדרוגים נספרים מהמכסה הרגילה: {creditsPhrase(quota.freeDaily)}{" "}
+            ביום בחינם, {creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש ב-Pro
           </p>
         </header>
 
