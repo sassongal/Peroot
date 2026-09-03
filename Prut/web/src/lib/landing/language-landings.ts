@@ -30,8 +30,11 @@ export interface LandingContent {
   subheading: string;
   cta: string;
   ctaSecondary: string;
-  /** "Free, no card" line, given the daily allowance from the policy. */
-  freePlanLine: (dailyFree: number) => string;
+  /**
+   * "Free, no card" line. Two numbers from the policy: the registered free
+   * allowance and the guest allowance, which are different ceilings.
+   */
+  freePlanLine: (dailyFree: number, guestDaily: number) => string;
   hebrewUiNote: string;
   /** Three steps. */
   stepsTitle: string;
@@ -67,10 +70,8 @@ const EN: LandingContent = {
     "Type what you need in any language. Peroot rewrites it as a complete, structured prompt: role, task, context, audience, format and constraints, written in English and scored before you copy it.",
   cta: "Enhance a prompt in English",
   ctaSecondary: "See how it works",
-  freePlanLine: (n) =>
-    n === 1
-      ? "Free: one enhancement a day, no card, no signup needed to try."
-      : `Free: ${n} enhancements a day, no card, no signup needed to try.`,
+  freePlanLine: (n, g) =>
+    `Free: ${n === 1 ? "one enhancement" : `${n} enhancements`} a day with a free account, no card. Try ${g === 1 ? "once" : `${g} times`} a day without signing up.`,
   hebrewUiNote:
     "The app's buttons and menus are in Hebrew for now. Your prompts are in English, and every control has a clear icon.",
   stepsTitle: "How it works",
@@ -151,22 +152,21 @@ const AR: LandingContent = {
   outputLanguage: "arabic",
   dir: "rtl",
   ogLocale: "ar_AR",
-  title: "بيروت: مولّد برومبتات بالذكاء الاصطناعي من إسرائيل، بالعربية",
+  title: "Peroot: مولّد برومبتات بالذكاء الاصطناعي من إسرائيل، بالعربية",
   description:
     "حوّل فكرة أولية إلى برومبت احترافي ومنظّم لـ ChatGPT أو Claude أو Gemini. مبني في إسرائيل، مجاني للبدء، والمخرجات بالعربية الفصحى.",
   eyebrow: "صُنع في إسرائيل",
   heading: "اكتب برومبتات أفضل،",
   headingHighlight: "بالعربية",
   subheading:
-    "اكتب ما تحتاجه بأي لغة. بيروت يعيد صياغته كبرومبت كامل ومنظّم: الدور، المهمة، السياق، الجمهور، التنسيق والقيود، مكتوب بالعربية الفصحى ومقيّم قبل أن تنسخه.",
+    "اكتب ما تحتاجه بأي لغة. Peroot يعيد صياغته كبرومبت كامل ومنظّم: الدور، المهمة، السياق، الجمهور، التنسيق والقيود، مكتوب بالعربية الفصحى ومقيّم قبل أن تنسخه.",
   cta: "حسّن برومبت بالعربية",
   ctaSecondary: "كيف يعمل",
-  freePlanLine: (n) =>
-    n === 1
-      ? "مجاناً: تحسين واحد يومياً، بلا بطاقة، وبلا تسجيل للتجربة."
-      : n === 2
-        ? "مجاناً: تحسينان يومياً، بلا بطاقة، وبلا تسجيل للتجربة."
-        : `مجاناً: ${n} تحسينات يومياً، بلا بطاقة، وبلا تسجيل للتجربة.`,
+  freePlanLine: (n, g) => {
+    const daily = n === 1 ? "تحسين واحد" : n === 2 ? "تحسينان" : `${n} تحسينات`;
+    const guest = g === 1 ? "مرة واحدة" : g === 2 ? "مرتين" : `${g} مرات`;
+    return `مجاناً: ${daily} يومياً بحساب مجاني، بلا بطاقة. ويمكنك التجربة ${guest} يومياً دون تسجيل.`;
+  },
   hebrewUiNote:
     "أزرار التطبيق وقوائمه بالعبرية حالياً. برومبتاتك بالعربية، ولكل عنصر تحكم أيقونة واضحة.",
   stepsTitle: "كيف يعمل",
@@ -177,7 +177,7 @@ const AR: LandingContent = {
     },
     {
       title: "اختر لغة المخرجات",
-      body: "العربية بنقرة واحدة، بجانب اختيار الوضع. كما يقترحها بيروت تلقائياً عندما يراك تكتب بالعربية.",
+      body: "العربية بنقرة واحدة، بجانب اختيار الوضع. كما يقترحها Peroot تلقائياً عندما يراك تكتب بالعربية.",
     },
     {
       title: "انسخ النتيجة",
@@ -220,7 +220,7 @@ const AR: LandingContent = {
     {
       question: "هل المخرجات بالعربية فعلاً؟",
       answer:
-        "نعم. يستخدم بيروت قوالب عربية للمخرجات العربية ويتحقق من كتابة النتيجة قبل عرضها. إذا انزلق النموذج إلى لغة أخرى، يُعاد التحسين دون تكلفة.",
+        "نعم. يستخدم Peroot قوالب عربية للمخرجات العربية ويتحقق من كتابة النتيجة قبل عرضها. إذا انزلق النموذج إلى لغة أخرى، يُعاد التحسين دون تكلفة.",
     },
     {
       question: "هل يمكنني كتابة فكرتي بالعبرية والحصول على النتيجة بالعربية؟",
@@ -237,7 +237,7 @@ const AR: LandingContent = {
         "ليس بعد. التطبيق بالعبرية أولاً، مع أيقونات واضحة على كل عنصر. الواجهة العربية مخطط لها؛ أما البرومبتات نفسها فهي بالعربية بالكامل منذ الآن.",
     },
   ],
-  hebrewSiteLink: "بيروت بالعبرية",
+  hebrewSiteLink: "Peroot بالعبرية",
   switcher: { he: "עברית", en: "English", ar: "العربية", ru: "Русский" },
 };
 
@@ -256,12 +256,12 @@ const RU: LandingContent = {
     "Опишите задачу на любом языке. Peroot перепишет её как полный структурированный промпт: роль, задача, контекст, аудитория, формат и ограничения, на русском языке и с оценкой до того, как вы его скопируете.",
   cta: "Улучшить промпт на русском",
   ctaSecondary: "Как это работает",
-  freePlanLine: (n) =>
-    n === 1
-      ? "Бесплатно: одно улучшение в день, без карты, попробовать можно без регистрации."
-      : n >= 2 && n <= 4
-        ? `Бесплатно: ${n} улучшения в день, без карты, попробовать можно без регистрации.`
-        : `Бесплатно: ${n} улучшений в день, без карты, попробовать можно без регистрации.`,
+  freePlanLine: (n, g) => {
+    const daily =
+      n === 1 ? "одно улучшение" : n >= 2 && n <= 4 ? `${n} улучшения` : `${n} улучшений`;
+    const guest = g === 1 ? "один раз" : g >= 2 && g <= 4 ? `${g} раза` : `${g} раз`;
+    return `Бесплатно: ${daily} в день с бесплатным аккаунтом, без карты. Попробовать можно ${guest} в день без регистрации.`;
+  },
   hebrewUiNote:
     "Кнопки и меню приложения пока на иврите. Ваши промпты на русском, и у каждого элемента понятная иконка.",
   stepsTitle: "Как это работает",

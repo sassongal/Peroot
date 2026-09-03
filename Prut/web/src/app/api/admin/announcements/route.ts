@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { withAdmin, withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
+import { stripAiDashes } from "@/lib/text/dashes";
 
 /**
  * Admin CRUD for the "מה חדש" notes (announcements table).
@@ -34,7 +35,7 @@ const patchSchema = noteSchema.partial().extend({ id: z.string().uuid() });
 function stripDashes<T extends Record<string, unknown>>(row: T): T {
   const out: Record<string, unknown> = { ...row };
   for (const key of ["title", "body", "href_label"]) {
-    if (typeof out[key] === "string") out[key] = (out[key] as string).replace(/[–—]/g, ",");
+    if (typeof out[key] === "string") out[key] = stripAiDashes(out[key] as string);
   }
   return out as T;
 }

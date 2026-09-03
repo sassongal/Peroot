@@ -196,3 +196,9 @@ describe("tokenize, four scripts", () => {
     ]);
   });
 });
+
+describe("tokenize, Arabic punctuation", () => {
+  it("does not glue Arabic commas, semicolons or question marks onto words", () => {
+    expect(tokenize("كتاب، قلم؛ ماذا؟")).toEqual(["كتاب", "قلم", "ماذا"]);
+  });
+});

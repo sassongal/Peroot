@@ -23,6 +23,10 @@ function walkStrings(value: unknown, out: string[] = []): string[] {
 }
 
 describe("language landings", () => {
+  it("never spells the brand as the city of Beirut in Arabic", () => {
+    expect(JSON.stringify(LANDINGS.ar)).not.toContain("بيروت");
+  });
+
   it("exist for English, Arabic and Russian with the right direction", () => {
     expect(LANDING_LOCALES).toEqual(["en", "ar", "ru"]);
     expect(LANDINGS.ar.dir).toBe("rtl");
@@ -34,8 +38,8 @@ describe("language landings", () => {
     for (const locale of LANDING_LOCALES) {
       const { switcher: _switcher, ...copy } = LANDINGS[locale];
       const strings = walkStrings(copy).concat(
-        LANDINGS[locale].freePlanLine(1),
-        LANDINGS[locale].freePlanLine(2),
+        LANDINGS[locale].freePlanLine(1, 1),
+        LANDINGS[locale].freePlanLine(2, 1),
       );
       for (const s of strings) {
         expect(s, `${locale}: ${s}`).not.toMatch(HEBREW);
@@ -47,7 +51,8 @@ describe("language landings", () => {
   it("never write a quota number into the copy: the line is built from the policy", () => {
     for (const locale of LANDING_LOCALES) {
       const c = LANDINGS[locale];
-      expect(c.freePlanLine(1)).not.toBe(c.freePlanLine(3));
+      expect(c.freePlanLine(1, 1)).not.toBe(c.freePlanLine(3, 1));
+      expect(c.freePlanLine(2, 1)).not.toBe(c.freePlanLine(2, 2));
       const fixed = walkStrings({ ...c, freePlanLine: undefined, switcher: undefined });
       for (const s of fixed) expect(s).not.toMatch(/\b\d+\s+(enhancements?|улучшени|تحسين)/i);
     }

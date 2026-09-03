@@ -264,3 +264,20 @@ describe("resolveLegacyPromptSlug (Sentry JAVASCRIPT-NEXTJS-P)", () => {
     expect(resolveLegacyPromptSlug("/blog/" + encodeURIComponent("שיווק"))).toBeNull();
   });
 });
+
+describe("legacy slug redirect keeps the query string", () => {
+  it("so a referral or campaign link survives the 301", async () => {
+    const { NextRequest } = await import("next/server");
+    const { proxy } = await import("../proxy");
+    const req = new NextRequest(
+      "https://www.peroot.space/prompts/" +
+        encodeURIComponent("שיווק") +
+        "?ref=ABC123&utm_source=x",
+    );
+    const res = await proxy(req);
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe(
+      "https://www.peroot.space/prompts/marketing?ref=ABC123&utm_source=x",
+    );
+  });
+});

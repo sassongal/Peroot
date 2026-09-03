@@ -221,7 +221,7 @@ export function hasSpecificityProperNouns(p: Parsed): boolean {
   // English capitalized proper nouns
   if (/\b[A-Z][a-z]{2,}\b/.test(p.text)) return true;
   // Quoted text (any script) — "פרויקט X", ״שם מוצר״, "Brand Name", «Бренд»
-  if (/["""״«».{2,}["""״«»]/.test(p.text)) return true;
+  if (/["""״«»].{2,}["""״«»]/.test(p.text)) return true;
   // Arabic and Russian entity markers, plus a capitalised Russian word mid-sentence
   if (I18N_PROPER_NOUN_RE.test(p.text)) return true;
   // Hebrew entity markers: חברת X, עיר X, מדינת X, פרוייקט X — possessive construct + Hebrew word

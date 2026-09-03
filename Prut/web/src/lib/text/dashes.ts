@@ -38,7 +38,11 @@ export function stripAiDashes(text: string): string {
  */
 export function createDashScrubStream(): TransformStream<string, string> {
   let held = "";
-  const TAIL = /(\S+\s*[\u2013\u2014]?\s*)$/;
+  // Three shapes are held back: a token followed by a dash ("Вы —"), a
+  // dash-led token with the space before it (" —bar"), or a plain last
+  // token. Leading whitespace is held only in the dash case, otherwise the
+  // copula rule's own trailing space would double it.
+  const TAIL = /(\S+\s*[\u2013\u2014]\s*|\s*[\u2013\u2014]\S*\s*|\S+\s*)$/;
   return new TransformStream<string, string>({
     transform(chunk, controller) {
       const text = held + chunk;

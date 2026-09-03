@@ -42,7 +42,7 @@ export function shareMessage(code: string, language: ShareLanguage = "hebrew"): 
     case "english":
       return `Join me on Peroot, the AI prompt generator from Israel: ${link}`;
     case "arabic":
-      return `انضم إليّ في بيروت، مولّد البرومبتات بالذكاء الاصطناعي من إسرائيل: ${link}`;
+      return `انضم إليّ في Peroot، مولّد البرومبتات بالذكاء الاصطناعي من إسرائيل: ${link}`;
     case "russian":
       return `Присоединяйтесь ко мне в Peroot, генераторе промптов с ИИ из Израиля: ${link}`;
     default:

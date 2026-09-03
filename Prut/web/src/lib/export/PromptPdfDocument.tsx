@@ -387,7 +387,7 @@ export function PromptPdfDocument({
 
         {/* Title + score hero */}
         <View style={styles.titleRow}>
-          {title ? <Text style={styles.title}>{title}</Text> : <View />}
+          {title ? <Text style={[styles.title, textStyle(title)]}>{title}</Text> : <View />}
           {score ? (
             <View style={styles.scorePill}>
               <Text style={styles.scoreBig}>{score.after}</Text>

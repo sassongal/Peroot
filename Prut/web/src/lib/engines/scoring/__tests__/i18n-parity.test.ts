@@ -170,3 +170,17 @@ describe("Scorer, the widening does not change Hebrew or English verdicts", () =
     expect(subject?.score ?? 1).toBeGreaterThan(0);
   });
 });
+
+describe("Scorer, review regressions", () => {
+  it("a Russian imperative starting with вы/ты is not a role statement", () => {
+    expect(hasRoleStatement(parse("Выполни анализ рынка за 2026 год."))).toBe(false);
+    expect(hasRoleStatement(parse("Тысяча слов о продукте."))).toBe(false);
+    expect(hasRoleStatement(parse("Вы опытный юрист. Составьте договор."))).toBe(true);
+  });
+
+  it("a lone period is not a proper noun", async () => {
+    const { hasSpecificityProperNouns } = await import("../prompt-parse");
+    expect(hasSpecificityProperNouns(parse("כתוב פוסט קצר."))).toBe(false);
+    expect(hasSpecificityProperNouns(parse('כתוב פוסט על "פרויקט אלפא" השבוע'))).toBe(true);
+  });
+});

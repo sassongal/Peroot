@@ -1,3 +1,4 @@
+import { scrubDashesInResponse } from "@/lib/text/dashes";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
@@ -67,5 +68,5 @@ ${contextText}`,
     temperature: 0.3,
   });
 
-  return result.toTextStreamResponse();
+  return scrubDashesInResponse(result.toTextStreamResponse());
 }

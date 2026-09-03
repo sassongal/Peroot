@@ -234,13 +234,14 @@ export function tokenize(text: string): string[] {
   if (!text) return [];
   // Split on whitespace + punctuation; keep Hebrew (\u0590-\u05FF), Arabic
   // (\u0600-\u06FF, \u0750-\u077F), Cyrillic (\u0400-\u04FF) and Latin
-  // letters + digits. Strip Hebrew niqqud (\u05B0-\u05C7) and Arabic
+  // letters + digits; Arabic punctuation (، ؛ ؟) and Arabic-Indic digits
+  // are separators. Strip Hebrew niqqud (\u05B0-\u05C7) and Arabic
   // tashkeel (\u064B-\u065F, \u0670) first: "كِتَاب" and "كتاب" are one word.
   return text
     .toLowerCase()
     .replace(/[֑-ׇ]/g, "") // shared niqqud range (see lib/hebrew-search normalizeHebrew)
     .replace(/[\u064B-\u065F\u0670]/g, "")
-    .split(/[^\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u0400-\u04FFa-z0-9]+/i)
+    .split(/[^\u0590-\u05FF\u0620-\u064A\u066E-\u06FF\u0750-\u077F\u0400-\u04FFa-z0-9]+/i)
     .filter((t) => t.length >= 3 && !STOPWORDS.has(t));
 }
 

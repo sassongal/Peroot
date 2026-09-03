@@ -93,7 +93,9 @@ export async function LanguageLanding({ locale }: { locale: LandingLocale }) {
                 {c.ctaSecondary}
               </a>
             </div>
-            <p className="text-sm text-(--text-muted)">{c.freePlanLine(quota.freeDaily)}</p>
+            <p className="text-sm text-(--text-muted)">
+              {c.freePlanLine(quota.freeDaily, quota.guestDaily)}
+            </p>
             <p className="text-sm text-(--text-muted) border-s-2 border-amber-500/40 ps-3">
               {c.hebrewUiNote}
             </p>
@@ -185,7 +187,9 @@ export async function LanguageLanding({ locale }: { locale: LandingLocale }) {
           {/* Closing CTA */}
           <section className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-8 text-center space-y-4">
             <h2 className="text-2xl font-bold text-(--text-primary)">{c.cta}</h2>
-            <p className="text-(--text-muted)">{c.freePlanLine(quota.freeDaily)}</p>
+            <p className="text-(--text-muted)">
+              {c.freePlanLine(quota.freeDaily, quota.guestDaily)}
+            </p>
             <Link
               href={appHref}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 text-black font-semibold hover:bg-amber-400 transition-colors min-h-[48px]"

@@ -123,3 +123,25 @@ describe("createDashScrubStream, chunk shapes", () => {
     );
   });
 });
+
+describe("stream and whole-text scrubs agree", () => {
+  it("on a dash glued to the next word across a chunk boundary", async () => {
+    const chunks = ["foo ", `${EM}bar baz`, ` and 2`, `${EN}3 items`];
+    const out: string[] = [];
+    const stream = createDashScrubStream();
+    const writer = stream.writable.getWriter();
+    const reader = stream.readable.getReader();
+    const reading = (async () => {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        out.push(value);
+      }
+    })();
+    for (const c of chunks) await writer.write(c);
+    await writer.close();
+    await reading;
+    expect(out.join("")).toBe(stripAiDashes(chunks.join("")));
+    expect(out.join("")).toBe("foo, bar baz and 2-3 items");
+  });
+});

@@ -1812,6 +1812,7 @@ function PageContent() {
         }}
       />
       <HomeViewChrome
+        isPro={isPro}
         viewMode={mobileActiveTab}
         onTabChange={handleMobileTabChange}
         discovery={discovery}

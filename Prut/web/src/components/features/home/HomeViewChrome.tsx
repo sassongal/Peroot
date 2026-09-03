@@ -70,6 +70,8 @@ interface HomeViewChromeProps {
   // Onboarding
   showOnboarding: boolean;
   user: unknown;
+  /** Pro subscriber, so a note aimed at Pro users reaches them. */
+  isPro?: boolean;
   onOnboardingComplete: (data: { role: string; goal: string }) => void;
 
   // Fixed overlays (sidebar drawer, mobile FAQ panel) — rendered as siblings of the main content div
@@ -91,6 +93,7 @@ function HomeViewChromeInner({
   loginRequiredConfig,
   showOnboarding,
   user,
+  isPro = false,
   onOnboardingComplete,
   overlays,
   children,
@@ -167,7 +170,7 @@ function HomeViewChromeInner({
         {!hasCompletion && !isLoading && (
           <div className="min-h-[48px] flex flex-col gap-3">
             <DidYouKnowBanner />
-            <WhatsNewBanner viewer={user ? "user" : "guest"} />
+            <WhatsNewBanner viewer={isPro ? "pro" : user ? "user" : "guest"} />
           </div>
         )}
       </div>

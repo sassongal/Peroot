@@ -202,7 +202,10 @@ export async function proxy(request: NextRequest) {
   // the catalogue instead of a 500.
   const legacySlug = resolveLegacyPromptSlug(pathname);
   if (legacySlug) {
-    return NextResponse.redirect(new URL(legacySlug.to, request.url), legacySlug.status);
+    return NextResponse.redirect(
+      new URL(legacySlug.to + request.nextUrl.search, request.url),
+      legacySlug.status,
+    );
   }
 
   const isMaintenance = await getCachedMaintenanceMode();
