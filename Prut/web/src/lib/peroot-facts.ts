@@ -5,6 +5,7 @@
  * show already-seen facts from the other language.
  */
 
+import { OUTPUT_LANGUAGE_STORAGE_KEY } from "@/lib/output-language";
 import { PROMPT_LIBRARY_COUNT } from "./constants";
 
 export type FactLocale = "he" | "en";
@@ -66,13 +67,20 @@ export function getFactsForLocale(locale: FactLocale): readonly string[] {
 }
 
 /**
- * Detect the current locale from the <html lang="..."> attribute.
- * Runs on the client only — returns "he" during SSR.
+ * Which fact set to show. The page is always Hebrew (<html lang="he">), so
+ * the old <html lang> check never picked English; the preferred output
+ * language the user chose (home picker or profile) is the real signal.
+ * English readers get the English facts; Arabic and Russian readers get
+ * Hebrew until those sets exist. Client only, "he" during SSR.
  */
 export function detectFactLocale(): FactLocale {
-  if (typeof document === "undefined") return "he";
-  const lang = document.documentElement.lang?.toLowerCase();
-  return lang === "en" ? "en" : "he";
+  if (typeof window === "undefined") return "he";
+  try {
+    if (localStorage.getItem(OUTPUT_LANGUAGE_STORAGE_KEY) === "english") return "en";
+  } catch {
+    /* private mode */
+  }
+  return document.documentElement.lang?.toLowerCase() === "en" ? "en" : "he";
 }
 
 /**

@@ -281,12 +281,12 @@ when the trigger fires.
 - Server Components by default, `"use client"` only when necessary
 
 ## Personal Library Architecture
-- `PersonalLibraryView` orchestrates all library state and passes a `shared: PersonalLibrarySharedState` object down to header, sidebar, grid, modals
+- `PersonalLibraryView` orchestrates all library state and exposes it through `PersonalLibraryContext` to header, sidebar, grid, modals
 - `localViewType: "grid" | "graph"` — sub-view toggle inside PersonalLibraryView (NOT a HomeClient viewMode)
 - **History** is a virtual folder: `useHistory()` items are mapped to `PersonalPrompt[]` locally; `setFolder("history")` skips `ctxSetActiveFolder` to avoid server pagination with unknown folder key
 - **Graph view** (`PromptGraphView`) uses ALL prompts from `filteredPersonalLibrary`, not the paginated slice
 - `addPrompt` is actually `addPromptWithSuggestion` in LibraryDataContext — auto-categorizes via AI (non-blocking) for saves to "כללי" by authenticated users
-- `PersonalLibrarySharedState` is defined in `src/components/views/personal-library/types.ts` — extend it when adding new shared state
+- Shared library state is the context seam in `src/components/views/personal-library/context/PersonalLibraryContext.tsx` (`usePersonalLibrary()`); the old `PersonalLibrarySharedState` god-object and its `types.ts` are gone (2026-07-18 refactor, file removed 2026-09-02)
 
 ## Memory Palace (Graph Sidebar/Drawer)
 - **Desktop:** `MemoryPalaceSidebar` mounted inside `PersonalLibraryView`, collapsible, persisted via `peroot_palace_collapsed` localStorage key
