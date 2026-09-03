@@ -73,3 +73,45 @@ describe("analyzeUserStyle", () => {
     await expect(analyzeUserStyle("u1")).rejects.toThrow(/persist failed/);
   });
 });
+
+describe("analyzeUserStyle, the persona's language (spec C.9)", () => {
+  it("asks for the brief in the language the library is written in", async () => {
+    mockLibrary([
+      {
+        title: "Пост",
+        prompt: "Напишите пост для LinkedIn о запуске продукта",
+        use_case: null,
+        personal_category: "общее",
+      },
+      {
+        title: "Письмо",
+        prompt: "Составьте письмо клиенту с извинениями за задержку",
+        use_case: null,
+        personal_category: "общее",
+      },
+      {
+        title: "План",
+        prompt: "Подготовьте план контента на месяц для малого бизнеса",
+        use_case: null,
+        personal_category: "общее",
+      },
+    ]);
+    mockGenerateObject.mockResolvedValue({
+      object: { tokens: [], preferred_format: "списки", personality_brief: "деловой" },
+    });
+    await analyzeUserStyle("u1");
+    const call = mockGenerateObject.mock.calls[0][0] as { prompt: string };
+    expect(call.prompt).toContain("in Russian");
+    expect(call.prompt).not.toContain("in Hebrew");
+  });
+
+  it("defaults to Hebrew for a Hebrew library", async () => {
+    mockLibrary(LIBRARY);
+    mockGenerateObject.mockResolvedValue({
+      object: { tokens: [], preferred_format: "", personality_brief: "" },
+    });
+    await analyzeUserStyle("u1");
+    const call = mockGenerateObject.mock.calls[0][0] as { prompt: string };
+    expect(call.prompt).toContain("in Hebrew");
+  });
+});

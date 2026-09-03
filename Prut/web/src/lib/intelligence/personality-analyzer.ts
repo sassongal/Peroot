@@ -1,3 +1,4 @@
+import { detectScriptLanguage, outputLanguageDef } from "@/lib/output-language";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { google } from "@/lib/ai/models";
@@ -48,17 +49,31 @@ export async function analyzeUserStyle(userId: string) {
     .map((p) => `[${p.title}]\n${(p.prompt ?? "").slice(0, 800)}`)
     .join("\n\n---\n\n");
 
+  // The brief is shown to the user in Settings ("הסגנון שלך") and injected
+  // as context for their enhancements, so it is written in the language
+  // they actually write in (languages spec C.9): a Russian-only library
+  // gets a Russian persona, not a Hebrew description of Russian habits.
+  const briefLanguage = outputLanguageDef(detectScriptLanguage(libraryText).language ?? "hebrew");
+  const briefLanguageName = {
+    hebrew: "Hebrew",
+    english: "English",
+    arabic: "Arabic",
+    russian: "Russian",
+  }[briefLanguage.code];
+
   const analyzerPrompt = `
     Analyze the following prompt engineering styles for this user.
     Identify recurring patterns in:
     - Tone (e.g. professional, direct, creative, technical)
     - Structure (e.g. bullet points, complex scenarios, short instructions)
-    - Language habits (e.g. specific Hebrew terminology, formatting preferences)
+    - Language habits (e.g. specific terminology, formatting preferences)
     - Precision level (detailed vs concise)
 
-    Return: tokens (recurring words/phrases), preferred_format (description of
-    structure), personality_brief (a professional brief of this user's writing
-    identity, in Hebrew).
+    Return: tokens (recurring words/phrases, verbatim from the prompts),
+    preferred_format (description of structure) and personality_brief (a
+    professional brief of this user's writing identity). Write
+    preferred_format and personality_brief in ${briefLanguageName}, the
+    language these prompts are written in. Never use em or en dashes.
 
     Prompts to analyze:
     ---
