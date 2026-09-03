@@ -60,14 +60,18 @@ jobs:
     name: Production build
     runs-on: ubuntu-latest
     needs: quality
-    # Prerendering reads through the ANON key, which is a repo secret. The
-    # service-role key is only needed to satisfy env validation at import time,
-    # so a placeholder keeps this a real gate without putting a full-access,
-    # RLS-bypassing key into a PUBLIC repo's Actions secrets.
+    # Prerendered public pages (/templates, /prompts, /blog, the sitemap) read
+    # the catalog through createServiceClient(). No service-role key belongs in
+    # a PUBLIC repo's Actions secrets, so the build runs those reads with the
+    # ANON key in that slot: every table they touch has a public SELECT policy,
+    # so the pages render under RLS exactly as an anonymous visitor would see
+    # them, and the gate stays real. Since 2026-09-01 (root layout no longer
+    # dynamic) these pages are prerendered at build, and a placeholder string
+    # here failed every build with library_load_failed.
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-placeholder-service-key' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
       NEXT_PUBLIC_POSTHOG_HOST: ${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
     steps:
