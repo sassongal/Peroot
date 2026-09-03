@@ -561,7 +561,7 @@ export function PromptInput({
           <div className="bg-white/60 dark:bg-black/40 rounded-xl flex flex-col gap-4 relative">
             {/* Scroll wrapper: long prompts used to clip (overflow-hidden on layers). */}
             <div className="max-h-[min(75vh,36rem)] overflow-y-auto scrollbar-hide min-h-0 rounded-t-xl overscroll-contain">
-              <div className="relative min-h-[120px] md:min-h-[160px]">
+              <div className="relative min-h-[104px] md:min-h-[160px]">
                 <div
                   aria-hidden
                   className="absolute inset-0 p-6 md:p-8 text-base md:text-lg lg:text-xl text-(--text-primary) font-sans leading-relaxed whitespace-pre-wrap wrap-break-word pointer-events-none z-0"
@@ -585,7 +585,7 @@ export function PromptInput({
                     PLACEHOLDERS_BY_MODE[selectedCapability] || t.prompt_generator.placeholder
                   }
                   aria-label="כתוב את הפרומפט שלך"
-                  className="w-full min-h-[120px] md:min-h-[160px] bg-transparent p-6 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-(--text-primary) placeholder:text-(--text-muted) focus:outline-none resize-none leading-relaxed relative z-10 font-sans block overflow-y-auto"
+                  className="w-full min-h-[104px] md:min-h-[160px] bg-transparent p-5 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-(--text-primary) placeholder:text-(--text-muted) focus:outline-none resize-none leading-relaxed relative z-10 font-sans block overflow-y-auto"
                   onPaste={(e) => {
                     if (!onAddUrl) return;
                     const text = e.clipboardData.getData("text").trim();

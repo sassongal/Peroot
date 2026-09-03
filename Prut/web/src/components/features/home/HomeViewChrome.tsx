@@ -163,8 +163,11 @@ function HomeViewChromeInner({
           href="/features"
           className="text-xs md:text-sm text-(--text-muted) hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center text-center px-3 md:px-4 leading-snug"
         >
-          כותבים בעברית, מקבלים גם באנגלית, בערבית או ברוסית. מצרפים קובץ או קישור. משגרים ישר
-          ל-ChatGPT. איך זה עובד
+          <span className="md:hidden">קובץ, קישור, ארבע שפות, שיגור ל-ChatGPT. איך זה עובד</span>
+          <span className="hidden md:inline">
+            כותבים בעברית, מקבלים גם באנגלית, בערבית או ברוסית. מצרפים קובץ או קישור. משגרים ישר
+            ל-ChatGPT. איך זה עובד
+          </span>
         </Link>
 
         {children}
