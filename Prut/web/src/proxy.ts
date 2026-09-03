@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { isMaintenanceMode } from "@/lib/maintenance";
 import { HEBREW_SLUG_TO_ENGLISH } from "@/lib/category-slugs";
+import { HEBREW_BLOG_SLUGS } from "@/lib/blog-slug-map";
 
 // In-memory maintenance mode cache (avoids Redis call on every request)
 let maintenanceCache: { value: boolean; expires: number } | null = null;
@@ -161,18 +162,22 @@ export function validateCsrfOrigin(request: NextRequest): NextResponse | null {
 export function resolveLegacyPromptSlug(
   pathname: string,
 ): { to: string; status: 301 | 302 } | null {
-  const m = /^\/prompts\/([^/]+)(\/.*)?$/.exec(pathname);
+  // Every ISR route whose old addresses were Hebrew: the section, its legacy
+  // map, and where an unknown non-ASCII slug should land.
+  const m = /^\/(prompts|blog)\/([^/]+)(\/.*)?$/.exec(pathname);
   if (!m) return null;
+  const section = m[1];
+  const legacy = section === "prompts" ? HEBREW_SLUG_TO_ENGLISH : HEBREW_BLOG_SLUGS;
   let decoded: string;
   try {
-    decoded = decodeURIComponent(m[1]);
+    decoded = decodeURIComponent(m[2]);
   } catch {
-    return { to: "/prompts", status: 302 };
+    return { to: `/${section}`, status: 302 };
   }
   if (/^[\x21-\x7e]+$/.test(decoded)) return null;
-  const english = HEBREW_SLUG_TO_ENGLISH[decoded];
-  if (english) return { to: `/prompts/${english}${m[2] ?? ""}`, status: 301 };
-  return { to: "/prompts", status: 302 };
+  const english = legacy[decoded];
+  if (english) return { to: `/${section}/${english}${m[3] ?? ""}`, status: 301 };
+  return { to: `/${section}`, status: 302 };
 }
 
 export async function proxy(request: NextRequest) {
@@ -193,8 +198,8 @@ export async function proxy(request: NextRequest) {
     return new NextResponse("Not Found", { status: 404 });
   }
 
-  // Legacy Hebrew category slugs (/prompts/שיווק) must never reach the ISR
-  // page: Next tags the cached page with its decoded path in the
+  // Legacy Hebrew slugs (/prompts/שיווק, /blog/<כותרת>) must never reach an
+  // ISR page: Next tags the cached page with its decoded path in the
   // x-next-cache-tags header, and a non-ASCII header value throws
   // ERR_INVALID_CHAR before the page's own redirect can run (Sentry
   // JAVASCRIPT-NEXTJS-P, 2026-09-02). Known slugs get their permanent

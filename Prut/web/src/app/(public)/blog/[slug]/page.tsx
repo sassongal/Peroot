@@ -47,7 +47,7 @@ export async function generateStaticParams() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) {
-    return Object.keys(HEBREW_BLOG_SLUGS).map((heSlug) => ({ slug: heSlug }));
+    return [];
   }
 
   const { createClient: createSupabase } = await import("@supabase/supabase-js");
@@ -57,11 +57,10 @@ export async function generateStaticParams() {
     .select("slug")
     .eq("status", "published");
 
-  const englishSlugs = (posts || []).map((post) => ({ slug: post.slug }));
-  const hebrewSlugs = Object.keys(HEBREW_BLOG_SLUGS).map((heSlug) => ({
-    slug: heSlug,
-  }));
-  return [...englishSlugs, ...hebrewSlugs];
+  // Legacy Hebrew slugs are NOT prerendered: they redirect at the edge
+  // (proxy.ts), and an ISR render of a non-ASCII path throws on the
+  // x-next-cache-tags header (Sentry JAVASCRIPT-NEXTJS-P, 2026-09-02/03).
+  return (posts || []).map((post) => ({ slug: post.slug }));
 }
 
 export const revalidate = 3600; // ISR: revalidate every hour

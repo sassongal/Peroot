@@ -257,11 +257,25 @@ describe("resolveLegacyPromptSlug (Sentry JAVASCRIPT-NEXTJS-P)", () => {
     expect(resolveLegacyPromptSlug("/prompts/%E0%A4")).toEqual({ to: "/prompts", status: 302 });
   });
 
+  it("does the same for legacy Hebrew blog slugs", () => {
+    expect(
+      resolveLegacyPromptSlug("/blog/" + encodeURIComponent("perplexity-מול-chatgpt")),
+    ).toEqual({
+      to: "/blog/perplexity-vs-chatgpt-research",
+      status: 301,
+    });
+    expect(resolveLegacyPromptSlug("/blog/" + encodeURIComponent("פוסט-שלא-קיים"))).toEqual({
+      to: "/blog",
+      status: 302,
+    });
+    expect(resolveLegacyPromptSlug("/blog/geo-ai-overviews-hebrew-guide")).toBeNull();
+  });
+
   it("leaves ASCII slugs and other paths alone", () => {
     expect(resolveLegacyPromptSlug("/prompts/marketing")).toBeNull();
     expect(resolveLegacyPromptSlug("/prompts/marketing/abc-123")).toBeNull();
     expect(resolveLegacyPromptSlug("/prompts")).toBeNull();
-    expect(resolveLegacyPromptSlug("/blog/" + encodeURIComponent("שיווק"))).toBeNull();
+    expect(resolveLegacyPromptSlug("/guides/" + encodeURIComponent("שיווק"))).toBeNull();
   });
 });
 
