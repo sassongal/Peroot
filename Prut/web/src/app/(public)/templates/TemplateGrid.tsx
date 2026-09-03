@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Crown, Loader2, Search, Variable, X } from "lucide-react";
 import { toast } from "sonner";
@@ -30,6 +30,9 @@ export interface TemplateSummary {
 interface TemplateGridProps {
   templates: TemplateSummary[];
 }
+
+/** Cards in the first render and in each "הצג עוד" step. */
+const PAGE_SIZE = 60;
 
 /** Group templates by category and return sorted groups */
 function groupByCategory(templates: TemplateSummary[]) {
@@ -130,6 +133,27 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
 
   const allChipCount = isSearching ? filtered.length : templates.length;
 
+  // Render in pages. The summaries are all on the client already; what made
+  // the page heavy was the server markup of every card (575 cards, ~1.2MB
+  // of HTML), so only the first page is in the HTML and the rest mounts on
+  // "הצג עוד". Any filter change starts from the first page again.
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  useEffect(() => {
+    setVisible(PAGE_SIZE);
+  }, [activeCategory, trimmedQuery]);
+  const renderedGroups = useMemo(() => {
+    const out: Array<readonly [string, TemplateSummary[], number]> = [];
+    let left = visible;
+    for (const [category, items] of grouped) {
+      if (left <= 0) break;
+      const slice = items.length > left ? items.slice(0, left) : items;
+      out.push([category, slice, items.length] as const);
+      left -= slice.length;
+    }
+    return out;
+  }, [grouped, visible]);
+  const hasMore = visible < filtered.length;
+
   return (
     <>
       {/* Free-text search */}
@@ -208,7 +232,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
 
       {/* Template groups */}
       <div className="space-y-12">
-        {grouped.map(([category, items]) => (
+        {renderedGroups.map(([category, items, total]) => (
           <section key={category} aria-label={CATEGORY_LABELS[category] || category}>
             {/* Show section header only when showing all categories AND not searching */}
             {!activeCategory && !isSearching && (
@@ -216,7 +240,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
                 <h2 className="text-lg md:text-xl font-serif text-foreground">
                   {CATEGORY_LABELS[category] || category}
                 </h2>
-                <span className="text-xs text-muted-foreground">{items.length} תבניות</span>
+                <span className="text-xs text-muted-foreground">{total} תבניות</span>
               </div>
             )}
 
@@ -288,6 +312,21 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
             </div>
           </section>
         ))}
+
+        {hasMore && (
+          <div className="flex flex-col items-center gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setVisible((v) => v + PAGE_SIZE)}
+              className="px-6 py-2.5 rounded-full border border-border text-sm font-medium text-secondary-foreground hover:border-amber-500/40 hover:text-foreground hover:bg-amber-500/5 transition-colors min-h-[44px]"
+            >
+              הצג עוד תבניות
+            </button>
+            <span className="text-xs text-muted-foreground" aria-live="polite">
+              מוצגות {Math.min(visible, filtered.length)} מתוך {filtered.length}
+            </span>
+          </div>
+        )}
 
         {/* Empty state */}
         {filtered.length === 0 && (
