@@ -35,6 +35,10 @@
       "schedule": "0 9 * * 1"
     },
     {
+      "path": "/api/cron/language-eval",
+      "schedule": "0 4 * * 0"
+    },
+    {
       "path": "/api/cron/reengagement",
       "schedule": "0 10 * * *"
     },
