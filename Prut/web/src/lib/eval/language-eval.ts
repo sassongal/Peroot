@@ -195,10 +195,7 @@ export function measureOutput(output: string, language: OutputLanguage) {
   };
 }
 
-export async function runEvalCase(
-  c: EvalCase,
-  judge: Judge = defaultJudge,
-): Promise<EvalResult> {
+export async function runEvalCase(c: EvalCase, judge: Judge = defaultJudge): Promise<EvalResult> {
   const started = Date.now();
   const engine = await getEngine(CapabilityMode.STANDARD, c.language);
   const out = engine.generate({
@@ -239,13 +236,15 @@ export async function runEvalCase(
  * A failed case is logged and skipped so one flaky model call does not
  * lose the run.
  */
-export async function runLanguageEval(opts: {
-  runId?: string;
-  cases?: EvalCase[];
-  concurrency?: number;
-  judge?: Judge;
-  persist?: boolean;
-} = {}): Promise<{ runId: string; results: EvalResult[]; failed: string[] }> {
+export async function runLanguageEval(
+  opts: {
+    runId?: string;
+    cases?: EvalCase[];
+    concurrency?: number;
+    judge?: Judge;
+    persist?: boolean;
+  } = {},
+): Promise<{ runId: string; results: EvalResult[]; failed: string[] }> {
   const runId = opts.runId ?? crypto.randomUUID();
   const cases = opts.cases ?? EVAL_CASES;
   const concurrency = opts.concurrency ?? 4;

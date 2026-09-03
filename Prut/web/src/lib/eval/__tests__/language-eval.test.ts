@@ -12,9 +12,8 @@ vi.mock("@/lib/engines", () => ({ getEngine: vi.fn() }));
 vi.mock("ai", () => ({ generateObject: vi.fn() }));
 vi.mock("@/lib/ai/models", () => ({ google: () => ({}) }));
 
-const { EVAL_CASES, EVAL_LANGUAGES, measureOutput, summarizeRun } = await import(
-  "../language-eval"
-);
+const { EVAL_CASES, EVAL_LANGUAGES, measureOutput, summarizeRun } =
+  await import("../language-eval");
 
 const SCRIPT: Record<string, RegExp> = {
   hebrew: /[֐-׿]/,
@@ -56,15 +55,45 @@ describe("measureOutput", () => {
 describe("summarizeRun", () => {
   it("averages per language and counts language failures", () => {
     const rows = [
-      { language: "hebrew" as const, language_ok: true, fluency: 5, intent: 4, structure: 5, scorer_total: 80, dashes: 0 },
-      { language: "hebrew" as const, language_ok: true, fluency: 4, intent: 4, structure: 4, scorer_total: 70, dashes: 1 },
-      { language: "arabic" as const, language_ok: false, fluency: 3, intent: 4, structure: 4, scorer_total: 60, dashes: 0 },
+      {
+        language: "hebrew" as const,
+        language_ok: true,
+        fluency: 5,
+        intent: 4,
+        structure: 5,
+        scorer_total: 80,
+        dashes: 0,
+      },
+      {
+        language: "hebrew" as const,
+        language_ok: true,
+        fluency: 4,
+        intent: 4,
+        structure: 4,
+        scorer_total: 70,
+        dashes: 1,
+      },
+      {
+        language: "arabic" as const,
+        language_ok: false,
+        fluency: 3,
+        intent: 4,
+        structure: 4,
+        scorer_total: 60,
+        dashes: 0,
+      },
     ];
     const s = summarizeRun(rows);
     const he = s.find((x) => x.language === "hebrew")!;
     const ar = s.find((x) => x.language === "arabic")!;
     const ru = s.find((x) => x.language === "russian")!;
-    expect(he).toMatchObject({ cases: 2, language_ok_pct: 100, fluency: 4.5, scorer_total: 75, dashes: 1 });
+    expect(he).toMatchObject({
+      cases: 2,
+      language_ok_pct: 100,
+      fluency: 4.5,
+      scorer_total: 75,
+      dashes: 1,
+    });
     expect(ar).toMatchObject({ cases: 1, language_ok_pct: 0, fluency: 3 });
     expect(ru).toMatchObject({ cases: 0, language_ok_pct: 0 });
   });
