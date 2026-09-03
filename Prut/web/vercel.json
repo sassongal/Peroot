@@ -28,7 +28,7 @@
     },
     {
       "path": "/api/cron/language-eval",
-      "schedule": "0 4 * * 0"
+      "schedule": "0 4 1 * *"
     },
     {
       "path": "/api/cron/reengagement",

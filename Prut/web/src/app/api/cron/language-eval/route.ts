@@ -7,7 +7,7 @@ import { runLanguageEval, summarizeRun } from "@/lib/eval/language-eval";
 export const maxDuration = 300;
 
 /**
- * GET /api/cron/language-eval (weekly, vercel.json)
+ * GET /api/cron/language-eval (monthly, the 1st at 04:00 UTC, vercel.json)
  *
  * Runs the language evaluation set (languages spec B6) and stores one row
  * per case in language_eval_runs. Auth: Bearer CRON_SECRET.
