@@ -1012,3 +1012,29 @@
   .peroot-preview-qtitle { color: #334155; }
   .peroot-preview-q { color: #64748b; }
 }
+
+/* ── v3.1: a light ground when the chat site is light ─────────────────── */
+@media (prefers-color-scheme: light) {
+  :root {
+    --peroot-bg: rgba(255, 255, 255, 0.96);
+    --peroot-bg-solid: #ffffff;
+    --peroot-surface: rgba(0, 0, 0, 0.03);
+    --peroot-surface-hover: rgba(0, 0, 0, 0.06);
+    --peroot-border: rgba(0, 0, 0, 0.08);
+    --peroot-border-hover: rgba(0, 0, 0, 0.14);
+    --peroot-text: #0f172a;
+    --peroot-text-dim: #334155;
+    --peroot-text-muted: #64748b;
+  }
+  .peroot-side-panel { box-shadow: -12px 0 50px rgba(15, 23, 42, 0.12); }
+  .peroot-radial-option { box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12); }
+  .peroot-sp-tab.active { text-shadow: none; color: #B45309; }
+  .peroot-sp-card:hover { box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08), 0 0 20px rgba(245, 158, 11, 0.06); }
+  .peroot-mode-dropdown, .peroot-export-content, .peroot-toast { background: #ffffff; color: #0f172a; border-color: rgba(0, 0, 0, 0.1); box-shadow: 0 12px 40px rgba(15, 23, 42, 0.14); }
+  .peroot-mode-item { color: #334155; }
+  .peroot-mode-item:hover { background: rgba(0, 0, 0, 0.04); color: #0f172a; }
+  .peroot-toast-success { border-color: rgba(34, 197, 94, 0.5); }
+  .peroot-toast-error { border-color: rgba(239, 68, 68, 0.5); }
+  .peroot-export-btn { color: #0f172a; border-color: rgba(0, 0, 0, 0.1); background: #f8fafc; }
+  .peroot-export-preview { background: #f8fafc; color: #334155; }
+}

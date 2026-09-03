@@ -245,15 +245,15 @@ export default function ExtensionPage() {
           <section className="py-20 text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground text-sm">
               <Chrome className="w-4 h-4" />
-              התוסף בפיתוח פעיל
+              {CHROME_STORE_URL ? "זמין בחנות Chrome" : "בבדיקות אחרונות לפני החנות"}
             </div>
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
-              הירשמו לקבלת עדכון כשהתוסף יצא
+              {CHROME_STORE_URL ? "התקינו את התוסף" : "נעדכן כשהתוסף בחנות"}
             </h2>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
-              נודיע לכם בדיוק כשהתוסף יצא לאוויר העולם.
-              <br />
-              נרשמים עכשיו מקבלים גישה מוקדמת.
+              {CHROME_STORE_URL
+                ? "ההתקנה לוקחת שניות. אחר כך מתחברים לחשבון Peroot מהתוסף, וזהו."
+                : "ההודעה תופיע במה חדש ובניוזלטר. בינתיים אפשר לשדרג פרומפטים באתר."}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
@@ -268,9 +268,9 @@ export default function ExtensionPage() {
                   התקנה מחנות Chrome
                 </ButtonLink>
               ) : (
-                <ButtonLink href="/?notify=extension" size="lg">
+                <ButtonLink href="/whats-new" size="lg">
                   <Chrome className="w-5 h-5" />
-                  עדכנו אותי
+                  מה חדש
                 </ButtonLink>
               )}
               <Link

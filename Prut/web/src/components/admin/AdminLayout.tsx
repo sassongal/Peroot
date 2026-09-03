@@ -28,6 +28,7 @@ import {
   MessageSquare,
   Megaphone,
   Languages,
+  Chrome,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -60,6 +61,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: "מודרציה", href: "/admin/moderation", icon: GitBranch },
     { name: "מה חדש", href: "/admin/whats-new", icon: Megaphone },
     { name: "שפות", href: "/admin/languages", icon: Languages },
+    { name: "תוסף", href: "/admin/extension", icon: Chrome },
     // ── System ──
     { name: t.admin.layout.engines, href: "/admin/engines", icon: Cpu },
     { name: "מאגר סקילים", href: "/admin/skills", icon: Sparkles },

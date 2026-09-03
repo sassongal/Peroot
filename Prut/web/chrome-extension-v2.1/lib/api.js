@@ -64,14 +64,15 @@
   async function streamEnhance(body, { onChunk, signal } = {}) {
     const headers = await root.getAuthHeaders({ "Content-Type": "application/json" });
     const t = withTimeout(90000);
-    const onAbort = () => t.signal; // external abort handled below
-    if (signal) signal.addEventListener("abort", onAbort, { once: true });
+    // The caller's abort (the stop button) and the 90s timeout both cancel.
+    const combined =
+      signal && typeof AbortSignal.any === "function" ? AbortSignal.any([signal, t.signal]) : signal || t.signal;
     try {
       let res = await fetch(`${SITE_URL}/api/enhance`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
-        signal: signal || t.signal,
+        signal: combined,
       });
       if (res.status === 401 && typeof root.refreshAccessToken === "function") {
         const fresh = await root.refreshAccessToken();
@@ -80,7 +81,7 @@
             method: "POST",
             headers: { ...headers, Authorization: `Bearer ${fresh}` },
             body: JSON.stringify(body),
-            signal: signal || t.signal,
+            signal: combined,
           });
         }
       }
