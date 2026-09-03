@@ -228,7 +228,7 @@ export function SettingsProfileSection({
         ) : credits ? (
           <>
             <div
-              className="w-full h-2.5 bg-(--surface-panel) rounded-full overflow-hidden"
+              className="w-full h-2.5 bg-(--glass-border) rounded-full overflow-hidden"
               role="progressbar"
               aria-valuenow={used}
               aria-valuemin={0}
