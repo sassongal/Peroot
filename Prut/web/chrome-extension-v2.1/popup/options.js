@@ -1,131 +1,161 @@
 /**
- * Peroot Extension — Options page logic.
- *
- * External script (no inline) so the page complies with MV3 CSP
- * `script-src 'self'`. Mirrors what was previously inline in options.html.
+ * Peroot Extension — options page (v3). Every control writes through
+ * lib/prefs.js, so the popup and the content scripts see the change at once.
  */
 (() => {
-  const store = chrome.storage.sync || chrome.storage.local;
+  const $ = (id) => document.getElementById(id);
+  const Prefs = self.PerootPrefs;
+  const Api = self.PerootApi;
 
-  function applyTheme(val) {
-    if (val === "system") {
-      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    } else {
-      document.documentElement.setAttribute("data-theme", val);
+  function applyTheme(theme) {
+    const resolved =
+      theme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        : theme;
+    document.documentElement.setAttribute("data-theme", resolved);
+  }
+  function setActive(selector, attr, value) {
+    document.querySelectorAll(selector).forEach((b) => b.classList.toggle("active", b.dataset[attr] === value));
+  }
+  let savedTimer = null;
+  function saved() {
+    const b = $("save-banner");
+    b.classList.add("show");
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => b.classList.remove("show"), 1600);
+  }
+  function setSwitch(id, on) {
+    $(id).setAttribute("aria-checked", on ? "true" : "false");
+  }
+
+  async function init() {
+    const prefs = await Prefs.getAll();
+    applyTheme(prefs.theme);
+    setActive("#theme-chips .seg", "themeVal", prefs.theme);
+    setActive("#lang-chips .seg", "lang", prefs.outputLanguage);
+    setActive("#mode-chips .chip-btn", "mode", prefs.mode);
+    setActive("#tone-chips .chip-btn", "tone", prefs.tone);
+    setSwitch("inline-toggle", prefs.inlineToolbar);
+    setSwitch("profile-lang-toggle", prefs.languageFromProfile);
+    try {
+      $("version-badge").textContent = `v${chrome.runtime.getManifest().version}`;
+    } catch {
+      /* ignore */
+    }
+    loadAccount();
+    loadNews();
+  }
+
+  async function loadAccount() {
+    const auth = await checkAuth();
+    if (!auth.authenticated) return;
+    const res = await Api.me();
+    if (!res.ok || !res.data) return;
+    const me = res.data;
+    const name = me.display_name || me.email || "";
+    $("account-name").textContent = name;
+    $("account-avatar").textContent = (name || "?").trim()[0]?.toUpperCase() || "?";
+    const tier = me.plan_tier === "admin" ? "מנהל" : me.plan_tier === "pro" ? "Pro" : "חינם";
+    $("account-meta").textContent = `${me.email || ""} · ${tier}`;
+    $("logout-btn").classList.remove("hidden");
+  }
+  $("logout-btn").addEventListener("click", async () => {
+    await clearAuth();
+    chrome.runtime.sendMessage({ type: "REFRESH_BADGE" }, () => void chrome.runtime.lastError);
+    $("account-name").textContent = "לא מחוברים";
+    $("account-meta").textContent = "פתחו את התוסף מסרגל הכלים כדי להתחבר";
+    $("account-avatar").textContent = "?";
+    $("logout-btn").classList.add("hidden");
+    saved();
+  });
+
+  async function loadNews() {
+    const res = await Api.announcements();
+    const list = $("news-list");
+    list.innerHTML = "";
+    const items = (res.data || []).filter((a) => !a.lang || a.lang === "he").slice(0, 4);
+    if (!items.length) {
+      list.innerHTML = '<div class="row"><div class="row-desc">אין עדכונים כרגע</div></div>';
+      return;
+    }
+    for (const a of items) {
+      const row = document.createElement("div");
+      row.className = "row";
+      const news = document.createElement("div");
+      news.className = "news";
+      const t = document.createElement("div");
+      t.className = "news-title";
+      t.textContent = a.title;
+      const b = document.createElement("div");
+      b.className = "news-body";
+      b.textContent = a.body || "";
+      news.append(t, b);
+      row.appendChild(news);
+      if (a.href) {
+        const link = document.createElement("a");
+        link.className = "btn btn-sm";
+        link.href = a.href.startsWith("http") ? a.href : `${Api.SITE_URL}${a.href}`;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = a.href_label || "פרטים";
+        row.appendChild(link);
+      }
+      list.appendChild(row);
     }
   }
 
-  function setActive(groupId, selector, attr, value) {
-    document.querySelectorAll(`#${groupId} ${selector}`).forEach((btn) => {
-      btn.classList.toggle("active", btn.getAttribute(attr) === value);
-    });
-  }
-
-  function showSaved() {
-    const banner = document.getElementById("save-banner");
-    if (!banner) return;
-    banner.classList.add("show");
-    setTimeout(() => banner.classList.remove("show"), 1800);
-  }
-
-  // Apply theme immediately on load (sync storage — follows the user across devices).
-  store.get(["peroot_theme_pref"], (syncPrefs) => {
-    const theme = syncPrefs.peroot_theme_pref || "dark";
-    applyTheme(theme);
-    setActive("theme-chips", "[data-theme-val]", "data-theme-val", theme);
-  });
-
-  chrome.storage.local.get(
-    ["peroot_last_mode", "peroot_last_tone", "peroot_output_language", "peroot_inline_btn"],
-    (localPrefs) => {
-      setActive(
-        "mode-chips",
-        "[data-mode-val]",
-        "data-mode-val",
-        localPrefs.peroot_last_mode || "STANDARD",
-      );
-      setActive(
-        "tone-chips",
-        "[data-tone-val]",
-        "data-tone-val",
-        localPrefs.peroot_last_tone || "Professional",
-      );
-      setActive(
-        "lang-chips",
-        "[data-lang-val]",
-        "data-lang-val",
-        localPrefs.peroot_output_language || "hebrew",
-      );
-      const toggle = document.getElementById("inline-btn-toggle");
-      if (toggle) toggle.checked = localPrefs.peroot_inline_btn !== false;
-    },
-  );
-
-  // Version badge
-  try {
-    const badge = document.getElementById("version-badge");
-    if (badge) badge.textContent = "v" + chrome.runtime.getManifest().version;
-  } catch {}
-
-  // Theme chips
-  document.querySelectorAll("[data-theme-val]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const val = btn.dataset.themeVal;
-      setActive("theme-chips", "[data-theme-val]", "data-theme-val", val);
-      store.set({ peroot_theme_pref: val });
-      applyTheme(val);
-      showSaved();
+  document.querySelectorAll("#theme-chips .seg").forEach((b) => {
+    b.addEventListener("click", async () => {
+      await Prefs.set({ theme: b.dataset.themeVal });
+      setActive("#theme-chips .seg", "themeVal", b.dataset.themeVal);
+      applyTheme(b.dataset.themeVal);
+      saved();
     });
   });
-
-  // Mode chips
-  document.querySelectorAll("[data-mode-val]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const val = btn.dataset.modeVal;
-      setActive("mode-chips", "[data-mode-val]", "data-mode-val", val);
-      chrome.storage.local.set({ peroot_last_mode: val });
-      showSaved();
+  document.querySelectorAll("#lang-chips .seg").forEach((b) => {
+    b.addEventListener("click", async () => {
+      await Prefs.set({ outputLanguage: b.dataset.lang, languageFromProfile: false });
+      setActive("#lang-chips .seg", "lang", b.dataset.lang);
+      setSwitch("profile-lang-toggle", false);
+      saved();
     });
   });
-
-  // Tone chips
-  document.querySelectorAll("[data-tone-val]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const val = btn.dataset.toneVal;
-      setActive("tone-chips", "[data-tone-val]", "data-tone-val", val);
-      chrome.storage.local.set({ peroot_last_tone: val });
-      showSaved();
+  document.querySelectorAll("#mode-chips .chip-btn").forEach((b) => {
+    b.addEventListener("click", async () => {
+      await Prefs.set({ mode: b.dataset.mode });
+      setActive("#mode-chips .chip-btn", "mode", b.dataset.mode);
+      saved();
     });
   });
-
-  // Language chips
-  document.querySelectorAll("[data-lang-val]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const val = btn.dataset.langVal;
-      setActive("lang-chips", "[data-lang-val]", "data-lang-val", val);
-      chrome.storage.local.set({ peroot_output_language: val });
-      showSaved();
+  document.querySelectorAll("#tone-chips .chip-btn").forEach((b) => {
+    b.addEventListener("click", async () => {
+      await Prefs.set({ tone: b.dataset.tone });
+      setActive("#tone-chips .chip-btn", "tone", b.dataset.tone);
+      saved();
     });
   });
-
-  // Inline button toggle
-  document.getElementById("inline-btn-toggle")?.addEventListener("change", (e) => {
-    chrome.storage.local.set({ peroot_inline_btn: e.target.checked });
-    showSaved();
+  $("inline-toggle").addEventListener("click", async (e) => {
+    const on = e.currentTarget.getAttribute("aria-checked") !== "true";
+    setSwitch("inline-toggle", on);
+    await Prefs.set({ inlineToolbar: on });
+    saved();
   });
-
-  // Refresh config from server
-  document.getElementById("peroot-refresh-config")?.addEventListener("click", () => {
-    const status = document.getElementById("peroot-refresh-config-status");
-    if (status) status.textContent = "מרענן…";
+  $("profile-lang-toggle").addEventListener("click", async (e) => {
+    const on = e.currentTarget.getAttribute("aria-checked") !== "true";
+    setSwitch("profile-lang-toggle", on);
+    await Prefs.set({ languageFromProfile: on });
+    saved();
+  });
+  $("refresh-config").addEventListener("click", () => {
+    const status = $("refresh-status");
+    status.textContent = "מרענן...";
     chrome.runtime.sendMessage({ type: "REFRESH_CONFIG" }, (resp) => {
-      if (chrome.runtime.lastError || !resp?.ok) {
-        if (status) status.textContent = "שגיאה — נסה שוב";
-      } else {
-        if (status) status.textContent = "✓ עודכן מהשרת";
-        showSaved();
-      }
+      status.textContent = chrome.runtime.lastError || !resp?.ok ? "לא הצליח, נסו שוב" : "עודכן מהשרת";
+      if (resp?.ok) saved();
     });
   });
+
+  document.addEventListener("DOMContentLoaded", init);
 })();

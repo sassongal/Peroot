@@ -71,3 +71,4 @@ repomix.config.json
 
 # Local-only diagnostic output
 gsc-priority-submit.txt
+dist/

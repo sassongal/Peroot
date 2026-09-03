@@ -1,381 +1,193 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html dir="rtl" lang="he" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Peroot — הגדרות</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap">
+  <meta name="color-scheme" content="dark light">
+  <title>Peroot: הגדרות התוסף</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="popup.css">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #07070a;
-      --surface: rgba(255,255,255,0.04);
-      --border: rgba(255,255,255,0.07);
-      --amber: #f59e0b;
-      --text: #fafafa;
-      --text-muted: #a1a1aa;
-      --success: #22c55e;
-      --radius: 10px;
-    }
-
-    [data-theme="light"] {
-      --bg: #f8f8f8;
-      --surface: rgba(0,0,0,0.04);
-      --border: rgba(0,0,0,0.1);
-      --text: #18181b;
-      --text-muted: #52525b;
-    }
-
-    body {
-      font-family: 'Alef', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 0;
-      direction: rtl;
-    }
-
-    .page {
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 32px 24px 60px;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 36px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .header-logo { width: 36px; height: 36px; border-radius: 8px; }
-
-    .header-text h1 {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--amber);
-    }
-
-    .header-text p {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .section {
-      margin-bottom: 28px;
-    }
-
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-
-    .option-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .option-row:last-child { border-bottom: none; }
-
-    .option-label { font-size: 14px; font-weight: 600; }
-    .option-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-
-    .chip-group {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: flex-start;
-    }
-
-    .chip {
-      padding: 5px 12px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text-muted);
-      font-family: 'Alef', sans-serif;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .chip:hover { border-color: rgba(245,158,11,0.4); color: var(--text); }
-
-    .chip.active {
-      background: rgba(245,158,11,0.12);
-      border-color: rgba(245,158,11,0.5);
-      color: var(--amber);
-      font-weight: 700;
-    }
-
-    .save-banner {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(60px);
-      background: var(--success);
-      color: #fff;
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 700;
-      transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .save-banner.show { transform: translateX(-50%) translateY(0); }
-
-    .about-row {
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .about-row:last-child { border-bottom: none; }
-
-    .about-row a { color: var(--amber); text-decoration: none; }
-    .about-row a:hover { text-decoration: underline; }
-
-    .version-badge {
-      display: inline-block;
-      background: rgba(245,158,11,0.1);
-      border: 1px solid rgba(245,158,11,0.25);
-      border-radius: 6px;
-      padding: 2px 8px;
-      font-size: 11px;
-      color: var(--amber);
-      font-weight: 700;
-      margin-right: 6px;
-    }
-
-    /* Toggle Switch */
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 40px;
-      height: 22px;
-      flex-shrink: 0;
-    }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-thumb {
-      position: absolute;
-      inset: 0;
-      background: var(--border);
-      border-radius: 22px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .toggle-thumb::after {
-      content: '';
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background: #fff;
-      border-radius: 50%;
-      top: 3px;
-      left: 3px;
-      transition: transform 0.2s;
-    }
-    .toggle-switch input:checked + .toggle-thumb { background: var(--amber); }
-    .toggle-switch input:checked + .toggle-thumb::after { transform: translateX(18px); }
-
-    /* Keyboard badge */
-    .kbd {
-      display: inline-block;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-size: 11px;
-      font-family: monospace;
-      color: var(--text);
-    }
-
-    /* Link button */
-    .btn-link {
-      display: inline-block;
-      padding: 5px 12px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--amber);
-      font-family: 'Alef', sans-serif;
-      font-size: 12px;
-      text-decoration: none;
-      white-space: nowrap;
-      transition: border-color 0.15s;
-      flex-shrink: 0;
-    }
-    .btn-link:hover { border-color: rgba(245,158,11,0.5); }
+    html, body { width: auto; max-height: none; }
+    body { min-height: 100vh; }
+    .page { max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; display: flex; flex-direction: column; gap: 22px; }
+    .page-head { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .page-head img { width: 40px; height: 40px; border-radius: 10px; }
+    .page-head h1 { font-size: 20px; }
+    .page-head p { color: var(--muted); font-size: 13px; }
+    .section { display: flex; flex-direction: column; gap: 8px; }
+    .section h2 { font-size: 12px; font-weight: 700; color: var(--muted); padding-inline-start: 2px; }
+    .card-list { border: 1px solid var(--border); border-radius: var(--radius); background: var(--glass); overflow: hidden; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .row:last-child { border-bottom: 0; }
+    .row-text { min-width: 0; }
+    .row-title { font-weight: 700; font-size: 14px; }
+    .row-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .switch { position: relative; width: 44px; height: 26px; border-radius: 999px; background: var(--glass-strong); border: 1px solid var(--border); transition: background 0.2s; flex-shrink: 0; }
+    .switch::after { content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.3); transition: transform 0.2s var(--ease); }
+    .switch[aria-checked="true"] { background: var(--gold); border-color: var(--gold); }
+    .switch[aria-checked="true"]::after { transform: translateX(-18px); }
+    .saved { position: fixed; bottom: 20px; inset-inline-start: 50%; transform: translate(50%, 20px); opacity: 0; padding: 8px 16px; border-radius: 999px; background: var(--gold); color: #080808; font-weight: 700; font-size: 12px; transition: opacity 0.2s, transform 0.2s var(--ease); pointer-events: none; }
+    .saved.show { opacity: 1; transform: translate(50%, 0); }
+    .account { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--gold); color: #080808; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .news { display: flex; flex-direction: column; gap: 4px; }
+    .news-title { font-weight: 700; font-size: 13px; }
+    .news-body { font-size: 12px; color: var(--muted); }
+    .kbd-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
   </style>
 </head>
 <body>
   <div class="page">
-    <div class="header">
-      <img src="../icons/icon-128.png" alt="Peroot" class="header-logo">
-      <div class="header-text">
-        <h1>Peroot</h1>
-        <p>הגדרות תוסף</p>
+    <header class="page-head">
+      <img src="../icons/icon-128.png" alt="">
+      <div>
+        <h1>הגדרות Peroot</h1>
+        <p>ההעדפות נשמרות בחשבון Chrome ועוקבות אחריכם בין מחשבים</p>
       </div>
-    </div>
+    </header>
 
-    <!-- Theme -->
-    <div class="section">
-      <div class="section-title">ערכת צבעים</div>
-      <div class="card">
-        <div class="option-row">
-          <div>
-            <div class="option-label">מצב תצוגה</div>
-            <div class="option-desc">החל על חלון התוסף</div>
+    <section class="section" id="account-section">
+      <h2>החשבון</h2>
+      <div class="card-list">
+        <div class="row">
+          <div class="account">
+            <div class="avatar" id="account-avatar">?</div>
+            <div class="row-text">
+              <div class="row-title" id="account-name">לא מחוברים</div>
+              <div class="row-desc" id="account-meta">פתחו את התוסף מסרגל הכלים כדי להתחבר</div>
+            </div>
           </div>
-          <div class="chip-group" id="theme-chips">
-            <button class="chip" data-theme-val="dark">כהה</button>
-            <button class="chip" data-theme-val="light">בהיר</button>
-            <button class="chip" data-theme-val="system">מערכת</button>
+          <div class="chips">
+            <a class="btn btn-sm" href="https://www.peroot.space/settings" target="_blank" rel="noopener">הגדרות החשבון באתר</a>
+            <button class="btn btn-sm hidden" id="logout-btn" type="button">התנתקות</button>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Default Mode -->
-    <div class="section">
-      <div class="section-title">מצב ברירת מחדל</div>
-      <div class="card">
-        <div class="option-row">
-          <div>
-            <div class="option-label">מצב שדרוג</div>
-            <div class="option-desc">מצבי Pro דורשים מנוי Pro</div>
+    <section class="section">
+      <h2>ברירות מחדל לשדרוג</h2>
+      <div class="card-list">
+        <div class="row">
+          <div class="row-text">
+            <div class="row-title">שפת הפלט</div>
+            <div class="row-desc">"אוטו" מזהה את שפת הטקסט. הבחירה בפרופיל באתר מסונכרנת לכאן.</div>
           </div>
-          <div class="chip-group" id="mode-chips">
-            <button class="chip" data-mode-val="STANDARD">רגיל</button>
-            <button class="chip" data-mode-val="DEEP_RESEARCH">מחקר</button>
-            <button class="chip" data-mode-val="IMAGE_GENERATION">תמונה</button>
-            <button class="chip" data-mode-val="VIDEO_GENERATION">וידאו</button>
-            <button class="chip" data-mode-val="AGENT_BUILDER">סוכן</button>
+          <div class="segmented" id="lang-chips">
+            <button class="seg" data-lang="hebrew" type="button">עברית</button>
+            <button class="seg" data-lang="english" type="button">EN</button>
+            <button class="seg" data-lang="arabic" type="button">ع</button>
+            <button class="seg" data-lang="russian" type="button">RU</button>
+            <button class="seg" data-lang="auto" type="button">אוטו</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row-text">
+            <div class="row-title">מצב</div>
+            <div class="row-desc">המצבים המתקדמים פתוחים למנויי Pro</div>
+          </div>
+          <div class="chips" id="mode-chips">
+            <button class="chip-btn" data-mode="STANDARD" type="button">רגיל</button>
+            <button class="chip-btn" data-mode="DEEP_RESEARCH" type="button">מחקר</button>
+            <button class="chip-btn" data-mode="IMAGE_GENERATION" type="button">תמונה</button>
+            <button class="chip-btn" data-mode="VIDEO_GENERATION" type="button">וידאו</button>
+            <button class="chip-btn" data-mode="AGENT_BUILDER" type="button">סוכן</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row-text">
+            <div class="row-title">טון</div>
+          </div>
+          <div class="chips" id="tone-chips">
+            <button class="chip-btn" data-tone="Professional" type="button">מקצועי</button>
+            <button class="chip-btn" data-tone="Casual" type="button">יומיומי</button>
+            <button class="chip-btn" data-tone="Creative" type="button">יצירתי</button>
+            <button class="chip-btn" data-tone="Persuasive" type="button">משכנע</button>
+            <button class="chip-btn" data-tone="Academic" type="button">אקדמי</button>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Default Tone -->
-    <div class="section">
-      <div class="section-title">טון ברירת מחדל</div>
-      <div class="card">
-        <div class="option-row">
-          <div>
-            <div class="option-label">טון שדרוג</div>
-            <div class="option-desc">ניתן לשנות בכל שדרוג</div>
+    <section class="section">
+      <h2>מראה והתנהגות</h2>
+      <div class="card-list">
+        <div class="row">
+          <div class="row-text">
+            <div class="row-title">ערכת צבעים</div>
+            <div class="row-desc">"מערכת" עוקב אחרי הגדרת המחשב</div>
           </div>
-          <div class="chip-group" id="tone-chips">
-            <button class="chip" data-tone-val="Professional">מקצועי</button>
-            <button class="chip" data-tone-val="Casual">יומיומי</button>
-            <button class="chip" data-tone-val="Creative">יצירתי</button>
-            <button class="chip" data-tone-val="Persuasive">משכנע</button>
-            <button class="chip" data-tone-val="Academic">אקדמי</button>
+          <div class="segmented" id="theme-chips">
+            <button class="seg" data-theme-val="system" type="button">מערכת</button>
+            <button class="seg" data-theme-val="dark" type="button">כהה</button>
+            <button class="seg" data-theme-val="light" type="button">בהיר</button>
           </div>
         </div>
+        <div class="row">
+          <div class="row-text">
+            <div class="row-title">כפתור "שדרוג" צף בכל שדה טקסט</div>
+            <div class="row-desc">מופיע כשמתמקדים בשדה עם טקסט, בכל אתר. ב-ChatGPT, Claude ו-Gemini יש כפתור קבוע בכל מקרה.</div>
+          </div>
+          <button class="switch" id="inline-toggle" type="button" role="switch" aria-checked="true" aria-label="כפתור שדרוג צף"></button>
+        </div>
+        <div class="row">
+          <div class="row-text">
+            <div class="row-title">שפה מהפרופיל</div>
+            <div class="row-desc">כשמשנים את שפת הפלט בפרופיל באתר, התוסף מאמץ אותה</div>
+          </div>
+          <button class="switch" id="profile-lang-toggle" type="button" role="switch" aria-checked="true" aria-label="שפה מהפרופיל"></button>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Output Language -->
-    <div class="section">
-      <div class="section-title">שפת פלט</div>
-      <div class="card">
-        <div class="option-row">
-          <div>
-            <div class="option-label">שפת הפרומפט המשודרג</div>
-            <div class="option-desc">בחר בעברית, אנגלית, או לפי שפת הקלט</div>
-          </div>
-          <div class="chip-group" id="lang-chips">
-            <button class="chip" data-lang-val="hebrew">עברית</button>
-            <button class="chip" data-lang-val="english">English</button>
-            <button class="chip" data-lang-val="auto">אוטומטי</button>
-          </div>
-        </div>
+    <section class="section">
+      <h2>קיצורי מקשים</h2>
+      <div class="card-list">
+        <div class="row"><div class="row-title">פתיחת התוסף</div><div class="kbd-row"><kbd>Alt</kbd>+<kbd>P</kbd></div></div>
+        <div class="row"><div class="row-title">שדרוג טקסט מסומן, בכל אתר</div><div class="kbd-row"><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd></div></div>
+        <div class="row"><div class="row-title">שדרוג בתוך ChatGPT, Claude, Gemini</div><div class="kbd-row"><kbd>Ctrl</kbd>+<kbd>M</kbd></div></div>
+        <div class="row"><div class="row-title">ספרייה בתוך הצ'אט</div><div class="kbd-row"><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd></div></div>
+        <div class="row"><div class="row-desc">לשינוי הקיצורים: chrome://extensions/shortcuts</div></div>
       </div>
-    </div>
+    </section>
 
-    <!-- Productivity -->
-    <div class="section">
-      <div class="section-title">פרודוקטיביות</div>
-      <div class="card">
-        <div class="option-row">
-          <div>
-            <div class="option-label">כפתור שדרוג מהיר</div>
-            <div class="option-desc">הצג כפתור ⚡ שדרג בשדות טקסט בכל אתר</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="inline-btn-toggle" checked>
-            <span class="toggle-thumb"></span>
-          </label>
-        </div>
-        <div class="option-row">
-          <div>
-            <div class="option-label">קיצורי מקשים</div>
-            <div class="option-desc"><kbd class="kbd">Alt+P</kbd> פתח · <kbd class="kbd">Alt+Shift+E</kbd> שדרג טקסט מסומן</div>
-          </div>
-          <a href="chrome://extensions/shortcuts" target="_blank" class="btn-link">שנה קיצורים ›</a>
-        </div>
+    <section class="section" id="news-section">
+      <h2>מה חדש ב-Peroot</h2>
+      <div class="card-list" id="news-list">
+        <div class="row"><div class="row-desc">טוען...</div></div>
       </div>
-    </div>
+    </section>
 
-    <!-- Sync -->
-    <div class="section">
-      <div class="section-title">סנכרון הגדרות שרת</div>
-      <div class="card">
-        <div class="option-row">
-          <div>
-            <div class="option-label">רענן הגדרות מהשרת</div>
-            <div class="option-desc">מושך את רישום הסלקטורים ופרופילי המודלים העדכניים</div>
+    <section class="section">
+      <h2>תחזוקה</h2>
+      <div class="card-list">
+        <div class="row">
+          <div class="row-text">
+            <div class="row-title">רענון ההגדרות מהשרת</div>
+            <div class="row-desc">מזהי השדות של ChatGPT, Claude ו-Gemini מתעדכנים מהשרת. מתרענן לבד פעם ביום.</div>
           </div>
-          <button id="peroot-refresh-config" class="btn-link" type="button">רענן עכשיו</button>
+          <div class="chips">
+            <span class="hint" id="refresh-status"></span>
+            <button class="btn btn-sm" id="refresh-config" type="button">רענון</button>
+          </div>
         </div>
-        <div class="about-row" id="peroot-refresh-config-status" style="min-height:18px;"></div>
-      </div>
-    </div>
-
-    <!-- About -->
-    <div class="section">
-      <div class="section-title">אודות</div>
-      <div class="card">
-        <div class="about-row">
-          <span class="version-badge" id="version-badge">v1.3.0</span>
-          Peroot — שדרוג פרומפטים עם AI
-        </div>
-        <div class="about-row">
-          <a href="https://www.peroot.space" target="_blank" rel="noopener">peroot.space</a>
-          &nbsp;·&nbsp;
-          <a href="https://www.peroot.space/privacy" target="_blank" rel="noopener">מדיניות פרטיות</a>
-        </div>
-        <div class="about-row">
-          קיצורי מקשים: <strong>Alt+P</strong> פתח תוסף · <strong>Alt+Shift+E</strong> שדרג טקסט מסומן
+        <div class="row">
+          <div class="row-text">
+            <div class="row-title">גרסה</div>
+            <div class="row-desc"><span class="readout" id="version-badge"></span> · <a href="https://www.peroot.space/extension" target="_blank" rel="noopener">peroot.space/extension</a> · <a href="https://www.peroot.space/privacy" target="_blank" rel="noopener">פרטיות</a></div>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   </div>
+  <div class="saved" id="save-banner" role="status" aria-live="polite">נשמר</div>
 
-  <div class="save-banner" id="save-banner">✓ הגדרות נשמרו</div>
-
+  <script src="../lib/auth.js"></script>
+  <script src="../lib/language.js"></script>
+  <script src="../lib/prompt-text.js"></script>
+  <script src="../lib/prefs.js"></script>
+  <script src="../lib/api.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

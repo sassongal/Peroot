@@ -1,8 +1,11 @@
 /**
- * Peroot AI Chat Injector v3.0
+ * Peroot AI Chat Injector v3.1
  *
- * Injects Peroot enhancement button + side panel into AI chat pages.
- * Supports: ChatGPT, Claude, Gemini, DeepSeek, Perplexity
+ * The gold button beside the composer on ChatGPT, Claude and Gemini. One
+ * click enhances what is written; the result streams into a preview card
+ * above the composer and is inserted when it is complete. The menu opens
+ * modes, the library and conversation export. Preferences, language and
+ * stream parsing come from lib/prefs.js, lib/language.js, lib/prompt-text.js.
  */
 (() => {
   if (window.__peerootAIChatInjected) return;
@@ -255,23 +258,10 @@
   const autoImagePlatform = SITE_IMAGE_PLATFORM_MAP[detectedSiteKey] || "general";
   const autoVideoPlatform = SITE_VIDEO_PLATFORM_MAP[detectedSiteKey] || "general";
 
-  // ── Output Sanitizer ──────────────────────────────────────────────────────
-  function sanitizeOutput(text) {
-    const META_PREFIXES = [
-      /^here'?s?\s+(your|the|a)\s+.*?prompt.*?:?\s*\n?/i,
-      /^i'?ve\s+(created|crafted|generated).*?:?\s*\n?/i,
-      /^below\s+is.*?:?\s*\n?/i,
-      /^the\s+following\s+.*?prompt.*?:?\s*\n?/i,
-      /^to\s+(create|generate)\s+this.*?:?\s*\n?/i,
-      /^כתוב את הפרומפט הבא:?\s*\n?/,
-      /^הנה הפרומפט.*?:?\s*\n?/,
-      /^פרומפט מוכן.*?:?\s*\n?/,
-    ];
-    let cleaned = text;
-    for (const pattern of META_PREFIXES) {
-      cleaned = cleaned.replace(pattern, "");
-    }
-    return cleaned.trimStart();
+  // ── Output cleaning: one implementation, shared with the popup ──────────
+  function cleanOutput(raw, mode, imagePlatform) {
+    const json = mode === "IMAGE_GENERATION" && ["stable-diffusion", "nanobanana"].includes(imagePlatform);
+    return Text.cleanForDisplay(raw, { json });
   }
 
   // ── State ──────────────────────────────────────────────────────────────────
@@ -289,19 +279,44 @@
 
   // ── API Proxy (routes through service worker to avoid CORS) ──────────
 
+  const Prefs = window.PerootPrefs;
+  const Lang = window.PerootLanguage;
+  const Text = window.PerootPromptText;
+
   /**
-   * Resolve the effective output language from the stored preference and the
-   * input text.  When the preference is "auto", detect the dominant script:
-   * if >60% of alphabetic characters are Latin the user is writing in English
-   * so the output should match. Otherwise leave it unset (server defaults to Hebrew).
+   * Streamed enhance through the service worker (a content script cannot
+   * fetch the site itself). Resolves with { ok, status, text, cache, error }.
    */
-  function resolveOutputLanguage(pref, inputText) {
-    if (pref === "english") return "english";
-    if (pref !== "auto") return null; // hebrew — no override needed
-    const hebrew = (inputText.match(/[\u05D0-\u05EA]/g) || []).length;
-    const latin = (inputText.match(/[a-zA-Z]/g) || []).length;
-    const total = hebrew + latin;
-    return total > 0 && latin / total > 0.6 ? "english" : null;
+  function streamEnhance(body, onChunk) {
+    return new Promise((resolve) => {
+      let full = "";
+      let settled = false;
+      let port;
+      try {
+        port = chrome.runtime.connect({ name: "peroot-stream" });
+      } catch (err) {
+        return resolve({ ok: false, status: 0, error: err?.message || "no worker" });
+      }
+      const finish = (r) => {
+        if (settled) return;
+        settled = true;
+        try {
+          port.disconnect();
+        } catch {
+          /* already gone */
+        }
+        resolve(r);
+      };
+      port.onMessage.addListener((m) => {
+        if (m.type === "chunk") {
+          full += m.text;
+          if (onChunk) onChunk(full);
+        } else if (m.type === "done") finish({ ok: true, status: m.status, text: full, cache: m.cache });
+        else if (m.type === "error") finish({ ok: false, status: m.status, error: m.error });
+      });
+      port.onDisconnect.addListener(() => finish({ ok: false, status: 0, error: "disconnected" }));
+      port.postMessage({ type: "start", path: "/api/enhance", body });
+    });
   }
 
   function apiFetch(path, options = {}) {
@@ -462,132 +477,216 @@
     if (isEnhancing) return;
     const inputEl = findInputElement();
     if (!inputEl) {
-      showToast("לא נמצא שדה קלט — כתוב טקסט ונסה שוב", "error");
+      showToast("לא נמצא שדה כתיבה. כתבו משהו ונסו שוב", "error");
       return;
     }
-
     const text = currentSite.getInputText(inputEl).trim();
     if (!text || text.length < 3) {
-      showToast("כתוב לפחות 3 תווים כדי לשדרג", "error");
+      showToast("כתבו לפחות כמה מילים לפני השדרוג", "error");
       return;
     }
 
     isEnhancing = true;
     updateButtonState("loading");
-    showToast("משדרג...", "info");
+    const prefs = await Prefs.getAll();
+    const mode = prefs.mode || "STANDARD";
+    const imgPlat = prefs.imagePlatform || selectedImagePlatform;
+    const vidPlat = prefs.videoPlatform || selectedVideoPlatform;
+    const outputLang = Lang.resolveOutputLanguage(prefs.outputLanguage, text);
+    selectedMode = mode;
+    updateRadialHalo();
 
+    const targetModel = ["chatgpt", "claude", "gemini"].includes(detectedSiteKey) ? detectedSiteKey : "general";
+    let modelProfileSlug = null;
     try {
-      // Read tone/mode/platform from shared storage so injector stays in sync
-      // with whatever the user last configured in the popup.
-      const stored = await new Promise((r) =>
-        chrome.storage.local.get(
-          [
-            "peroot_last_tone",
-            "peroot_last_mode",
-            "peroot_last_image_platform",
-            "peroot_last_video_platform",
-            "peroot_output_language",
-          ],
-          r,
-        ),
-      );
-      const tone = stored.peroot_last_tone || "Professional";
-      const mode = stored.peroot_last_mode || selectedMode;
-      const imgPlat = stored.peroot_last_image_platform || selectedImagePlatform;
-      const vidPlat = stored.peroot_last_video_platform || selectedVideoPlatform;
-      const outputLang = resolveOutputLanguage(stored.peroot_output_language || "hebrew", text);
+      const overrideSlug = await (window.PerootTargetModel?.getOverride?.(location.hostname) || Promise.resolve(null));
+      modelProfileSlug =
+        window.PerootTargetModel?.resolveTargetModel?.({
+          hostname: location.hostname,
+          registry: activeRegistry,
+          override: overrideSlug,
+        }) ||
+        currentSite.profile_slug ||
+        null;
+    } catch {
+      modelProfileSlug = currentSite.profile_slug || null;
+    }
 
-      // Map the detected site to target_model so the server tunes the
-      // enhanced prompt for the exact platform the user is sitting on.
-      // detectedSiteKey is set at module init (line ~227) via SITES.
-      const targetModel =
-        detectedSiteKey === "chatgpt"
-          ? "chatgpt"
-          : detectedSiteKey === "claude"
-            ? "claude"
-            : detectedSiteKey === "gemini"
-              ? "gemini"
-              : "general";
-
-      // Resolve target model_profile_slug (manual override beats host match).
-      let modelProfileSlug = null;
-      try {
-        const overrideSlug = await (window.PerootTargetModel?.getOverride?.(location.hostname) ||
-          Promise.resolve(null));
-        modelProfileSlug =
-          window.PerootTargetModel?.resolveTargetModel?.({
-            hostname: location.hostname,
-            registry: activeRegistry,
-            override: overrideSlug,
-          }) ||
-          currentSite.profile_slug ||
-          null;
-      } catch {
-        modelProfileSlug = currentSite.profile_slug || null;
-      }
-
-      // Route through service worker to avoid CORS
-      const res = await apiFetch("/api/enhance", {
-        method: "POST",
-        body: {
+    const preview = showPreview();
+    let lastPaint = 0;
+    try {
+      const res = await streamEnhance(
+        {
           prompt: text,
-          tone,
+          tone: prefs.tone || "Professional",
           category: "כללי",
           capability_mode: mode,
           target_model: targetModel,
           ...(modelProfileSlug && { model_profile_slug: modelProfileSlug }),
-          ...(outputLang === "english" && { output_language: "english" }),
+          ...(outputLang && { output_language: outputLang }),
           ...(mode === "IMAGE_GENERATION" && { mode_params: { image_platform: imgPlat } }),
           ...(mode === "VIDEO_GENERATION" && { mode_params: { video_platform: vidPlat } }),
         },
-        stream: true,
-      });
+        (full) => {
+          const now = Date.now();
+          if (now - lastPaint < 120) return;
+          lastPaint = now;
+          preview.setText(cleanOutput(full, mode, imgPlat), true);
+        },
+      );
 
-      if (res.status === 401) {
-        showToast("התחבר ל-peroot.space כדי לרענן את ההתחברות", "error");
-        updateButtonState("idle");
-        isEnhancing = false;
-        return;
-      }
-      if (res.status === 403) {
-        showToast("אין קרדיטים. שדרג ל-Pro", "error");
-        updateButtonState("idle");
-        isEnhancing = false;
-        return;
-      }
       if (!res.ok) {
-        showToast("שגיאה בשדרוג", "error");
+        preview.close();
+        if (res.status === 401) showToast("פג תוקף ההתחברות. פתחו את התוסף והתחברו שוב", "error");
+        else if (res.status === 403) showToast(res.error || "נגמרו הקרדיטים להיום", "error");
+        else if (res.status === 429) showToast("יותר מדי בקשות. נסו שוב בעוד רגע", "error");
+        else showToast("השדרוג נכשל. נסו שוב", "error");
         updateButtonState("idle");
         isEnhancing = false;
         return;
       }
 
-      // Result comes as full text from proxy — strip metadata tags + sanitize meta-text
-      const raw = (res.text || "").split("[GENIUS_QUESTIONS]")[0];
-      const stripped = raw
-        .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, "")
-        .replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, "")
-        .trim();
-      const cleaned = sanitizeOutput(stripped);
-      if (cleaned) {
-        currentSite.setInputText(inputEl, cleaned);
-        inputEl.focus();
-        updateButtonState("success");
-        showToast(
-          "\u05D4\u05E4\u05E8\u05D5\u05DE\u05E4\u05D8 \u05E9\u05D5\u05D3\u05E8\u05D2!",
-          "success",
-        );
-        // Note: /api/enhance already saves to history server-side — no duplicate sync needed
+      const cleaned = cleanOutput(res.text || "", mode, imgPlat);
+      if (!cleaned) {
+        preview.close();
+        showToast("לא התקבלה תוצאה. נסו שוב", "error");
+        return;
       }
-    } catch (err) {
-      showToast("שגיאת רשת — בדוק חיבור לאינטרנט", "error");
+      preview.setText(cleaned, false);
+      const target = findInputElement() || inputEl;
+      currentSite.setInputText(target, cleaned);
+      target.focus();
+      updateButtonState("success");
+      preview.done(cleaned, res.cache === "score-gate");
+      const questions = Text.parseGeniusQuestions(res.text || "");
+      if (questions.length) preview.showQuestions(questions, text, cleaned, { mode, imgPlat, tone: prefs.tone, targetModel, modelProfileSlug, outputLang });
+    } catch {
+      preview.close();
+      showToast("שגיאת רשת. בדקו את החיבור לאינטרנט", "error");
       updateButtonState("idle");
     } finally {
       setTimeout(() => {
         isEnhancing = false;
         updateButtonState("idle");
-      }, 2000);
+      }, 1500);
     }
+  }
+
+  // ── Preview card above the composer ─────────────────────────────────────
+  function showPreview() {
+    document.getElementById("peroot-preview")?.remove();
+    const card = document.createElement("div");
+    card.id = "peroot-preview";
+    card.className = "peroot-preview";
+    card.setAttribute("role", "status");
+    card.setAttribute("aria-live", "polite");
+    card.innerHTML = `
+      <div class="peroot-preview-head">
+        <span class="peroot-preview-title"><img src="${LOGO_URL}" alt="" width="14" height="14"> Peroot משדרג</span>
+        <span class="peroot-preview-meta"></span>
+        <button class="peroot-preview-close" type="button" aria-label="סגירה">✕</button>
+      </div>
+      <div class="peroot-preview-text peroot-streaming" dir="auto"></div>
+      <div class="peroot-preview-actions" hidden>
+        <button class="peroot-preview-btn" data-act="copy" type="button">העתקה</button>
+        <button class="peroot-preview-btn" data-act="insert" type="button">הכנסה שוב</button>
+      </div>
+      <div class="peroot-preview-questions" hidden></div>
+    `;
+    const anchor = currentSite.inputArea?.() || findInputElement()?.closest("form") || document.body;
+    const host = anchor && anchor !== document.body ? anchor : document.body;
+    if (host !== document.body && window.getComputedStyle(host).position === "static") host.style.position = "relative";
+    host.appendChild(card);
+    if (host === document.body) card.classList.add("peroot-preview-fixed");
+    const textEl = card.querySelector(".peroot-preview-text");
+    const meta = card.querySelector(".peroot-preview-meta");
+    const started = Date.now();
+    const timer = setInterval(() => (meta.textContent = `${((Date.now() - started) / 1000).toFixed(1)}s`), 200);
+    let autoClose = null;
+    const api = {
+      setText(t, streaming) {
+        textEl.textContent = t;
+        textEl.classList.toggle("peroot-streaming", !!streaming);
+        textEl.dir = Lang.textDirection(t);
+        textEl.scrollTop = textEl.scrollHeight;
+      },
+      done(finalText, scoreGate) {
+        clearInterval(timer);
+        meta.textContent = scoreGate ? "כבר חזק, בלי AI" : `${((Date.now() - started) / 1000).toFixed(1)}s`;
+        card.querySelector(".peroot-preview-title").lastChild.textContent = " הוכנס לתיבה";
+        const actions = card.querySelector(".peroot-preview-actions");
+        actions.hidden = false;
+        actions.querySelector('[data-act="copy"]').addEventListener("click", async () => {
+          await navigator.clipboard.writeText(finalText);
+          showToast("הועתק", "success");
+        });
+        actions.querySelector('[data-act="insert"]').addEventListener("click", () => {
+          const t = findInputElement();
+          if (t) {
+            currentSite.setInputText(t, finalText);
+            t.focus();
+          }
+        });
+        autoClose = setTimeout(() => api.close(), 9000);
+        card.addEventListener("mouseenter", () => clearTimeout(autoClose));
+      },
+      showQuestions(questions, original, enhanced, ctx) {
+        clearTimeout(autoClose);
+        const box = card.querySelector(".peroot-preview-questions");
+        box.hidden = false;
+        box.innerHTML = '<div class="peroot-preview-qtitle">לדייק עוד? בחרו תשובה:</div>';
+        const top = [...questions].sort((a, b) => (b.priority || 0) - (a.priority || 0)).slice(0, 2);
+        for (const q of top) {
+          const row = document.createElement("div");
+          row.className = "peroot-preview-q";
+          const qt = document.createElement("span");
+          qt.textContent = q.question;
+          row.appendChild(qt);
+          for (const ex of (q.examples || []).slice(0, 3)) {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "peroot-preview-chip";
+            b.textContent = ex;
+            b.addEventListener("click", async () => {
+              box.hidden = true;
+              api.setText("", true);
+              card.querySelector(".peroot-preview-title").lastChild.textContent = " מדייק";
+              const res = await streamEnhance(
+                {
+                  prompt: original,
+                  tone: ctx.tone || "Professional",
+                  category: "כללי",
+                  capability_mode: ctx.mode,
+                  target_model: ctx.targetModel,
+                  ...(ctx.modelProfileSlug && { model_profile_slug: ctx.modelProfileSlug }),
+                  ...(ctx.outputLang && { output_language: ctx.outputLang }),
+                  previousResult: enhanced,
+                  refinementInstruction: `שאלה: ${q.question}\nתשובה: ${ex}`,
+                  answers: { [String(q.id || q.question.slice(0, 40))]: ex },
+                },
+                (full) => api.setText(cleanOutput(full, ctx.mode, ctx.imgPlat), true),
+              );
+              if (!res.ok) return showToast("הדיוק נכשל. נסו שוב", "error");
+              const refined = cleanOutput(res.text || "", ctx.mode, ctx.imgPlat);
+              api.setText(refined, false);
+              const t = findInputElement();
+              if (t) currentSite.setInputText(t, refined);
+              api.done(refined, false);
+            });
+            row.appendChild(b);
+          }
+          box.appendChild(row);
+        }
+      },
+      close() {
+        clearInterval(timer);
+        clearTimeout(autoClose);
+        card.classList.add("peroot-preview-exit");
+        setTimeout(() => card.remove(), 180);
+      },
+    };
+    card.querySelector(".peroot-preview-close").addEventListener("click", api.close);
+    return api;
   }
 
   // ── Button Injection ──────────────────────────────────────────────────────
@@ -694,10 +793,11 @@
         e.preventDefault();
         e.stopPropagation();
         if (isLocked) {
-          showToast("שדרג ל-Pro כדי להשתמש במצב זה", "error");
+          showToast("המצב הזה פתוח למנויי Pro", "error");
           return;
         }
         selectedMode = mode.key;
+        Prefs.set({ mode: mode.key });
         updateRadialHalo();
 
         // Show platform sub-selector for image/video modes
@@ -764,8 +864,13 @@
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (modeKey === "IMAGE_GENERATION") selectedImagePlatform = p.id;
-        else selectedVideoPlatform = p.id;
+        if (modeKey === "IMAGE_GENERATION") {
+          selectedImagePlatform = p.id;
+          Prefs.set({ imagePlatform: p.id });
+        } else {
+          selectedVideoPlatform = p.id;
+          Prefs.set({ videoPlatform: p.id });
+        }
         // Close dropdown
         dropdown.remove();
         modeDropdownOpen = false;
@@ -836,7 +941,7 @@
     const trigger = document.createElement("button");
     trigger.id = "peroot-radial-trigger";
     trigger.className = "peroot-radial-trigger";
-    trigger.title = "Peroot — שדרג פרומפט (Ctrl+M)";
+    trigger.title = "Peroot: שדרוג הפרומפט (Ctrl+M)";
     trigger.style.setProperty("--halo-color", getActiveColor());
     trigger.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" class="peroot-radial-logo"><span class="peroot-radial-mode-indicator" style="display:none"></span>`;
 
@@ -924,7 +1029,7 @@
       <div class="peroot-sp-header">
         <div class="peroot-sp-brand">
           <img src="${LOGO_URL}" alt="Peroot" class="peroot-sp-logo-img" style="width:22px;height:22px;">
-          <span class="peroot-sp-title">Peroot Library</span>
+          <span class="peroot-sp-title">הספרייה שלי</span>
         </div>
         <button class="peroot-sp-close" id="peroot-sp-close">✕</button>
       </div>
@@ -1010,7 +1115,7 @@
       libraryCache = Array.isArray(data) ? data : data?.items || data?.prompts || [];
       renderLibrary(libraryCache);
     } catch {
-      content.innerHTML = '<div class="peroot-sp-empty">שגיאת רשת — בדוק חיבור לאינטרנט</div>';
+      content.innerHTML = '<div class="peroot-sp-empty">שגיאת רשת. בדקו את החיבור לאינטרנט</div>';
     }
   }
 
@@ -1020,7 +1125,7 @@
 
     if (!prompts.length) {
       content.innerHTML =
-        '<div class="peroot-sp-empty">עדיין אין פרומפטים שמורים.<br>שמור פרומפטים ב-peroot.space!</div>';
+        '<div class="peroot-sp-empty">עוד אין פרומפטים שמורים.<br>שמרו אחרי שדרוג, או באתר.</div>';
       return;
     }
 
@@ -1048,7 +1153,7 @@
           currentSite.setInputText(inputEl, prompt.prompt || "");
           inputEl.focus();
           closeSidePanel();
-          showToast("הפרומפט הוכנס!", "success");
+          showToast("הפרומפט הוכנס", "success");
         }
       });
     });
@@ -1058,7 +1163,7 @@
         const prompt = prompts[parseInt(btn.dataset.idx)];
         if (prompt) {
           navigator.clipboard.writeText(prompt.prompt || "");
-          showToast("הועתק!", "success");
+          showToast("הועתק", "success");
         }
       });
     });
@@ -1222,7 +1327,7 @@
     modal.querySelector("#peroot-export-continue").addEventListener("click", () => {
       const continuePrompt = `המשך את השיחה הזו מהמקום שהפסקת:\n\n${markdown}`;
       navigator.clipboard.writeText(continuePrompt);
-      showToast("הועתק עם הקשר — הדבק בכל צ׳אט AI!", "success");
+      showToast("הועתק עם ההקשר. הדביקו בכל צ'אט AI", "success");
       modal.remove();
     });
   }
@@ -1361,7 +1466,7 @@
     const trigger = document.createElement("button");
     trigger.id = "peroot-radial-trigger";
     trigger.className = "peroot-radial-trigger";
-    trigger.title = "Peroot — שדרג פרומפט";
+    trigger.title = "Peroot: שדרוג הפרומפט";
     trigger.style.setProperty("--halo-color", getActiveColor());
     trigger.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" class="peroot-radial-logo"><span class="peroot-radial-mode-indicator" style="display:none"></span>`;
     peerootBtn = trigger;
@@ -1415,8 +1520,21 @@
 
   tryInject();
 
-  // Fetch user profile once on init (fire-and-forget)
+  // Fetch user profile once on init (fire-and-forget), and start from the
+  // saved mode so the halo colour matches what the popup shows.
   fetchUserProfile();
+  Prefs.getAll().then((p) => {
+    selectedMode = p.mode || "STANDARD";
+    if (p.imagePlatform && p.imagePlatform !== "general") selectedImagePlatform = p.imagePlatform;
+    if (p.videoPlatform && p.videoPlatform !== "general") selectedVideoPlatform = p.videoPlatform;
+    updateRadialHalo();
+  });
+  Prefs.onChange((patch) => {
+    if (patch.mode) {
+      selectedMode = patch.mode;
+      updateRadialHalo();
+    }
+  });
 
   // ── Listen for INSERT_TEXT from popup ────────────────────────────────────
   // The popup sends INSERT_TEXT via service worker to insert enhanced text into the chat input
@@ -1430,7 +1548,7 @@
       } else {
         // Fallback: copy to clipboard
         navigator.clipboard.writeText(message.text).then(() => {
-          showToast("הועתק ללוח — הדבק בשדה הקלט", "info");
+          showToast("הועתק ללוח. הדביקו בשדה הכתיבה", "info");
         });
       }
     }

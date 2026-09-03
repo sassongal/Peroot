@@ -345,6 +345,20 @@ Rule: after changing an engine's default template in code, run
 change never reaches users. The admin drift view
 (`/api/admin/engine-shipped-baseline?mode=`) compares a row with the code.
 
+## Chrome extension (v3, 2026-09-03)
+
+`chrome-extension-v2.1/` is the extension (the folder name is historical).
+Manifest V3, no build step; `npm run extension:build` zips it for the store,
+`npm run extension:test` runs its unit tests (vitest picks up
+`chrome-extension-v2.1/lib/__tests__`). The four shared modules under `lib/`
+(`prefs`, `language`, `prompt-text`, `api`) are the only place the popup, the
+options page and the content scripts read preferences, resolve the output
+language or parse the enhance stream; `language.js` and `prompt-text.js`
+mirror `src/lib/output-language.ts` and `src/lib/prompt-stream/trailer.ts`
+and must change together. The store listing text is in
+`chrome-extension-v2.1/STORE_LISTING.md`; `CHROME_STORE_URL` in
+`src/lib/constants.ts` stays null until the listing is approved.
+
 ## Background jobs (style analysis, achievements)
 
 `background_jobs` table → `/api/jobs/process` worker (hourly vercel.json cron

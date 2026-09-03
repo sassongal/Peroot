@@ -1,271 +1,248 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html dir="rtl" lang="he" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="popup.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap">
+  <meta name="color-scheme" content="dark light">
   <title>Peroot</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <!-- Login Screen -->
-  <div id="login-screen" class="screen hidden">
-    <div class="login-glow"></div>
-    <div class="login-content">
-      <div class="login-icon">
-        <img src="../icons/icon-128.png" alt="Peroot" width="40" height="40">
-      </div>
-      <h1 class="login-title">Peroot</h1>
-      <p class="login-subtitle">שדרג כל פרומפט עם AI מתקדם</p>
+  <!-- Loading -->
+  <div id="loading-screen" class="screen screen-center">
+    <span class="spinner spinner-lg" aria-label="טוען"></span>
+  </div>
 
-      <!-- Google OAuth Button (primary) -->
-      <button id="google-login-btn" class="btn-google">
-        <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
+  <!-- Login -->
+  <div id="login-screen" class="screen screen-center hidden">
+    <div class="login">
+      <img src="../icons/icon-128.png" alt="" width="44" height="44" class="login-logo">
+      <h1 class="login-title">Peroot</h1>
+      <p class="login-sub">פרומפט מקצועי מכל משפט, ישירות בתוך ChatGPT, Claude ו-Gemini</p>
+      <button id="google-login-btn" class="btn btn-primary btn-block" type="button">
+        <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
         </svg>
-        <span>התחבר עם Google</span>
+        <span>כניסה עם Google</span>
       </button>
-
-      <!-- Divider -->
-      <div class="login-divider">
-        <span class="login-divider-line"></span>
-        <span class="login-divider-text">או</span>
-        <span class="login-divider-line"></span>
-      </div>
-
-      <!-- Email/Password Form -->
-      <form id="email-login-form" class="email-form" autocomplete="on">
-        <input id="email-input" type="email" class="auth-input" placeholder="אימייל" autocomplete="email" required dir="ltr">
-        <input id="password-input" type="password" class="auth-input" placeholder="סיסמה" autocomplete="current-password" required dir="ltr">
-        <button id="email-login-btn" type="submit" class="btn-accent btn-wide">התחבר</button>
+      <div class="divider"><span>או</span></div>
+      <form id="email-login-form" class="stack" autocomplete="on">
+        <input id="email-input" type="email" class="input" placeholder="אימייל" autocomplete="email" required dir="ltr" aria-label="אימייל">
+        <input id="password-input" type="password" class="input" placeholder="סיסמה" autocomplete="current-password" required dir="ltr" aria-label="סיסמה">
+        <button id="email-login-btn" type="submit" class="btn btn-secondary btn-block">כניסה</button>
       </form>
-
-      <p id="login-hint" class="login-hint"></p>
-
-      <!-- Fallback -->
-      <button id="retry-btn" class="btn-retry">&#8635; נסה שוב</button>
-      <a href="https://www.peroot.space/login" target="_blank" class="login-link">אין לך חשבון? הירשם ב-peroot.space</a>
+      <p id="login-hint" class="hint" role="status" aria-live="polite"></p>
+      <div class="login-links">
+        <a href="https://www.peroot.space/login" target="_blank" rel="noopener">אין חשבון? הרשמה</a>
+        <span aria-hidden="true">·</span>
+        <button id="retry-btn" type="button" class="link-btn">התחברתי באתר, לרענן</button>
+      </div>
     </div>
   </div>
 
-  <!-- Main Screen -->
+  <!-- Main -->
   <div id="main-screen" class="screen hidden">
-    <!-- Header -->
-    <header class="main-header" role="banner">
-      <div class="header-brand">
-        <img src="../icons/icon-48.png" alt="" width="20" height="20" class="header-logo">
-        <span class="header-title">Peroot</span>
-        <span id="target-model-badge" class="target-model-badge hidden" aria-live="polite" title="המודל שזוהה בלשונית הפעילה"></span>
+    <header class="topbar">
+      <div class="brand">
+        <img src="../icons/icon-48.png" alt="" width="22" height="22">
+        <span class="brand-name">Peroot</span>
+        <span id="site-badge" class="chip chip-muted hidden" title="האתר שזוהה בלשונית הפעילה"></span>
       </div>
-      <div class="header-meta">
-        <span id="tier-badge" class="tier-badge hidden" aria-live="polite"></span>
-        <span id="credits-badge" class="credits-badge hidden" aria-live="polite" aria-label="קרדיטים שנותרו">
-          <span id="credits-count">0</span> קרדיטים
-        </span>
-        <button id="settings-toggle" class="settings-gear" type="button" aria-label="הגדרות" aria-expanded="false" aria-controls="settings-panel">&#9881;</button>
-        <button id="logout-btn" class="btn-logout" type="button" aria-label="התנתק" title="התנתק">&#x23FB;</button>
+      <div class="topbar-actions">
+        <span id="tier-chip" class="chip hidden" aria-live="polite"></span>
+        <span id="credits-readout" class="readout hidden" aria-live="polite" title="קרדיטים שנותרו"></span>
+        <button id="settings-btn" class="icon-btn" type="button" aria-label="הגדרות" title="הגדרות">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+        <button id="logout-btn" class="icon-btn" type="button" aria-label="התנתקות" title="התנתקות">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
       </div>
     </header>
 
-    <!-- Settings Panel (collapsible from header) -->
-    <div id="settings-panel" class="settings-panel" role="region" aria-label="הגדרות">
-      <div class="settings-section">
-        <h3 class="settings-title">קיצורי מקשים</h3>
-        <div class="shortcuts-list">
-          <div class="shortcut-item"><kbd>Alt + P</kbd><span>פתח תוסף</span></div>
-          <div class="shortcut-item"><kbd>Alt + Shift + E</kbd><span>שדרג טקסט מסומן</span></div>
-          <div class="shortcut-item"><kbd>&#8984;/Ctrl + M</kbd><span>שדרג פרומפט בצ׳אט AI</span></div>
-          <div class="shortcut-item"><kbd>Enter</kbd><span>שדרג (בתוסף)</span></div>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3 class="settings-title">שילובי AI נתמכים</h3>
-        <div class="integrations-list">
-          <div class="integration-item">&#10003; ChatGPT (chatgpt.com)</div>
-          <div class="integration-item">&#10003; Claude (claude.ai)</div>
-          <div class="integration-item">&#10003; Gemini (gemini.google.com)</div>
-          <div class="integration-item">&#10003; DeepSeek (chat.deepseek.com)</div>
-          <div class="integration-item">&#10003; Perplexity (perplexity.ai)</div>
-          <div class="integration-item">&#10003; Mistral (chat.mistral.ai)</div>
-          <div class="integration-item">&#9675; Minimax (minimaxi.com)</div>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3 class="settings-title">אודות</h3>
-        <p class="settings-desc">Peroot <span id="ext-version">v1.3.0</span> · <a href="https://www.peroot.space" target="_blank" rel="noopener" class="settings-link">peroot.space</a></p>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <nav class="tabs" role="tablist" aria-label="מצבי פעולה">
-      <button class="tab active" data-tab="enhance" role="tab" aria-selected="true" aria-controls="tab-enhance" id="tab-btn-enhance" type="button">&#10022; שדרוג</button>
-      <button class="tab" data-tab="library" role="tab" aria-selected="false" aria-controls="tab-library" id="tab-btn-library" type="button" tabindex="-1">&#9672; ספרייה</button>
-      <button class="tab" data-tab="favorites" role="tab" aria-selected="false" aria-controls="tab-favorites" id="tab-btn-favorites" type="button" tabindex="-1">&#9733; מועדפים</button>
-      <button class="tab" data-tab="history" role="tab" aria-selected="false" aria-controls="tab-history" id="tab-btn-history" type="button" tabindex="-1">&#9719; היסטוריה</button>
+    <nav class="tabs" role="tablist" aria-label="מסכים">
+      <button class="tab active" data-tab="enhance" role="tab" aria-selected="true" aria-controls="tab-enhance" id="tab-btn-enhance" type="button">שדרוג</button>
+      <button class="tab" data-tab="library" role="tab" aria-selected="false" aria-controls="tab-library" id="tab-btn-library" type="button" tabindex="-1">ספרייה</button>
+      <button class="tab" data-tab="history" role="tab" aria-selected="false" aria-controls="tab-history" id="tab-btn-history" type="button" tabindex="-1">היסטוריה</button>
     </nav>
 
-    <!-- Tab: Enhance -->
-    <div id="tab-enhance" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-enhance">
-      <div class="input-section">
-        <div class="mode-selector" id="mode-selector">
-          <button class="mode-btn active" data-mode="STANDARD" data-color="#f59e0b" title="שדרוג פרומפט רגיל">
-            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8h6.1l-4.9 3.6 1.9 5.8L12 14.6l-4.9 3.6 1.9-5.8L4 8.8h6.1z"/></svg></span>
-            <span class="mode-label">רגיל</span>
-          </button>
-          <button class="mode-btn locked" data-mode="DEEP_RESEARCH" data-color="#10b981" title="מחקר מעמיק">
-            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg></span>
-            <span class="mode-label">מחקר</span>
-            <span class="mode-lock">Pro</span>
-          </button>
-          <button class="mode-btn locked" data-mode="IMAGE_GENERATION" data-color="#ec4899" title="יצירת תמונות">
-            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></svg></span>
-            <span class="mode-label">תמונה</span>
-            <span class="mode-lock">Pro</span>
-          </button>
-          <button class="mode-btn locked" data-mode="VIDEO_GENERATION" data-color="#3b82f6" title="יצירת סרטונים">
-            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="15" height="16" rx="2"/><path d="M17 8l5-3v14l-5-3"/></svg></span>
-            <span class="mode-label">וידאו</span>
-            <span class="mode-lock">Pro</span>
-          </button>
-          <button class="mode-btn locked" data-mode="AGENT_BUILDER" data-color="#8b5cf6" title="בניית סוכן AI">
-            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h.01M15 9h.01M9 15h6"/></svg></span>
-            <span class="mode-label">סוכן</span>
-            <span class="mode-lock">Pro</span>
-          </button>
-        </div>
-        <div id="image-platform-selector" class="platform-selector platform-selector-image hidden">
-          <button class="platform-chip active" data-iplatform="general">🎨 כללי</button>
-          <button class="platform-chip" data-iplatform="midjourney">Midjourney</button>
-          <button class="platform-chip" data-iplatform="dalle">GPT Image</button>
-          <button class="platform-chip" data-iplatform="flux">FLUX.2</button>
-          <button class="platform-chip" data-iplatform="stable-diffusion">Stable Diffusion</button>
-          <button class="platform-chip" data-iplatform="imagen">Imagen</button>
-          <button class="platform-chip" data-iplatform="nanobanana">Gemini</button>
-        </div>
-        <div id="video-platform-selector" class="platform-selector hidden">
-          <button class="platform-chip active" data-vplatform="general">🎬 כללי</button>
-          <button class="platform-chip" data-vplatform="runway">Runway</button>
-          <button class="platform-chip" data-vplatform="kling">Kling</button>
-          <button class="platform-chip" data-vplatform="sora">Sora</button>
-          <button class="platform-chip" data-vplatform="veo">Veo</button>
-          <button class="platform-chip" data-vplatform="higgsfield">Higgsfield</button>
-          <button class="platform-chip" data-vplatform="minimax">Minimax</button>
-        </div>
-        <div class="tone-row">
-          <div class="tone-chips" id="tone-chips">
-            <button class="tone-chip active" data-tone="Professional">מקצועי</button>
-            <button class="tone-chip" data-tone="Casual">יומיומי</button>
-            <button class="tone-chip" data-tone="Creative">יצירתי</button>
-            <button class="tone-chip" data-tone="Persuasive">משכנע</button>
-            <button class="tone-chip" data-tone="Academic">אקדמי</button>
-          </div>
-          <button id="lang-toggle-btn" class="lang-toggle" title="שפת פלט — לחץ לשינוי" aria-label="שפת פלט">HE</button>
-        </div>
-        <div class="enhance-input-container">
-          <div class="textarea-wrap">
-            <textarea id="prompt-input" placeholder="הכנס טקסט לשדרוג..." rows="4" maxlength="4000"></textarea>
-            <span id="char-count" class="char-count">0</span>
-          </div>
-        </div>
-        <div id="score-bar" class="score-bar hidden">
-          <div class="score-progress">
-            <div id="score-fill" class="score-fill"></div>
-          </div>
-          <span id="score-label" class="score-label"></span>
-          <span id="score-tip" class="score-tip"></span>
-        </div>
-        <div class="peroot-target-model-row" id="peroot-target-model-row">
-          <label class="peroot-target-model-label" for="peroot-target-model-select">🎯 משדרג עבור:</label>
-          <select id="peroot-target-model-select" class="peroot-target-model-select">
-            <option value="">(זיהוי אוטומטי)</option>
-          </select>
-          <span class="peroot-target-model-detected" id="peroot-target-model-detected"></span>
-        </div>
-        <div class="peroot-score-gate-hint" id="peroot-score-gate-hint" hidden>
-          ✨ הפרומפט שלך כבר חזק — דילגנו על AI
-        </div>
-        <button id="enhance-btn" class="btn-accent btn-full-width">
-          <span id="enhance-label">שדרג</span>
-          <span id="enhance-spinner" class="spinner hidden"></span>
+    <!-- Enhance -->
+    <section id="tab-enhance" class="panel" role="tabpanel" aria-labelledby="tab-btn-enhance">
+      <div class="modes" id="mode-selector" role="radiogroup" aria-label="מצב">
+        <button class="mode active" data-mode="STANDARD" role="radio" aria-checked="true" type="button" title="שדרוג רגיל">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8h6.1l-4.9 3.6 1.9 5.8L12 14.6l-4.9 3.6 1.9-5.8L4 8.8h6.1z"/></svg>
+          <span>רגיל</span>
         </button>
-        <p class="hint">Enter לשדרוג &middot; Shift+Enter שורה חדשה</p>
+        <button class="mode" data-mode="DEEP_RESEARCH" role="radio" aria-checked="false" type="button" title="מחקר מעמיק">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>מחקר</span><span class="lock">Pro</span>
+        </button>
+        <button class="mode" data-mode="IMAGE_GENERATION" role="radio" aria-checked="false" type="button" title="יצירת תמונות">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          <span>תמונה</span><span class="lock">Pro</span>
+        </button>
+        <button class="mode" data-mode="VIDEO_GENERATION" role="radio" aria-checked="false" type="button" title="יצירת וידאו">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="15" height="16" rx="2"/><path d="M17 8l5-3v14l-5-3"/></svg>
+          <span>וידאו</span><span class="lock">Pro</span>
+        </button>
+        <button class="mode" data-mode="AGENT_BUILDER" role="radio" aria-checked="false" type="button" title="בניית סוכן">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h.01M15 9h.01M9 15h6"/></svg>
+          <span>סוכן</span><span class="lock">Pro</span>
+        </button>
       </div>
 
-      <!-- Result -->
-      <div id="result-section" class="result-section hidden">
-        <div class="result-header">
-          <span class="result-label">תוצאה</span>
-          <span id="result-timer" class="result-timer"></span>
+      <div id="image-platforms" class="chips hidden" role="radiogroup" aria-label="פלטפורמת תמונה">
+        <button class="chip-btn active" data-iplatform="general" type="button">כללי</button>
+        <button class="chip-btn" data-iplatform="midjourney" type="button">Midjourney</button>
+        <button class="chip-btn" data-iplatform="dalle" type="button">GPT Image</button>
+        <button class="chip-btn" data-iplatform="flux" type="button">FLUX</button>
+        <button class="chip-btn" data-iplatform="stable-diffusion" type="button">SD</button>
+        <button class="chip-btn" data-iplatform="imagen" type="button">Imagen</button>
+        <button class="chip-btn" data-iplatform="nanobanana" type="button">Gemini</button>
+      </div>
+      <div id="video-platforms" class="chips hidden" role="radiogroup" aria-label="פלטפורמת וידאו">
+        <button class="chip-btn active" data-vplatform="general" type="button">כללי</button>
+        <button class="chip-btn" data-vplatform="runway" type="button">Runway</button>
+        <button class="chip-btn" data-vplatform="kling" type="button">Kling</button>
+        <button class="chip-btn" data-vplatform="sora" type="button">Sora</button>
+        <button class="chip-btn" data-vplatform="veo" type="button">Veo</button>
+        <button class="chip-btn" data-vplatform="higgsfield" type="button">Higgsfield</button>
+        <button class="chip-btn" data-vplatform="minimax" type="button">Minimax</button>
+      </div>
+
+      <div class="row-between">
+        <div class="chips" id="tone-chips" role="radiogroup" aria-label="טון">
+          <button class="chip-btn active" data-tone="Professional" type="button">מקצועי</button>
+          <button class="chip-btn" data-tone="Casual" type="button">יומיומי</button>
+          <button class="chip-btn" data-tone="Creative" type="button">יצירתי</button>
+          <button class="chip-btn" data-tone="Persuasive" type="button">משכנע</button>
+          <button class="chip-btn" data-tone="Academic" type="button">אקדמי</button>
         </div>
-        <div id="result-text" class="result-text"></div>
+      </div>
+
+      <div class="lang" role="radiogroup" aria-label="שפת הפלט">
+        <span class="lang-label">שפת הפלט</span>
+        <div class="segmented" id="lang-segmented">
+          <button class="seg active" data-lang="hebrew" type="button" lang="he">עברית</button>
+          <button class="seg" data-lang="english" type="button" lang="en">EN</button>
+          <button class="seg" data-lang="arabic" type="button" lang="ar">ع</button>
+          <button class="seg" data-lang="russian" type="button" lang="ru">RU</button>
+          <button class="seg" data-lang="auto" type="button" title="לפי שפת הטקסט">אוטו</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <textarea id="prompt-input" class="textarea" placeholder="מה אתם רוצים מהמודל? כתבו בכל שפה" rows="4" maxlength="4000" dir="auto" aria-label="הפרומפט"></textarea>
+        <span id="char-count" class="counter readout">0</span>
+      </div>
+
+      <div id="readiness" class="readiness hidden" aria-live="polite">
+        <div class="readiness-track"><div id="readiness-fill" class="readiness-fill"></div></div>
+        <span id="readiness-label" class="readiness-label"></span>
+        <span id="readiness-tip" class="readiness-tip"></span>
+      </div>
+
+      <div class="target" id="target-row">
+        <label class="target-label" for="peroot-target-model-select">מותאם עבור</label>
+        <select id="peroot-target-model-select" class="select" aria-label="המודל שהפרומפט מיועד לו">
+          <option value="">זיהוי אוטומטי</option>
+        </select>
+        <span id="peroot-target-model-detected" class="target-detected"></span>
+      </div>
+
+      <button id="enhance-btn" class="btn btn-primary btn-block btn-cta" type="button">
+        <span id="enhance-label">שדרוג</span>
+        <span id="enhance-spinner" class="spinner hidden" aria-hidden="true"></span>
+      </button>
+      <p class="hint hint-kbd">Enter לשדרוג · Shift+Enter לשורה חדשה</p>
+
+      <div id="result" class="result hidden">
+        <div class="result-head">
+          <span class="result-title">התוצאה</span>
+          <span id="result-meta" class="readout result-meta"></span>
+        </div>
+        <div id="result-text" class="result-text" dir="auto" tabindex="0"></div>
         <div class="result-actions">
-          <button id="copy-btn" class="btn-sm">העתק</button>
-          <button id="insert-btn" class="btn-sm">הכנס לשדה</button>
-          <button id="reuse-btn" class="btn-sm">שדרג שוב</button>
-          <button id="save-btn" class="btn-sm prompt-card-btn-use">&#9733; שמור</button>
+          <button id="copy-btn" class="btn btn-sm" type="button">העתקה</button>
+          <button id="insert-btn" class="btn btn-sm" type="button">הכנסה לשדה</button>
+          <button id="save-btn" class="btn btn-sm" type="button">שמירה לספרייה</button>
+          <button id="reuse-btn" class="btn btn-sm" type="button">שדרוג נוסף</button>
         </div>
-        <div id="feedback-row" class="feedback-row hidden" aria-label="דרג את התוצאה">
-          <span class="feedback-label">התוצאה הייתה טובה?</span>
-          <button id="feedback-up-btn" class="btn-feedback" title="כן, תוצאה טובה" aria-label="תוצאה טובה">&#128077;</button>
-          <button id="feedback-down-btn" class="btn-feedback" title="לא, תוצאה גרועה" aria-label="תוצאה גרועה">&#128078;</button>
+        <div id="feedback-row" class="feedback hidden">
+          <span>התוצאה עזרה?</span>
+          <button id="feedback-up" class="icon-btn" type="button" aria-label="כן">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>
+          </button>
+          <button id="feedback-down" class="icon-btn" type="button" aria-label="לא">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>
+          </button>
         </div>
-        <div id="refinement-section" class="refinement-section hidden" aria-label="שאלות לשיפור הפרומפט">
-          <div class="refinement-header">
-            <span class="refinement-title">&#10024; שדרג עוד</span>
-            <span class="refinement-subtitle">בחר תשובה לשיפור הפרומפט</span>
-          </div>
-          <div id="refinement-questions" class="refinement-questions"></div>
+        <div id="refine" class="refine hidden" aria-label="שאלות להמשך שיפור">
+          <p class="refine-title">כדי לדייק עוד, ענו על אחת:</p>
+          <div id="refine-questions"></div>
         </div>
       </div>
 
-      <!-- Error -->
-      <div id="error-section" class="error-section hidden">
-        <p id="error-text"></p>
-      </div>
+      <div id="error" class="error hidden" role="alert"><p id="error-text"></p></div>
+    </section>
 
-    </div>
-
-    <!-- Tab: Library -->
-    <div id="tab-library" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-library" hidden>
-      <div id="library-loading" class="tab-empty">
-        <span class="spinner large"></span>
+    <!-- Library -->
+    <section id="tab-library" class="panel" role="tabpanel" aria-labelledby="tab-btn-library" hidden>
+      <div class="row-between">
+        <input id="library-search" type="search" class="input input-sm" placeholder="חיפוש בספרייה" aria-label="חיפוש בספרייה" dir="auto">
+        <div class="segmented" id="library-filter">
+          <button class="seg active" data-filter="all" type="button">הכול</button>
+          <button class="seg" data-filter="favorites" type="button">מועדפים</button>
+        </div>
       </div>
-      <div id="library-empty" class="tab-empty hidden">
+      <div id="library-loading" class="empty"><span class="spinner spinner-lg"></span></div>
+      <div id="library-empty" class="empty hidden">
         <p class="empty-title">הספרייה ריקה</p>
-        <p class="empty-sub">שמור פרומפטים מהאתר כדי לגשת אליהם מהתוסף</p>
+        <p class="empty-sub">שמרו פרומפט אחרי שדרוג, או באתר, והוא יופיע כאן</p>
       </div>
-      <div id="library-list" class="prompt-list hidden"></div>
-    </div>
+      <div id="library-list" class="list hidden"></div>
+    </section>
 
-    <!-- Tab: Favorites -->
-    <div id="tab-favorites" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-favorites" hidden>
-      <div id="favorites-loading" class="tab-empty"><span class="spinner large"></span></div>
-      <div id="favorites-empty" class="tab-empty hidden">
-        <p class="empty-title">אין מועדפים</p>
-        <p class="empty-sub">סמן פרומפטים כמועדפים כדי לגשת אליהם מהר</p>
+    <!-- History -->
+    <section id="tab-history" class="panel" role="tabpanel" aria-labelledby="tab-btn-history" hidden>
+      <div id="history-loading" class="empty"><span class="spinner spinner-lg"></span></div>
+      <div id="history-empty" class="empty hidden">
+        <p class="empty-title">עוד אין היסטוריה</p>
+        <p class="empty-sub">כל שדרוג, מהתוסף או מהאתר, נשמר כאן</p>
       </div>
-      <div id="favorites-list" class="prompt-list hidden"></div>
-    </div>
+      <div id="history-list" class="list hidden"></div>
+    </section>
 
-    <!-- Tab: History -->
-    <div id="tab-history" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-history" hidden>
-      <div id="tab-history-loading" class="tab-empty"><span class="spinner large"></span></div>
-      <div id="tab-history-empty" class="tab-empty hidden">
-        <p class="empty-title">אין היסטוריה</p>
-        <p class="empty-sub">פרומפטים שדרגת יופיעו כאן</p>
-      </div>
-      <div id="tab-history-list" class="prompt-list hidden"></div>
-    </div>
+    <footer class="footer">
+      <a id="whats-new" class="whats-new hidden" href="https://www.peroot.space/whats-new" target="_blank" rel="noopener">
+        <span class="whats-new-dot" aria-hidden="true"></span>
+        <span id="whats-new-text"></span>
+      </a>
+      <span id="ext-version" class="readout version"></span>
+    </footer>
   </div>
 
-  <!-- Loading -->
-  <div id="loading-screen" class="screen loading-screen">
-    <span class="spinner large"></span>
+  <!-- First run -->
+  <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <div class="onboarding-card">
+      <h2 id="onboarding-title">ברוכים הבאים ל-Peroot</h2>
+      <ul>
+        <li>ב-ChatGPT, Claude ו-Gemini מופיע כפתור זהב ליד תיבת הכתיבה. לחיצה אחת משדרגת את מה שכתבתם.</li>
+        <li>בכל אתר אחר: סמנו טקסט, לחיצה ימנית, Peroot.</li>
+        <li><kbd>Alt</kbd>+<kbd>P</kbd> פותח את החלון הזה, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> משדרג טקסט מסומן.</li>
+      </ul>
+      <button id="onboarding-done" class="btn btn-primary btn-block" type="button">התחלה</button>
+    </div>
   </div>
 
   <script src="../lib/auth.js"></script>
+  <script src="../lib/language.js"></script>
+  <script src="../lib/prompt-text.js"></script>
+  <script src="../lib/prefs.js"></script>
+  <script src="../lib/api.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

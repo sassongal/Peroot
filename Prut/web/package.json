@@ -30,7 +30,9 @@
     "prepare": "node scripts/setup-git-hooks.mjs",
     "precommit": "lint-staged",
     "preflight": "npm run lint && npm run typecheck && npm run test",
-    "repomix": "npx repomix --compress --style xml -o repomix-output.xml"
+    "repomix": "npx repomix --compress --style xml -o repomix-output.xml",
+    "extension:build": "node scripts/build-extension.mjs",
+    "extension:test": "vitest run chrome-extension-v2.1"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [

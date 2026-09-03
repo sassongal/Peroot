@@ -152,3 +152,24 @@
 #peroot-body::-webkit-scrollbar { width: 3px; }
 #peroot-body::-webkit-scrollbar-track { background: transparent; }
 #peroot-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+/* ── v3: the same instrument as the popup, and a light ground when the page is light ── */
+#peroot-panel {
+  font-family: "Alef", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 8px 30px rgba(245, 158, 11, 0.16);
+}
+#peroot-panel-header { background: transparent; }
+.peroot-status { color: #94a3b8; }
+#peroot-close { color: #94a3b8; }
+@media (prefers-color-scheme: light) {
+  #peroot-panel { background: #ffffff; color: #0f172a; border-color: rgba(245, 158, 11, 0.45); }
+  #peroot-panel-header { border-bottom-color: rgba(0, 0, 0, 0.08); }
+  .peroot-brand { color: #0f172a; }
+  .peroot-status, #peroot-close { color: #64748b; }
+  #peroot-close:hover { background: rgba(0, 0, 0, 0.05); color: #0f172a; }
+  #peroot-body.peroot-error { color: #b91c1c; }
+  #peroot-actions { border-top-color: rgba(0, 0, 0, 0.08); }
+  .peroot-btn-secondary { background: #f8fafc !important; color: #0f172a !important; border-color: rgba(0, 0, 0, 0.1) !important; }
+  #peroot-body::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); }
+}

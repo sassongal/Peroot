@@ -55,31 +55,25 @@ if (!window.__peerootContentLoaded) {
   }
   const TARGET_MODEL = detectTargetModel();
 
-  // ─── Language Detection ───
-  // When preference is "auto", detect the dominant script of the input text.
-  // Latin >60% of alphabetic chars → English output; otherwise let server default (Hebrew).
+  // ─── Shared modules (injected before this file by the service worker) ───
+  const Lang = window.PerootLanguage;
+  const Text = window.PerootPromptText;
+  const Prefs = window.PerootPrefs;
   function resolveOutputLanguage(pref, inputText) {
-    if (pref === 'english') return 'english';
-    if (pref !== 'auto') return null;
-    const hebrew = (inputText.match(/[\u05D0-\u05EA]/g) || []).length;
-    const latin  = (inputText.match(/[a-zA-Z]/g) || []).length;
-    const total  = hebrew + latin;
-    return total > 0 && latin / total > 0.6 ? 'english' : null;
+    return Lang ? Lang.resolveOutputLanguage(pref, inputText) : null;
   }
 
   // ─── Stored Preferences ───
-  // Loaded once per script init. Refreshed on each handleEnhance call.
   let storedTone = "Professional";
   let storedLang = "hebrew";
   function loadPrefs(cb) {
-    chrome.storage.local.get(
-      ['peroot_last_tone', 'peroot_output_language'],
-      (prefs) => {
-        storedTone = prefs.peroot_last_tone || "Professional";
-        storedLang = prefs.peroot_output_language || "hebrew";
-        if (cb) cb();
-      }
-    );
+    const done = (p) => {
+      storedTone = p.tone || "Professional";
+      storedLang = p.outputLanguage || "hebrew";
+      if (cb) cb();
+    };
+    if (Prefs) Prefs.getAll().then(done);
+    else done({});
   }
   loadPrefs();
 
@@ -94,7 +88,7 @@ if (!window.__peerootContentLoaded) {
         return {
           prompt: text, tone: storedTone, category: "כללי",
           target_model: TARGET_MODEL,
-          ...(lang === 'english' && { output_language: 'english' }),
+          ...(lang && { output_language: lang }),
         };
       },
     },
@@ -126,7 +120,7 @@ if (!window.__peerootContentLoaded) {
       }),
     },
     translate: {
-      label: "\u05EA\u05E8\u05D2\u05DD",
+      label: "תרגום",
       buildBody: (text) => ({
         prompt: text, tone: storedTone, category: "כללי",
         target_model: TARGET_MODEL,
@@ -143,7 +137,7 @@ if (!window.__peerootContentLoaded) {
           target_model: TARGET_MODEL,
           refinementInstruction: "Summarize this text into 3-5 key bullet points. Be concise and capture only the essential information. Output ONLY the summary.",
           previousResult: text,
-          ...(lang === 'english' && { output_language: 'english' }),
+          ...(lang && { output_language: lang }),
         };
       },
     },
@@ -311,12 +305,9 @@ if (!window.__peerootContentLoaded) {
       // <internal_quality_check> self-review XML block. The last one
       // used to leak into the visible output — that's been a long-
       // standing bug in the context-menu flow, finally closed here.
-      lastEnhanced = fullText
-        .split("[GENIUS_QUESTIONS]")[0]
-        .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, '')
-        .replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, '')
-        .trim();
+      lastEnhanced = Text ? Text.cleanForDisplay(fullText) : fullText.trim();
       body.textContent = lastEnhanced;
+      if (Lang) body.dir = Lang.textDirection(lastEnhanced);
       body.scrollTop = body.scrollHeight;
 
       if (status) status.textContent = "\u05D4\u05D5\u05E9\u05DC\u05DD";
@@ -442,10 +433,10 @@ if (!window.__peerootContentLoaded) {
         display: flex;
         align-items: center;
         flex-direction: row;
-        background: #111113;
-        border: 1px solid rgba(251,191,36,0.25);
-        border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.55);
+        background: rgba(17,17,20,0.96);
+        border: 1px solid rgba(245,158,11,0.35);
+        border-radius: 999px;
+        box-shadow: 0 8px 30px rgba(245,158,11,0.18);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 11px;
         font-weight: 600;
@@ -462,11 +453,19 @@ if (!window.__peerootContentLoaded) {
       #peroot-inline-toolbar .pit-trigger {
         display: flex;
         align-items: center;
-        gap: 4px;
-        padding: 5px 10px;
-        color: #fbbf24;
+        gap: 6px;
+        padding: 6px 12px;
+        color: #FBBF24;
         white-space: nowrap;
         flex-shrink: 0;
+        font-family: "Alef", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      #peroot-inline-toolbar .pit-dot { width: 8px; height: 8px; border-radius: 50%; background: #F59E0B; box-shadow: 0 0 10px rgba(245,158,11,0.7); }
+      @media (prefers-color-scheme: light) {
+        #peroot-inline-toolbar { background: rgba(255,255,255,0.98); }
+        #peroot-inline-toolbar .pit-trigger, #peroot-inline-toolbar .pit-action-btn.pit-primary { color: #B45309; }
+        #peroot-inline-toolbar .pit-action-btn { color: #334155; }
+        #peroot-inline-toolbar .pit-action-btn:hover { color: #B45309; background: rgba(245,158,11,0.12); }
       }
       #peroot-inline-toolbar .pit-actions {
         display: flex;
@@ -508,13 +507,13 @@ if (!window.__peerootContentLoaded) {
   })();
 
   const INLINE_ACTIONS = [
-    { key: "enhance",   label: "⚡ שדרג",   primary: true },
-    { key: "fix",       label: "✓ תקן" },
-    { key: "shorten",   label: "↕ קצר" },
-    { key: "lengthen",  label: "↔ הארך" },
-    { key: "translate", label: "↯ תרגם" },
-    { key: "summarize", label: "≡ סכם" },
-    { key: "bullets",   label: "• נקודות" },
+    { key: "enhance",   label: "שדרוג",   primary: true },
+    { key: "fix",       label: "תיקון" },
+    { key: "shorten",   label: "קיצור" },
+    { key: "lengthen",  label: "הרחבה" },
+    { key: "translate", label: "תרגום" },
+    { key: "summarize", label: "סיכום" },
+    { key: "bullets",   label: "נקודות" },
   ];
 
   function createInlineBtn() {
@@ -525,7 +524,7 @@ if (!window.__peerootContentLoaded) {
     // Trigger pill (always visible, clicking fires enhance)
     const trigger = document.createElement("div");
     trigger.className = "pit-trigger";
-    trigger.innerHTML = `⚡ <span>שדרג</span>`;
+    trigger.innerHTML = `<span class="pit-dot"></span><span>Peroot</span>`;
     trigger.addEventListener("mousedown", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -607,9 +606,8 @@ if (!window.__peerootContentLoaded) {
 
   // Skip inline button on peroot.space itself and if user disabled it
   if (!window.location.hostname.includes("peroot.space")) {
-    chrome.storage.local.get(['peroot_inline_btn'], (prefs) => {
-      // Default: enabled (true). Only skip if explicitly set to false.
-      if (prefs.peroot_inline_btn === false) return;
+    (Prefs ? Prefs.getAll() : Promise.resolve({ inlineToolbar: true })).then((prefs) => {
+      if (prefs.inlineToolbar === false) return;
 
       document.addEventListener("focusin", (e) => {
         const el = e.target;

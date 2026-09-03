@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Peroot - AI Prompt Enhancer",
+  "name": "Peroot - שדרוג פרומפטים",
   "short_name": "Peroot",
-  "version": "2.0.1",
-  "description": "Enhance prompts on ChatGPT, Claude, and Gemini with model-aware tailoring. Iterative refinement, output language control, and prompt library sync.",
-  "homepage_url": "https://www.peroot.space",
-  "author": "Peroot by Joyatech",
+  "version": "3.0.0",
+  "minimum_chrome_version": "116",
+  "description": "שדרגו כל פרומפט בלחיצה, ישירות בתוך ChatGPT, Claude ו-Gemini. עברית, אנגלית, ערבית ורוסית, מסונכרן לחשבון Peroot.",
+  "homepage_url": "https://www.peroot.space/extension",
+  "author": "Peroot by JoyaTech",
   "permissions": [
     "contextMenus",
     "activeTab",
@@ -34,7 +35,7 @@
       "48": "icons/icon-48.png",
       "128": "icons/icon-128.png"
     },
-    "default_title": "Peroot - שדרוג פרומפטים"
+    "default_title": "Peroot: שדרוג פרומפטים (Alt+P)"
   },
   "commands": {
     "_execute_action": {
@@ -42,20 +43,25 @@
         "default": "Alt+P",
         "mac": "Alt+P"
       },
-      "description": "Open Peroot popup"
+      "description": "פתיחת Peroot"
     },
     "enhance-selection": {
       "suggested_key": {
         "default": "Alt+Shift+E",
         "mac": "Alt+Shift+E"
       },
-      "description": "Enhance selected text"
+      "description": "שדרוג הטקסט המסומן"
     }
   },
   "content_scripts": [
     {
-      "matches": ["https://peroot.space/*", "https://www.peroot.space/*"],
-      "js": ["content/auth-sync.js"],
+      "matches": [
+        "https://peroot.space/*",
+        "https://www.peroot.space/*"
+      ],
+      "js": [
+        "content/auth-sync.js"
+      ],
       "run_at": "document_idle"
     },
     {
@@ -70,9 +76,14 @@
         "lib/config-store.js",
         "lib/target-model.js",
         "lib/telemetry.js",
+        "lib/language.js",
+        "lib/prompt-text.js",
+        "lib/prefs.js",
         "content/ai-chat-injector.js"
       ],
-      "css": ["content/ai-chat-injector.css"],
+      "css": [
+        "content/ai-chat-injector.css"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -83,7 +94,9 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["icons/*.png"],
+      "resources": [
+        "icons/*.png"
+      ],
       "matches": [
         "https://chat.openai.com/*",
         "https://chatgpt.com/*",
@@ -92,7 +105,6 @@
       ]
     }
   ],
-  "privacy_policy_url": "https://www.peroot.space/privacy",
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; base-uri 'self'; frame-ancestors 'none'"
   },
