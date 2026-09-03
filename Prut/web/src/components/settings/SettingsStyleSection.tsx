@@ -112,20 +112,22 @@ export function SettingsStyleSection() {
   const dirty = brief.trim() !== (persona?.personality_brief ?? "").trim();
 
   return (
-    <div className="space-y-6" dir="rtl">
-      <div>
-        <h2 className="text-lg font-semibold text-(--text-primary) flex items-center gap-2">
-          <Fingerprint className="w-5 h-5 text-amber-500" />
+    <section
+      className="space-y-6 animate-in fade-in duration-300"
+      aria-labelledby="settings-style-heading"
+    >
+      <header className="space-y-1">
+        <h2 id="settings-style-heading" className="text-xl font-bold">
           הסגנון שלך
         </h2>
-        <p className="text-sm text-(--text-secondary) mt-1 leading-relaxed">
-          ככה פירוט מכיר אותך. התיאור הזה מוזרם לכל שדרוג, כדי שהתוצאה תישמע כמוך ולא כמו מישהו אחר.
+        <p className="text-sm text-(--text-muted)">
+          ככה פירוט מכיר אתכם. התיאור מוזרם לכל שדרוג, כדי שהתוצאה תישמע כמוכם
         </p>
-      </div>
+      </header>
 
       {!available && (
         <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
-          <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
           <p className="text-xs text-(--text-secondary) leading-relaxed">
             הזרמת הסגנון כבויה כרגע בכל הפלטפורמה. מה שמופיע כאן נשמר, אבל אינו משפיע על השדרוגים.
           </p>
@@ -134,14 +136,14 @@ export function SettingsStyleSection() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 className="w-5 h-5 animate-spin text-(--text-muted)" />
+          <Loader2 className="w-5 h-5 animate-spin text-(--text-muted)" aria-label="טוען" />
         </div>
       ) : !persona ? (
         <div className="text-center py-10 space-y-2">
-          <Fingerprint className="w-10 h-10 text-(--text-muted) mx-auto" />
-          <p className="text-sm text-(--text-secondary)">עוד לא בנינו לך פרופיל סגנון</p>
+          <Fingerprint className="w-10 h-10 text-(--text-muted) mx-auto" aria-hidden="true" />
+          <p className="text-sm text-(--text-secondary)">עוד אין פרופיל סגנון</p>
           <p className="text-xs text-(--text-muted)">
-            שמור שלושה פרומפטים לספרייה, והניתוח יתחיל לבד
+            שמרו שלושה פרומפטים לספרייה, והניתוח יתחיל לבד
           </p>
         </div>
       ) : (
@@ -160,12 +162,12 @@ export function SettingsStyleSection() {
               aria-checked={enabled}
               aria-label="הזרמת הסגנון לשדרוגים"
               onClick={toggleInjection}
-              className={`relative shrink-0 w-12 h-7 rounded-full transition-colors cursor-pointer ${
-                enabled ? "bg-amber-500" : "bg-(--glass-border)"
+              className={`relative shrink-0 w-12 h-7 rounded-full transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 ${
+                enabled ? "bg-amber-500" : "bg-slate-300 dark:bg-white/20"
               }`}
             >
               <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${
+                className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-sm transition-all motion-reduce:transition-none ${
                   enabled ? "right-1" : "right-6"
                 }`}
               />
@@ -184,31 +186,32 @@ export function SettingsStyleSection() {
               rows={4}
               maxLength={1000}
               placeholder="עוד אין תיאור"
-              className="w-full rounded-xl border border-(--glass-border) bg-(--glass-bg) px-3 py-2.5 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/60 transition-colors leading-relaxed resize-y"
+              dir="auto"
+              className="w-full rounded-xl border border-(--glass-border) bg-(--surface-panel) px-3 py-2.5 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/60 transition-colors leading-relaxed resize-y"
             />
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] text-(--text-muted)">{brief.length} / 1000</span>
+              <span className="text-[11px] text-(--text-muted) font-mono" dir="ltr">
+                {brief.length} / 1000
+              </span>
               <button
                 type="button"
                 onClick={saveBrief}
                 disabled={!dirty || saving}
-                className="cursor-pointer flex items-center gap-1.5 px-3 min-h-[36px] rounded-lg border border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-300 text-sm hover:bg-amber-500/25 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="cursor-pointer flex items-center gap-1.5 px-3 min-h-[40px] rounded-xl border border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-300 text-sm hover:bg-amber-500/25 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  <Save className="w-4 h-4" />
+                  <Save className="w-4 h-4" aria-hidden="true" />
                 )}
-                שמור תיאור
+                שמירת התיאור
               </button>
             </div>
           </div>
 
           {tokens.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold text-(--text-muted) tracking-wide">
-                סימני היכר בכתיבה שלך
-              </h3>
+              <h3 className="text-xs font-semibold text-(--text-muted)">סימני היכר בכתיבה שלכם</h3>
               <div className="flex flex-wrap gap-2">
                 {tokens.map((token) => (
                   <span
@@ -224,9 +227,7 @@ export function SettingsStyleSection() {
 
           {persona.preferred_format && (
             <div className="space-y-1.5">
-              <h3 className="text-xs font-semibold text-(--text-muted) tracking-wide">
-                הפורמט שאתה נוטה אליו
-              </h3>
+              <h3 className="text-xs font-semibold text-(--text-muted)">הפורמט שאתם נוטים אליו</h3>
               <p className="text-sm text-(--text-secondary) leading-relaxed">
                 {persona.preferred_format}
               </p>
@@ -245,18 +246,18 @@ export function SettingsStyleSection() {
               type="button"
               onClick={refresh}
               disabled={refreshing}
-              className="cursor-pointer self-start flex items-center gap-1.5 px-3 min-h-[36px] rounded-lg border border-(--glass-border) bg-(--glass-bg) text-sm text-(--text-secondary) hover:border-amber-500/40 transition-colors disabled:opacity-40"
+              className="cursor-pointer self-start flex items-center gap-1.5 px-3 min-h-[40px] rounded-xl border border-(--glass-border) bg-(--surface-panel) text-sm text-(--text-primary) hover:border-amber-500/40 transition-colors disabled:opacity-40"
             >
               {refreshing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               ) : (
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-4 h-4" aria-hidden="true" />
               )}
-              רענן ניתוח
+              ניתוח מחדש
             </button>
           </div>
         </>
       )}
-    </div>
+    </section>
   );
 }

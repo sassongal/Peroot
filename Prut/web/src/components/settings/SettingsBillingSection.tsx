@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, Check, CreditCard, Crown, Trash2, Zap } from "lucide-react";
+import { AlertTriangle, Check, Crown, ExternalLink, Zap } from "lucide-react";
 import type { Subscription } from "@/hooks/useSubscription";
 import { PLANS } from "@/lib/lemonsqueezy";
 import { useQuotaPolicy } from "@/context/QuotaPolicyContext";
-import { PRO_MONTHLY_CREDITS, creditsPhrase } from "@/lib/quota-policy";
+import { creditsPhrase } from "@/lib/quota-policy";
 import { formatDateHe } from "@/lib/dates/format";
 
 interface SettingsBillingSectionProps {
@@ -15,6 +15,12 @@ interface SettingsBillingSectionProps {
   portalUrl: string;
 }
 
+/**
+ * The plan card. One primary action per state: upgrade for free users, the
+ * LemonSqueezy portal for Pro (cancellation lives there too, so the old
+ * red "ביטול מנוי" button that opened the same page is gone). The Pro
+ * bullets come from PLANS so this list and the pricing page cannot drift.
+ */
 export function SettingsBillingSection({
   billingSuccess,
   isPro,
@@ -30,159 +36,129 @@ export function SettingsBillingSection({
     >
       <header className="space-y-1">
         <h2 id="settings-billing-heading" className="text-xl font-bold">
-          מנוי וחיוב
+          מנוי וקרדיטים
         </h2>
-        <p className="text-sm text-(--text-muted)">נהל את המנוי והתשלום שלך</p>
+        <p className="text-sm text-(--text-muted)">התוכנית שלכם, החיוב, והקרדיטים שנותרו</p>
       </header>
 
-      {billingSuccess && (
-        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center gap-3">
-          <Check className="w-5 h-5 text-green-400 shrink-0" />
-          <span className="text-sm text-green-300">
-            תודה שהצטרפת ל-Peroot Pro! ייתכן שהשינוי ייכנס לתוקף תוך מספר דקות.
+      {billingSuccess ? (
+        <div
+          className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-3"
+          role="status"
+        >
+          <Check
+            className="w-5 h-5 text-emerald-700 dark:text-emerald-300 shrink-0"
+            aria-hidden="true"
+          />
+          <span className="text-sm text-emerald-800 dark:text-emerald-200">
+            תודה שהצטרפתם ל-Peroot Pro. השינוי נכנס לתוקף תוך דקות ספורות.
           </span>
         </div>
-      )}
+      ) : null}
 
-      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {isPro ? (
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <Crown className="w-5 h-5 text-amber-400" />
-              </div>
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-(--glass-bg) flex items-center justify-center">
-                <Zap className="w-5 h-5 text-(--text-muted)" />
-              </div>
-            )}
-            <div>
+      <div
+        className={
+          isPro
+            ? "p-5 rounded-2xl border border-amber-500/25 bg-amber-500/5 space-y-4"
+            : "p-5 rounded-2xl border border-(--glass-border) bg-(--glass-bg) space-y-4"
+        }
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className={
+                isPro
+                  ? "w-10 h-10 shrink-0 rounded-full bg-amber-500/15 flex items-center justify-center"
+                  : "w-10 h-10 shrink-0 rounded-full bg-(--glass-border) flex items-center justify-center"
+              }
+            >
+              {isPro ? (
+                <Crown className="w-5 h-5 text-amber-500" aria-hidden="true" />
+              ) : (
+                <Zap className="w-5 h-5 text-(--text-muted)" aria-hidden="true" />
+              )}
+            </div>
+            <div className="min-w-0">
               <h3 className="font-bold text-(--text-primary)">
                 {isPro ? "Peroot Pro" : "תוכנית חינם"}
               </h3>
               <p className="text-xs text-(--text-muted)">
                 {isPro
-                  ? `סטטוס: פעיל${subscription.renews_at ? ` · מתחדש ב-${formatDateHe(subscription.renews_at)}` : ""}`
-                  : `${creditsPhrase(freeDaily)} ביום`}
+                  ? subscription.ends_at
+                    ? `פעיל עד ${formatDateHe(subscription.ends_at)}`
+                    : subscription.renews_at
+                      ? `פעיל, מתחדש ב-${formatDateHe(subscription.renews_at)}`
+                      : "פעיל"
+                  : `${creditsPhrase(freeDaily)} ביום, מתחדשים כל יום`}
               </p>
             </div>
           </div>
-          {isPro && (
-            <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-bold rounded-full border border-amber-500/30">
-              PRO
+          {isPro ? (
+            <span className="shrink-0 px-2.5 py-0.5 bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[11px] font-bold rounded-full border border-amber-500/30">
+              Pro
             </span>
-          )}
+          ) : null}
         </div>
 
-        {!isPro && (
+        {isPro ? (
+          <a
+            href={portalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl border border-(--glass-border) bg-(--surface-panel) text-(--text-primary) font-medium text-sm hover:border-amber-500/40 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
+            <span>ניהול המנוי, אמצעי התשלום והחשבוניות</span>
+          </a>
+        ) : (
           <Link
             href="/pricing"
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all"
+            className="w-full flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl bg-amber-500 text-black font-bold text-sm hover:bg-amber-400 transition-colors"
           >
-            <Crown className="w-4 h-4" />
-            <span>שדרג ל-Pro - ₪{PLANS.pro.price}/חודש</span>
+            <Crown className="w-4 h-4" aria-hidden="true" />
+            <span>שדרוג ל-Pro, ₪{PLANS.pro.price} לחודש</span>
           </Link>
-        )}
-
-        {isPro && (
-          <div className="flex flex-col sm:flex-row gap-2 pt-1">
-            <a
-              href={portalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium rounded-xl transition-colors text-sm border border-amber-500/20"
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>ניהול מנוי</span>
-            </a>
-            <a
-              href={portalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-medium rounded-xl transition-colors text-sm border border-red-500/20"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>ביטול מנוי</span>
-            </a>
-          </div>
         )}
       </div>
 
-      {!isPro && (
-        <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
-          <h3 className="font-semibold text-amber-400 flex items-center gap-2">
-            <Zap className="w-4 h-4" />
-            מה כולל Pro?
+      {isPro && subscription.ends_at ? (
+        <div
+          className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3"
+          role="status"
+        >
+          <AlertTriangle
+            className="w-4 h-4 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5"
+            aria-hidden="true"
+          />
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            המנוי בוטל ויסתיים ב-{formatDateHe(subscription.ends_at)}. עד אז הכול נשאר פתוח, ואחר כך
+            החשבון עובר לתוכנית החינם.
+          </p>
+        </div>
+      ) : null}
+
+      {isPro && !subscription.ends_at ? (
+        <p className="text-xs text-(--text-muted)">
+          ביטול נעשה מדף ניהול המנוי ונכנס לתוקף בסוף תקופת החיוב הנוכחית. הגישה ל-Pro נשמרת עד אז.
+        </p>
+      ) : null}
+
+      {!isPro ? (
+        <div className="p-5 bg-(--glass-bg) border border-(--glass-border) rounded-2xl space-y-3">
+          <h3 className="font-semibold text-(--text-primary) flex items-center gap-2">
+            <Crown className="w-4 h-4 text-amber-500" aria-hidden="true" />
+            מה מקבלים ב-Pro
           </h3>
           <ul className="space-y-2 text-sm text-(--text-secondary)">
-            <li className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              {creditsPhrase(PRO_MONTHLY_CREDITS)} בחודש
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              גישה לכל המנועים המתקדמים
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              שיפור איטרטיבי מתקדם
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              ספרייה אישית + מועדפים ללא הגבלה
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              תוסף Chrome עם סנכרון מלא
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              תמיכה בעדיפות
-            </li>
+            {PLANS.pro.features.map((feature) => (
+              <li key={feature} className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                {feature}
+              </li>
+            ))}
           </ul>
         </div>
-      )}
-
-      {isPro && subscription.ends_at && (
-        <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-start gap-3">
-          <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
-          <p className="text-sm text-yellow-300">
-            המנוי שלך בוטל ויסתיים ב-{formatDateHe(subscription.ends_at)}. לאחר מכן תעבור לתוכנית
-            החינם.
-          </p>
-        </div>
-      )}
-
-      {isPro && !subscription.ends_at && (
-        <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-2">
-          <p className="text-xs text-(--text-muted) font-medium flex items-center gap-2">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            ביטול יכנס לתוקף בסוף תקופת החיוב הנוכחית
-          </p>
-          <p className="text-xs text-(--text-muted)">
-            לביטול המנוי לחץ על &quot;ביטול מנוי&quot; למעלה. הגישה ל-Pro תישמר עד סוף תקופת החיוב
-            הנוכחית.
-          </p>
-        </div>
-      )}
-
-      {!isPro && (
-        <div className="p-4 bg-(--glass-bg) rounded-xl border border-(--glass-border) flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-(--text-primary)">רוצה פרומפטים ללא הגבלה?</p>
-            <p className="text-xs text-(--text-muted) mt-0.5">
-              שדרג ל-Pro ב-₪{PLANS.pro.price} בלבד לחודש
-            </p>
-          </div>
-          <Link
-            href="/pricing"
-            className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all"
-          >
-            <Zap className="w-3.5 h-3.5" />
-            <span>שדרג ל-Pro</span>
-          </Link>
-        </div>
-      )}
+      ) : null}
     </section>
   );
 }

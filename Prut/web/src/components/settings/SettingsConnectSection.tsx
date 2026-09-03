@@ -166,7 +166,7 @@ export function SettingsConnectSection() {
     >
       <header className="space-y-1">
         <h2 id="settings-connect-heading" className="text-xl font-bold flex items-center gap-2">
-          <Plug className="w-5 h-5 text-amber-400" />
+          <Plug className="w-5 h-5 text-amber-500" aria-hidden="true" />
           Peroot Connect
         </h2>
         <p className="text-sm text-(--text-muted)">
@@ -178,32 +178,32 @@ export function SettingsConnectSection() {
       {/* One-time fresh key display */}
       {freshKey && (
         <div className="p-5 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
-          <h3 className="font-semibold text-amber-300 flex items-center gap-2">
-            <KeyRound className="w-4 h-4" />
+          <h3 className="font-semibold text-amber-800 dark:text-amber-200 flex items-center gap-2">
+            <KeyRound className="w-4 h-4" aria-hidden="true" />
             המפתח החדש שלך, מוצג פעם אחת בלבד
           </h3>
           <div className="flex items-center gap-3">
             <code
               dir="ltr"
-              className="flex-1 px-4 py-3 bg-(--glass-bg) rounded-lg border border-amber-500/20 font-mono text-sm text-amber-200 break-all select-all"
+              className="flex-1 px-4 py-3 bg-(--glass-bg) rounded-lg border border-amber-500/20 font-mono text-sm text-(--text-primary) break-all select-all"
             >
               {freshKey}
             </code>
             <button
               type="button"
               onClick={() => copyText(freshKey, "fresh")}
-              className="cursor-pointer shrink-0 p-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg transition-colors"
+              className="cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 rounded-xl border border-amber-500/30 transition-colors"
               aria-label="העתק מפתח"
             >
               {copied === "fresh" ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
             </button>
           </div>
-          <p className="text-xs text-amber-200/70">
+          <p className="text-xs text-amber-800/80 dark:text-amber-200/80">
             שמור את המפתח במקום בטוח. אם יאבד, בטל אותו וצור חדש.
           </p>
           <div className="pt-1">
             <CopySetupPrompt apiKey={freshKey} />
-            <p className="text-xs text-amber-200/60 mt-2">
+            <p className="text-xs text-amber-800/80 dark:text-amber-200/70 mt-2">
               הדרך המהירה: העתק את פרומפט החיבור (כולל המפתח) והדבק אצל הסוכן, הוא כבר יידע להתחבר
               לבד.
             </p>
@@ -212,24 +212,29 @@ export function SettingsConnectSection() {
       )}
 
       {/* Create */}
-      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+      <div className="p-5 bg-(--glass-bg) rounded-2xl border border-(--glass-border) space-y-3">
         <h3 className="font-semibold text-(--text-primary) text-sm">יצירת מפתח חדש</h3>
         <div className="flex gap-2">
           <input
             type="text"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder='שם למפתח (למשל "Claude Desktop")'
+            placeholder="שם למפתח, למשל Claude Desktop"
+            aria-label="שם למפתח"
             maxLength={60}
-            className="flex-1 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-3 py-2.5 text-(--text-primary) text-sm placeholder:text-(--text-muted) focus:outline-none focus:border-amber-500/50 transition-colors"
+            className="flex-1 min-w-0 bg-(--surface-panel) border border-(--glass-border) rounded-xl px-3 min-h-[44px] text-(--text-primary) text-sm placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/60 transition-colors"
           />
           <button
             type="button"
             onClick={createKey}
             disabled={creating || !newName.trim()}
-            className="cursor-pointer shrink-0 px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-amber-500/30"
+            className="cursor-pointer shrink-0 px-4 min-h-[44px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-medium rounded-xl text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-amber-500/30"
           >
-            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "צור מפתח"}
+            {creating ? (
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+            ) : (
+              "יצירת מפתח"
+            )}
           </button>
         </div>
         <p className="text-xs text-(--text-muted)">
@@ -238,10 +243,10 @@ export function SettingsConnectSection() {
       </div>
 
       {/* Keys list */}
-      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+      <div className="p-5 bg-(--glass-bg) rounded-2xl border border-(--glass-border) space-y-3">
         <h3 className="font-semibold text-(--text-primary) text-sm flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-amber-400" />
-          המפתחות שלך
+          <KeyRound className="w-4 h-4 text-amber-500" aria-hidden="true" />
+          המפתחות שלכם
         </h3>
         {!loaded ? (
           <div className="flex items-center justify-center py-6">
@@ -269,7 +274,7 @@ export function SettingsConnectSection() {
                   type="button"
                   onClick={() => revokeKey(k.id, k.name)}
                   disabled={revokingId === k.id}
-                  className="cursor-pointer shrink-0 p-2 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                  className="cursor-pointer shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center text-(--text-muted) hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
                   aria-label={`בטל את המפתח ${k.name}`}
                 >
                   {revokingId === k.id ? (
@@ -285,10 +290,10 @@ export function SettingsConnectSection() {
       </div>
 
       {/* Setup snippets */}
-      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+      <div className="p-5 bg-(--glass-bg) rounded-2xl border border-(--glass-border) space-y-3">
         <h3 className="font-semibold text-(--text-primary) text-sm flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-amber-400" />
-          חיבור לכלי שלך
+          <Terminal className="w-4 h-4 text-amber-500" aria-hidden="true" />
+          חיבור לכלי שלכם
         </h3>
         <div className="flex gap-1">
           {(
@@ -302,10 +307,11 @@ export function SettingsConnectSection() {
               key={id}
               type="button"
               onClick={() => setSnippetTab(id)}
-              className={`cursor-pointer px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              aria-pressed={snippetTab === id}
+              className={`cursor-pointer px-3 min-h-[36px] rounded-lg text-xs font-medium transition-colors border ${
                 snippetTab === id
-                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                  : "bg-(--glass-bg) text-(--text-muted) border border-(--glass-border) hover:bg-(--glass-bg)"
+                  ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                  : "bg-(--glass-bg) text-(--text-muted) border-(--glass-border) hover:text-(--text-primary)"
               }`}
             >
               {label}
@@ -324,7 +330,7 @@ export function SettingsConnectSection() {
             onClick={() =>
               copyText(snippetFor(snippetTab, freshKey ?? ""), `snippet-${snippetTab}`)
             }
-            className="cursor-pointer absolute top-2 left-2 p-2 bg-(--glass-bg) hover:bg-(--glass-bg) text-(--text-muted) rounded-lg transition-colors"
+            className="cursor-pointer absolute top-2 left-2 min-w-[36px] min-h-[36px] flex items-center justify-center bg-(--surface-panel) border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) rounded-lg transition-colors"
             aria-label="העתק הגדרות"
           >
             {copied === `snippet-${snippetTab}` ? (
@@ -344,7 +350,7 @@ export function SettingsConnectSection() {
           <CopySetupPrompt apiKey={freshKey ?? undefined} />
           <a
             href="/connect"
-            className="inline-flex items-center gap-1.5 text-xs text-amber-400/80 hover:text-amber-300 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-300 hover:underline transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             המדריך המלא ורשימת הפקודות
@@ -353,9 +359,9 @@ export function SettingsConnectSection() {
       </div>
 
       {/* API endpoints — copyable */}
-      <div className="p-5 bg-(--glass-bg) rounded-xl border border-(--glass-border) space-y-3">
+      <div className="p-5 bg-(--glass-bg) rounded-2xl border border-(--glass-border) space-y-3">
         <h3 className="font-semibold text-(--text-primary) text-sm flex items-center gap-2">
-          <ExternalLink className="w-4 h-4 text-amber-400" />
+          <ExternalLink className="w-4 h-4 text-amber-500" aria-hidden="true" />
           כתובות ה-API
         </h3>
         <ul className="space-y-2">
@@ -382,7 +388,7 @@ export function SettingsConnectSection() {
               <button
                 type="button"
                 onClick={() => copyText(url, `url-${label}`)}
-                className="cursor-pointer shrink-0 p-2 bg-(--glass-bg) hover:bg-(--glass-bg) text-(--text-muted) rounded-lg transition-colors"
+                className="cursor-pointer shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center bg-(--surface-panel) border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) rounded-lg transition-colors"
                 aria-label={`העתק ${label}`}
               >
                 {copied === `url-${label}` ? (
@@ -396,7 +402,7 @@ export function SettingsConnectSection() {
         </ul>
         <p className="text-xs text-(--text-muted)">
           התיעוד האנושי המלא:{" "}
-          <a href="/connect/docs" className="text-amber-400/80 hover:text-amber-300">
+          <a href="/connect/docs" className="text-amber-700 dark:text-amber-300 hover:underline">
             /connect/docs
           </a>
         </p>

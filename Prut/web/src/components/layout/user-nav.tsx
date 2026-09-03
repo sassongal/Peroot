@@ -217,7 +217,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-blue-400 hover:bg-blue-500/10 rounded-xl transition-colors text-right"
                   >
                     <Shield className="w-4 h-4" />
-                    <span>Admin Dashboard</span>
+                    <span>לוח ניהול</span>
                   </Link>
                 )}
                 {isRoleLoaded && !isPro && (
@@ -236,7 +236,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                   className="w-full flex items-center gap-3 px-3 py-2 text-sm text-(--text-secondary) hover:bg-(--glass-bg) rounded-xl transition-colors text-right"
                 >
                   <UserIcon className="w-4 h-4" />
-                  <span>פרופיל והגדרות</span>
+                  <span>הגדרות חשבון</span>
                 </Link>
                 <div className="border-t border-(--glass-border) my-1" />
                 <button

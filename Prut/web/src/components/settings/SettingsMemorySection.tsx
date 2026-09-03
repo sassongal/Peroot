@@ -15,13 +15,14 @@ const CATEGORIES = [
   { key: "general", label: "כללי" },
 ] as const;
 
+// One hue per category, readable on both grounds (700 on light, 300 on dark).
 const CATEGORY_COLORS: Record<string, string> = {
-  professional: "border-blue-500/30 bg-blue-500/10 text-blue-300",
-  personal: "border-green-500/30 bg-green-500/10 text-green-300",
-  preference: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-  project: "border-indigo-500/30 bg-indigo-500/10 text-indigo-300",
-  language: "border-pink-500/30 bg-pink-500/10 text-pink-300",
-  general: "border-slate-500/30 bg-slate-500/10 text-(--text-secondary)",
+  professional: "border-blue-500/30 bg-blue-500/10 text-blue-800 dark:text-blue-200",
+  personal: "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200",
+  preference: "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200",
+  project: "border-indigo-500/30 bg-indigo-500/10 text-indigo-800 dark:text-indigo-200",
+  language: "border-pink-500/30 bg-pink-500/10 text-pink-800 dark:text-pink-200",
+  general: "border-(--glass-border) bg-(--glass-bg) text-(--text-secondary)",
 };
 
 export function SettingsMemorySection() {
@@ -58,43 +59,49 @@ export function SettingsMemorySection() {
   })).filter((g) => g.items.length > 0);
 
   return (
-    <div className="space-y-6" dir="rtl">
-      <div>
-        <h2 className="text-lg font-semibold text-(--text-primary) flex items-center gap-2">
-          <Brain className="w-5 h-5 text-indigo-400" />
+    <section
+      className="space-y-6 animate-in fade-in duration-300"
+      aria-labelledby="settings-memory-heading"
+    >
+      <header className="space-y-1">
+        <h2 id="settings-memory-heading" className="text-xl font-bold">
           זיכרון AI
         </h2>
-        <p className="text-sm text-(--text-muted) mt-1 leading-relaxed">
-          עובדות שה-AI יודע עליך, מוחלות אוטומטית על כל שיפור פרומפט החל מהפרומפט הראשון.
+        <p className="text-sm text-(--text-muted)">
+          מה פירוט יודע עליכם, ומחיל על כל שיפור מהפרומפט הראשון
         </p>
-      </div>
+      </header>
 
-      {/* Info banner */}
-      <div className="flex items-start gap-2.5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
-        <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+      <div className="flex items-start gap-2.5 rounded-xl border border-(--glass-border) bg-(--glass-bg) px-4 py-3">
+        <Info className="w-4 h-4 text-(--text-muted) shrink-0 mt-0.5" aria-hidden="true" />
         <p className="text-xs text-(--text-muted) leading-relaxed">
-          הזיכרון נבנה אוטומטית מהפרומפטים שאתה כותב. ניתן להוסיף עובדות ידנית או למחוק עובדות שאינן
-          מדויקות. מקסימום 100 עובדות.
+          הזיכרון נבנה לבד מהפרומפטים שאתם כותבים. אפשר להוסיף עובדה ידנית, ולמחוק כל עובדה שאינה
+          מדויקת. עד 100 עובדות.
         </p>
       </div>
 
       {/* Manual add */}
       <div className="space-y-2">
-        <label className="text-xs font-medium text-(--text-muted)">הוסף עובדה ידנית</label>
+        <label htmlFor="memory-new-fact" className="text-xs font-medium text-(--text-muted)">
+          הוספת עובדה ידנית
+        </label>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
+            id="memory-new-fact"
             value={newFact}
             onChange={(e) => setNewFact(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-            placeholder="למשל: מנהל מוצר ב-B2B SaaS"
-            className="flex-1 bg-(--glass-bg) border border-(--glass-border) rounded-lg px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-indigo-500/60 transition-colors"
+            placeholder="למשל: מנהלת מוצר בחברת SaaS"
+            dir="auto"
+            className="flex-1 min-w-0 bg-(--surface-panel) border border-(--glass-border) rounded-xl px-3 min-h-[44px] text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/60 transition-colors"
             maxLength={300}
           />
           <div className="flex gap-2">
             <select
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
-              className="flex-1 sm:flex-none sm:min-w-[110px] bg-(--glass-bg) border border-(--glass-border) rounded-lg px-2 py-2 text-sm text-(--text-secondary) focus:outline-none focus:border-indigo-500/60 transition-colors cursor-pointer"
+              aria-label="קטגוריה"
+              className="flex-1 sm:flex-none sm:min-w-[120px] bg-(--surface-panel) border border-(--glass-border) rounded-xl px-2 min-h-[44px] text-sm text-(--text-secondary) focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/60 transition-colors cursor-pointer"
             >
               {CATEGORIES.map((c) => (
                 <option key={c.key} value={c.key}>
@@ -103,16 +110,17 @@ export function SettingsMemorySection() {
               ))}
             </select>
             <button
+              type="button"
               onClick={handleAdd}
               disabled={!newFact.trim() || isAdding || facts.length >= 100}
-              className="cursor-pointer flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/30 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+              className="cursor-pointer flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             >
               {isAdding ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               ) : (
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4" aria-hidden="true" />
               )}
-              הוסף
+              הוספה
             </button>
           </div>
         </div>
@@ -121,26 +129,28 @@ export function SettingsMemorySection() {
       {/* Facts list */}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-(--text-muted)" />
+          <Loader2 className="w-5 h-5 animate-spin text-(--text-muted)" aria-label="טוען" />
         </div>
       ) : facts.length === 0 ? (
         <div className="text-center py-10 space-y-2">
-          <Brain className="w-10 h-10 text-(--text-muted) mx-auto" />
-          <p className="text-sm text-(--text-muted)">AI ילמד עליך בהדרגה תוך כדי שימוש</p>
+          <Brain className="w-10 h-10 text-(--text-muted) mx-auto" aria-hidden="true" />
+          <p className="text-sm text-(--text-secondary)">
+            עוד אין עובדות. פירוט ילמד אתכם תוך כדי שימוש
+          </p>
           <p className="text-xs text-(--text-muted)">
-            גם פרומפט אחד יכול לחשוף מידע שישתמר לכל השיפורים הבאים
+            גם פרומפט אחד יכול לחשוף פרט שיישמר לכל השיפורים הבאים
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-(--text-muted)">{facts.length} / 100 עובדות</span>
+            <span className="text-xs text-(--text-muted)">
+              <span className="font-mono">{facts.length}</span> מתוך 100 עובדות
+            </span>
           </div>
           {grouped.map((group) => (
             <div key={group.key} className="space-y-2">
-              <h3 className="text-xs font-semibold text-(--text-muted) uppercase tracking-wide">
-                {group.label}
-              </h3>
+              <h3 className="text-xs font-semibold text-(--text-muted)">{group.label}</h3>
               <div className="flex flex-wrap gap-2">
                 {group.items.map((fact) => (
                   <div
@@ -154,18 +164,19 @@ export function SettingsMemorySection() {
                       {fact.fact}
                     </span>
                     {fact.source === "manual" && (
-                      <span className="text-[9px] opacity-60">ידני</span>
+                      <span className="text-[10px] opacity-70">ידני</span>
                     )}
                     <button
+                      type="button"
                       onClick={() => handleDelete(fact.id)}
                       disabled={deletingId === fact.id}
-                      className="cursor-pointer opacity-50 hover:opacity-100 transition-opacity ml-0.5"
-                      aria-label="מחק עובדה"
+                      className="cursor-pointer -me-1 p-1.5 rounded-full opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-opacity"
+                      aria-label={`מחיקת העובדה: ${fact.fact}`}
                     >
                       {deletingId === fact.id ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
                       ) : (
-                        <X className="w-3 h-3" />
+                        <X className="w-3 h-3" aria-hidden="true" />
                       )}
                     </button>
                   </div>
@@ -175,6 +186,6 @@ export function SettingsMemorySection() {
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

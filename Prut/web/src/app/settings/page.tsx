@@ -9,18 +9,18 @@ import {
 import { trackOutputLanguageSelected } from "@/lib/analytics";
 import { logger } from "@/lib/logger";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import {
   User as UserIcon,
   Shield,
   Loader2,
-  ChevronLeft,
+  ChevronRight,
   BarChart3,
   CreditCard,
   Gift,
   Plug,
-  AlertTriangle,
   LayoutDashboard,
   Brain,
   Fingerprint,
@@ -38,7 +38,6 @@ import { SettingsStatsSection } from "@/components/settings/SettingsStatsSection
 import { SettingsReferralSection } from "@/components/settings/SettingsReferralSection";
 import { SettingsBillingSection } from "@/components/settings/SettingsBillingSection";
 import { SettingsDataSection } from "@/components/settings/SettingsDataSection";
-import { SettingsDangerSection } from "@/components/settings/SettingsDangerSection";
 import { SettingsMemorySection } from "@/components/settings/SettingsMemorySection";
 import { SettingsStyleSection } from "@/components/settings/SettingsStyleSection";
 import { SettingsConnectSection } from "@/components/settings/SettingsConnectSection";
@@ -51,9 +50,10 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
-  // "credits" used to be its own tab; it lives under billing now, and old
-  // links (quota modal, emails) still land in the right place.
-  const resolveTab = (tab: string | null) => (tab === "credits" ? "billing" : tab || "profile");
+  // "credits" and "danger" used to be their own tabs; they live under billing
+  // and data now, and old links (quota modal, emails) still land in the right place.
+  const resolveTab = (tab: string | null) =>
+    tab === "credits" ? "billing" : tab === "danger" ? "data" : tab || "profile";
   const initialSection = resolveTab(searchParams.get("tab"));
   const billingSuccessParam = searchParams.get("success") === "true";
   const [activeSection, setActiveSection] = useState<string>(initialSection);
@@ -82,6 +82,11 @@ export default function SettingsPage() {
   const [isSavingName, setIsSavingName] = useState(false);
   // Last name persisted to the DB — lets blur-autosave skip no-op writes.
   const savedNameRef = useRef("");
+  // The phone strip scrolls; a deep link into a far tab must show it selected.
+  const activeTabRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    activeTabRef.current?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [activeSection]);
 
   const supabase = useMemo(() => createClient(), []);
 
@@ -467,23 +472,43 @@ export default function SettingsPage() {
     ? `https://app.lemonsqueezy.com/my-orders/${lsSubId}`
     : "https://app.lemonsqueezy.com/my-orders";
 
-  const sections = [
-    { id: "profile", label: "פרופיל", icon: UserIcon },
-    { id: "stats", label: "סטטיסטיקות", icon: BarChart3 },
-    { id: "memory", label: "זיכרון AI", icon: Brain },
-    { id: "style", label: "הסגנון שלך", icon: Fingerprint },
-    { id: "connect", label: "Peroot Connect", icon: Plug },
-    { id: "referral", label: "הזמן חברים", icon: Gift },
-    { id: "billing", label: "מנוי וקרדיטים", icon: CreditCard },
-    { id: "data", label: "נתונים ופרטיות", icon: Shield },
-    { id: "danger", label: "אזור מסוכן", icon: AlertTriangle },
+  // Eight sections in four groups. The desktop rail shows the group names;
+  // the phone strip shows the same eight in the same order.
+  const groups = [
+    {
+      label: "החשבון",
+      items: [
+        { id: "profile", label: "פרופיל", icon: UserIcon },
+        { id: "billing", label: "מנוי וקרדיטים", icon: CreditCard },
+        { id: "stats", label: "סטטיסטיקות", icon: BarChart3 },
+      ],
+    },
+    {
+      label: "התאמה אישית",
+      items: [
+        { id: "memory", label: "זיכרון AI", icon: Brain },
+        { id: "style", label: "הסגנון שלך", icon: Fingerprint },
+      ],
+    },
+    {
+      label: "חיבורים",
+      items: [
+        { id: "connect", label: "Peroot Connect", icon: Plug },
+        { id: "referral", label: "הזמנת חברים", icon: Gift },
+      ],
+    },
+    {
+      label: "נתונים",
+      items: [{ id: "data", label: "נתונים ופרטיות", icon: Shield }],
+    },
   ];
+  const sections = groups.flatMap((g) => g.items);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-900/10 blur-[150px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[150px] rounded-full" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-500/10 dark:bg-amber-900/10 blur-[150px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-sky-500/10 dark:bg-blue-900/10 blur-[150px] rounded-full" />
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
@@ -496,34 +521,42 @@ export default function SettingsPage() {
               if (window.history.length <= 1) router.push("/");
               else router.back();
             }}
-            className="cursor-pointer flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+            className="cursor-pointer flex items-center gap-2 min-h-[44px] text-(--text-muted) hover:text-(--text-primary) transition-colors group"
+            aria-label="חזרה"
           >
-            <ChevronLeft className="w-5 h-5 group-hover:translate-x-[-4px] transition-transform" />
+            <ChevronRight
+              className="w-5 h-5 group-hover:translate-x-1 transition-transform motion-reduce:transition-none"
+              aria-hidden="true"
+            />
             <span>חזרה</span>
           </button>
-          <div className="h-6 w-px bg-border" />
+          <div className="h-6 w-px bg-(--glass-border)" />
           <h1 className="text-2xl font-bold">הגדרות חשבון</h1>
         </div>
 
         {/* Mobile horizontal scroll nav */}
         <nav
-          className="flex md:hidden gap-1 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none"
+          className="flex md:hidden gap-1 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none"
           aria-label="מקטעי הגדרות"
         >
           {sections.map((section) => {
             const Icon = section.icon;
+            const active = activeSection === section.id;
             return (
               <button
                 key={section.id}
                 type="button"
                 onClick={() => selectSection(section.id)}
-                className={`cursor-pointer shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-                  activeSection === section.id
-                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground border border-transparent"
-                }`}
+                ref={active ? activeTabRef : undefined}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "cursor-pointer shrink-0 flex items-center gap-2 px-3 min-h-[40px] rounded-xl text-sm font-medium transition-colors whitespace-nowrap border",
+                  active
+                    ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                    : "text-(--text-muted) hover:bg-(--glass-bg) hover:text-(--text-primary) border-transparent",
+                )}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4" aria-hidden="true" />
                 <span>{section.label}</span>
               </button>
             );
@@ -531,50 +564,58 @@ export default function SettingsPage() {
           {isAdmin && (
             <Link
               href="/admin"
-              className="cursor-pointer shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 whitespace-nowrap"
+              className="cursor-pointer shrink-0 flex items-center gap-2 px-3 min-h-[40px] rounded-xl text-sm font-medium transition-colors text-blue-700 dark:text-blue-300 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 whitespace-nowrap"
             >
-              <LayoutDashboard className="w-4 h-4" />
-              <span>ניהול</span>
+              <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
+              <span>לוח ניהול</span>
             </Link>
           )}
         </nav>
 
         <div className="grid md:grid-cols-[240px_1fr] gap-6 mt-4 md:mt-0">
           {/* Desktop sidebar */}
-          <div className="hidden md:flex flex-col gap-1">
-            <nav className="space-y-1" aria-label="מקטעי הגדרות">
-              {sections.map((section) => {
-                const Icon = section.icon;
-                return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => selectSection(section.id)}
-                    className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-xl text-start transition-all ${
-                      activeSection === section.id
-                        ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground border border-transparent"
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{section.label}</span>
-                  </button>
-                );
-              })}
+          <div className="hidden md:flex flex-col gap-1 self-start md:sticky md:top-24">
+            <nav className="space-y-4" aria-label="מקטעי הגדרות">
+              {groups.map((group) => (
+                <div key={group.label} className="space-y-1">
+                  <p className="px-4 text-[11px] font-medium text-(--text-muted)">{group.label}</p>
+                  {group.items.map((section) => {
+                    const Icon = section.icon;
+                    const active = activeSection === section.id;
+                    return (
+                      <button
+                        key={section.id}
+                        type="button"
+                        onClick={() => selectSection(section.id)}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "cursor-pointer w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-start transition-colors border",
+                          active
+                            ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                            : "text-(--text-muted) hover:bg-(--glass-bg) hover:text-(--text-primary) border-transparent",
+                        )}
+                      >
+                        <Icon className="w-5 h-5" aria-hidden="true" />
+                        <span className="font-medium">{section.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
             </nav>
 
             {isAdmin && (
               <Link
                 href="/admin"
-                className="cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl text-start transition-all text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 mt-1"
+                className="cursor-pointer flex items-center gap-3 px-4 py-2.5 rounded-xl text-start transition-colors text-blue-700 dark:text-blue-300 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 mt-3"
               >
-                <LayoutDashboard className="w-5 h-5" />
-                <span className="font-medium">פאנל ניהול</span>
+                <LayoutDashboard className="w-5 h-5" aria-hidden="true" />
+                <span className="font-medium">לוח ניהול</span>
               </Link>
             )}
           </div>
 
-          <div className="bg-card border border-border rounded-2xl p-6 backdrop-blur-sm">
+          <div className="bg-(--glass-bg) border border-(--glass-border) rounded-2xl p-4 sm:p-6 min-w-0">
             {activeSection === "profile" && (
               <SettingsProfileSection
                 user={user}
@@ -627,10 +668,6 @@ export default function SettingsPage() {
                 onClearHistory={handleClearHistory}
                 isClearingHistory={isClearingHistory}
                 historyLength={history.length}
-              />
-            )}
-            {activeSection === "danger" && (
-              <SettingsDangerSection
                 showDeleteConfirm={showDeleteConfirm}
                 onShowDeleteConfirm={setShowDeleteConfirm}
                 deleteConfirmText={deleteConfirmText}
