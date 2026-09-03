@@ -956,7 +956,7 @@
 .peroot-preview {
   position: absolute;
   inset-inline: 0;
-  bottom: calc(100% + 10px);
+  bottom: calc(100% + 62px);
   z-index: 2147483000;
   max-height: 46vh;
   display: flex;
