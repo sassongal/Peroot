@@ -38,6 +38,19 @@ export interface GatewayParams {
    */
   estimatedInputTokens?: number;
   onFinish?: (completion: { usage: unknown; text: string }) => Promise<void>;
+  /**
+   * Called when the stream is cancelled through `abortSignal` (client
+   * disconnect / stop button). `onFinish` does NOT fire for aborted streams,
+   * so any refund/lock cleanup the caller does in onFinish must have an
+   * onAbort twin.
+   */
+  onAbort?: () => void | Promise<void>;
+  /**
+   * Wire the request's signal here so a client disconnect actually cancels
+   * the upstream model call instead of letting it run (and bill) to
+   * completion.
+   */
+  abortSignal?: AbortSignal;
   onStreamEnd?: () => void;
   /**
    * Optional image attachments for multimodal requests.
@@ -350,11 +363,20 @@ export class AIGateway {
             temperature: defaults.temperature,
             maxOutputTokens: defaults.maxOutputTokens,
             ...(providerOptions ? { providerOptions } : {}),
+            ...(params.abortSignal ? { abortSignal: params.abortSignal } : {}),
             onFinish: async (completion) => {
               recordSuccess(config.provider);
               safeRelease();
               if (params.onFinish) {
                 await params.onFinish(completion);
+              }
+            },
+            // Abort is a client decision, not a provider failure: release the
+            // concurrency slot without touching the circuit breaker.
+            onAbort: async () => {
+              safeRelease();
+              if (params.onAbort) {
+                await params.onAbort();
               }
             },
           });

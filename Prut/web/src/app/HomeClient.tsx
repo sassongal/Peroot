@@ -1071,9 +1071,17 @@ function PageContent() {
 
   const handleRefine = useCallback(
     async (instruction: string) => {
-      if (ps.isLoading) return;
+      // Same synchronous double-fire guard as handleEnhance: `ps.isLoading`
+      // alone is an async state read, so two near-simultaneous refine
+      // triggers (Quick Refine + the free-retry toast) both pass it and
+      // clobber the shared stream accumulator.
+      if (ps.isLoading || enhanceCooldownRef.current) return;
       const hasAnswers = Object.values(ps.questionAnswers).some((a) => a.trim());
       if ((!instruction.trim() && !hasAnswers) || !ps.completion) return;
+      enhanceCooldownRef.current = true;
+      setTimeout(() => {
+        enhanceCooldownRef.current = false;
+      }, 500);
 
       const currentCompletion = ps.completion;
 
@@ -1631,6 +1639,17 @@ function PageContent() {
     abortStream();
     dispatch({ type: "STREAM_INTERRUPTED" });
   }, [abortStream, dispatch]);
+
+  // Navigating away mid-stream must abort the fetch: without this the stream
+  // keeps running against an unmounted page, its onDone/onError callbacks
+  // toast into whatever screen the user moved to, and the server keeps
+  // generating (and billing) a result nobody will see.
+  useEffect(() => {
+    return () => {
+      streamInterruptedRef.current = true;
+      abortStream();
+    };
+  }, [abortStream]);
 
   const handleDiscoveryCtaClick = useCallback(
     (action: string) => {
