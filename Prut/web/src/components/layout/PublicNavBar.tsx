@@ -127,7 +127,7 @@ export function PublicNavBar() {
             <Link
               key={href}
               href={href}
-              className={cn("hidden lg:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
+              className={cn(NAV_ITEM_BASE, NAV_ITEM_IDLE, "hidden lg:flex")}
             >
               <Icon className="w-4 h-4" style={{ color: hue }} />
               <span>{label}</span>
@@ -181,7 +181,7 @@ export function PublicNavBar() {
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           <Link
             href="/connect"
-            className={cn("hidden sm:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
+            className={cn(NAV_ITEM_BASE, NAV_ITEM_IDLE, "hidden sm:flex")}
             aria-label="Peroot Connect, חבר את הסוכן שלך"
             title="Peroot Connect, חבר את הסוכן שלך"
           >
@@ -204,7 +204,7 @@ export function PublicNavBar() {
           {hasSession && (
             <Link
               href="/?view=personal"
-              className={cn("hidden md:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
+              className={cn(NAV_ITEM_BASE, NAV_ITEM_IDLE, "hidden md:flex")}
             >
               <BookOpen className="w-4 h-4" style={{ color: "#456F52" }} />
               <span>הספרייה שלי</span>

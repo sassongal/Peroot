@@ -163,9 +163,9 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
                 key={id}
                 onClick={() => onNavigate(id)}
                 className={cn(
-                  "hidden sm:flex",
                   NAV_ITEM_BASE,
                   isActive ? NAV_ITEM_ACTIVE : NAV_ITEM_IDLE,
+                  "hidden sm:flex",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
@@ -182,9 +182,9 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
               else onNavigate("personal");
             }}
             className={cn(
-              "hidden sm:flex",
               NAV_ITEM_BASE,
               viewMode === "personal" ? NAV_ITEM_ACTIVE : NAV_ITEM_IDLE,
+              "hidden sm:flex",
             )}
             title="הקשרים בין הפרומפטים שלי"
             aria-label="פתח את מסך הקשרים"
@@ -202,7 +202,7 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
             <Link
               key={href}
               href={href}
-              className={cn("hidden xl:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
+              className={cn(NAV_ITEM_BASE, NAV_ITEM_IDLE, "hidden xl:flex")}
             >
               <Icon className="w-4 h-4" style={{ color: hue }} />
               <span>{label}</span>
@@ -257,7 +257,7 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
           {/* Phones reach Connect from the "עוד" menu (first item). */}
           <Link
             href="/connect"
-            className={cn("hidden sm:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
+            className={cn(NAV_ITEM_BASE, NAV_ITEM_IDLE, "hidden sm:flex")}
             aria-label="Peroot Connect, חבר את הסוכן שלך"
             title="Peroot Connect, חבר את הסוכן שלך"
           >

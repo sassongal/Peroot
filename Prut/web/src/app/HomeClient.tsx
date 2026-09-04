@@ -1727,7 +1727,7 @@ function PageContent() {
           Keeps TopNavBar under the 375px crowding threshold. */}
       <button
         onClick={handleOpenChainsFromNav}
-        className={cn("hidden sm:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
+        className={cn(NAV_ITEM_BASE, NAV_ITEM_IDLE, "hidden sm:flex")}
         aria-label="שרשראות"
         title="שרשראות פרומפטים"
       >
@@ -1737,9 +1737,9 @@ function PageContent() {
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className={cn(
-          "hidden sm:flex",
           NAV_ITEM_BASE,
           sidebarOpen ? NAV_ITEM_ACTIVE : NAV_ITEM_IDLE,
+          "hidden sm:flex",
         )}
         aria-expanded={sidebarOpen}
         aria-label="היסטוריה"
