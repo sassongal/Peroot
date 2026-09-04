@@ -205,6 +205,24 @@
   box-shadow: var(--desk-glow);
 }
 
+/* Light theme: the white-on-white frame of an idle or locked card vanished
+   on the light ground, so the four side cards floated as bare icons. The
+   light palette lives on bare :root (no .light class), so key off .dark. */
+:global(html:not(.dark)) .deskCard {
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.035) 0%, rgba(15, 23, 42, 0.01) 100%);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+:global(html:not(.dark)) .deskCard:hover {
+  border-color: rgba(15, 23, 42, 0.24);
+}
+:global(html:not(.dark)) .deskBtnDisabled {
+  opacity: 0.55;
+}
+:global(html:not(.dark)) .deskBtnActive .deskCard {
+  background: linear-gradient(160deg, var(--desk-grad-from) 0%, var(--desk-grad-to) 100%);
+  border-color: var(--desk-border-color);
+}
+
 /* Ambient blob above card */
 .blobGlow {
   position: absolute;
