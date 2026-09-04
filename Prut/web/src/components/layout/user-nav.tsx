@@ -110,45 +110,46 @@ export function UserMenu({ user, position }: UserMenuProps) {
     // Logged in user - show avatar and dropdown menu
     return (
       <div className="relative flex items-center gap-3 animate-in fade-in duration-700">
-        <div className="flex flex-col items-end hidden md:flex">
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-            <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-              {t.auth.connected}
-            </span>
-          </div>
-        </div>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="תפריט משתמש"
-          aria-haspopup="true"
-          aria-expanded={isOpen}
-          className="w-11 h-11 rounded-full bg-(--glass-bg) hover:bg-black/10 dark:hover:bg-white/10 border border-(--glass-border) flex items-center justify-center transition-all overflow-hidden shadow-2xl relative active:scale-95 hover:ring-2 hover:ring-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none cursor-pointer"
-        >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt="תמונת פרופיל"
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-              loading="eager"
-              decoding="async"
-              onError={(e) => {
-                const img = e.target as HTMLImageElement;
-                if (!img.dataset.fallback && fallbackGenerated) {
-                  img.dataset.fallback = "1";
-                  img.src = fallbackGenerated;
-                } else {
-                  img.onerror = null;
-                }
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-white font-bold bg-linear-to-br from-amber-500 to-red-500">
-              {user.email?.[0].toUpperCase()}
-            </div>
-          )}
-        </button>
+        {/* Signed-in state is the green dot on the avatar (owner direction,
+            2026-09-04), not a word beside it. */}
+        <span className="relative inline-flex shrink-0">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label={`תפריט משתמש, ${t.auth.connected}`}
+            aria-haspopup="true"
+            aria-expanded={isOpen}
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-(--glass-bg) hover:bg-black/10 dark:hover:bg-white/10 border border-(--glass-border) flex items-center justify-center transition-all overflow-hidden shadow-2xl relative active:scale-95 hover:ring-2 hover:ring-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none cursor-pointer"
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="תמונת פרופיל"
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+                loading="eager"
+                decoding="async"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  if (!img.dataset.fallback && fallbackGenerated) {
+                    img.dataset.fallback = "1";
+                    img.src = fallbackGenerated;
+                  } else {
+                    img.onerror = null;
+                  }
+                }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white font-bold bg-linear-to-br from-amber-500 to-red-500">
+                {user.email?.[0].toUpperCase()}
+              </div>
+            )}
+          </button>
+          <span
+            aria-hidden
+            title={t.auth.connected}
+            className="absolute bottom-0 end-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-(--surface-nav) shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+          />
+        </span>
 
         {isOpen && (
           <>

@@ -3,10 +3,24 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Moon, MoreHorizontal, Plug, Sparkles, Sun } from "lucide-react";
+import {
+  BookOpen,
+  Moon,
+  MoreHorizontal,
+  Plug,
+  Sparkles,
+  Sun,
+  Newspaper,
+  Tag,
+  LayoutTemplate,
+  GraduationCap,
+  Layers,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
+import { NAV_ITEM_BASE, NAV_ITEM_IDLE, NAV_ITEM_ACTIVE } from "@/components/layout/TopNavBar";
 
 /**
  * Branded top bar for the PUBLIC pages (marketing/content/docs) — the same
@@ -16,17 +30,19 @@ import { createClient } from "@/lib/supabase/client";
  * branded by construction.
  */
 
-const NAV_LINKS: { href: string; label: string }[] = [
-  { href: "/features", label: "יכולות" },
-  { href: "/prompts", label: "פרומפטים" },
-  { href: "/templates", label: "תבניות" },
-  { href: "/guide", label: "מדריך" },
-  { href: "/blog", label: "בלוג" },
-  { href: "/pricing", label: "מחירים" },
+// Same icons and palette hues as the app bar, so a section keeps its mark
+// across the site.
+const NAV_LINKS: { href: string; label: string; Icon: LucideIcon; hue: string }[] = [
+  { href: "/features", label: "יכולות", Icon: Layers, hue: "#F59E0B" },
+  { href: "/prompts", label: "פרומפטים", Icon: Sparkles, hue: "#5376A4" },
+  { href: "/templates", label: "תבניות", Icon: LayoutTemplate, hue: "#456F52" },
+  { href: "/guide", label: "מדריך", Icon: GraduationCap, hue: "#6468d4" },
+  { href: "/blog", label: "בלוג", Icon: Newspaper, hue: "#AC5050" },
+  { href: "/pricing", label: "מחירים", Icon: Tag, hue: "#FDBE00" },
 ];
 
 const MORE_LINKS: { href: string; label: string }[] = [
-  ...NAV_LINKS,
+  ...NAV_LINKS.map(({ href, label }) => ({ href, label })),
   { href: "/connect", label: "Peroot Connect, חיבור סוכנים" },
   { href: "/about", label: "אודות" },
   { href: "/contact", label: "צור קשר" },
@@ -79,12 +95,12 @@ export function PublicNavBar() {
       dir="rtl"
       aria-label="ניווט ראשי"
     >
-      <div className="flex items-center justify-between h-14 px-4 sm:px-6 max-w-[1920px] mx-auto">
+      <div className="flex items-center justify-between gap-3 h-14 px-4 sm:px-6 max-w-[1920px] mx-auto">
         {/* Right: logo + links */}
-        <div className="flex min-w-0 items-center gap-0.5 sm:gap-2">
+        <div className="flex min-w-0 items-center gap-1">
           <Link
             href="/"
-            className="flex items-center me-1 sm:me-4 shrink-0"
+            className="flex items-center me-2 sm:me-3 shrink-0"
             aria-label="Peroot, לדף הבית"
           >
             <Image
@@ -105,13 +121,16 @@ export function PublicNavBar() {
             />
           </Link>
 
-          {NAV_LINKS.map(({ href, label }) => (
+          <span aria-hidden className="hidden lg:block h-6 w-px mx-1.5 bg-(--border-nav)" />
+
+          {NAV_LINKS.map(({ href, label, Icon, hue }) => (
             <Link
               key={href}
               href={href}
-              className="hidden lg:flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className={cn("hidden lg:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
             >
-              {label}
+              <Icon className="w-4 h-4" style={{ color: hue }} />
+              <span>{label}</span>
             </Link>
           ))}
 
@@ -121,17 +140,13 @@ export function PublicNavBar() {
               ref={moreTriggerRef}
               type="button"
               onClick={() => setMoreOpen((o) => !o)}
-              className={cn(
-                "flex items-center gap-1 px-2 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                moreOpen
-                  ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent",
-              )}
+              className={cn(NAV_ITEM_BASE, moreOpen ? NAV_ITEM_ACTIVE : NAV_ITEM_IDLE)}
               aria-expanded={moreOpen}
               aria-haspopup="menu"
               aria-label="תפריט"
             >
-              <MoreHorizontal className="w-5 h-5 shrink-0" />
+              <MoreHorizontal className="w-4 h-4 shrink-0" />
+              <span className="max-[360px]:hidden">עוד</span>
             </button>
             {moreOpen && (
               <>
@@ -150,7 +165,7 @@ export function PublicNavBar() {
                       key={href}
                       href={href}
                       role="menuitem"
-                      className="block px-5 py-3 text-base text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10"
+                      className="block px-5 py-3 text-base font-bold text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10"
                       onClick={() => setMoreOpen(false)}
                     >
                       {label}
@@ -163,32 +178,39 @@ export function PublicNavBar() {
         </div>
 
         {/* Left: connect, theme, app CTA */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           <Link
             href="/connect"
-            className="hidden sm:flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/8 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className={cn("hidden sm:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
             aria-label="Peroot Connect, חבר את הסוכן שלך"
             title="Peroot Connect, חבר את הסוכן שלך"
           >
-            <Plug className="w-4 h-4" />
+            <Plug className="w-4 h-4" style={{ color: "#456F52" }} />
+            <span>Connect</span>
           </Link>
           <button
             onClick={toggleTheme}
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className={cn(NAV_ITEM_BASE, NAV_ITEM_IDLE, "min-w-[44px]")}
             aria-label={theme === "dark" ? "עבור למצב בהיר" : "עבור למצב כהה"}
             title={theme === "dark" ? "מצב בהיר" : "מצב כהה"}
           >
-            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4" style={{ color: "#FDBE00" }} />
+            ) : (
+              <Moon className="w-4 h-4" style={{ color: "#6468d4" }} />
+            )}
+            <span className="hidden sm:block">{theme === "dark" ? "בהיר" : "כהה"}</span>
           </button>
           {hasSession && (
             <Link
               href="/?view=personal"
-              className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/8 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className={cn("hidden md:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
             >
-              <BookOpen className="w-4 h-4" />
-              לספרייה שלי
+              <BookOpen className="w-4 h-4" style={{ color: "#456F52" }} />
+              <span>הספרייה שלי</span>
             </Link>
           )}
+          <span aria-hidden className="hidden sm:block h-6 w-px mx-1 bg-(--border-nav)" />
           <Link
             href="/"
             className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-bold bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"

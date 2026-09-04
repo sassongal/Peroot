@@ -12,10 +12,31 @@ import {
   MoreHorizontal,
   Network,
   Plug,
+  Newspaper,
+  Tag,
+  Sparkles,
+  LayoutTemplate,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
+
+/**
+ * Top bar (owner direction, 2026-09-04): every section is a small coloured
+ * icon above a bold label, sections are spaced and grouped with thin
+ * dividers, and the signed-in state is a green dot on the avatar (in
+ * user-nav), not a word. Icon hues come from the palette in DESIGN.md: the
+ * five engine hues plus Signal Gold for "שפר", the one gold item in the bar.
+ */
+const HUE = {
+  gold: "#F59E0B",
+  blue: "#5376A4",
+  green: "#456F52",
+  red: "#AC5050",
+  amber: "#FDBE00",
+  indigo: "#6468d4",
+} as const;
 
 const MORE_NAV_LINKS: { href: string; label: string }[] = [
   { href: "/connect", label: "Peroot Connect, חיבור סוכנים" },
@@ -26,13 +47,34 @@ const MORE_NAV_LINKS: { href: string; label: string }[] = [
   { href: "/guide", label: "מדריך" },
 ];
 
+const SITE_LINKS: { href: string; label: string; Icon: LucideIcon; hue: string }[] = [
+  { href: "/blog", label: "בלוג", Icon: Newspaper, hue: HUE.red },
+  { href: "/pricing", label: "מחירים", Icon: Tag, hue: HUE.amber },
+  { href: "/prompts", label: "פרומפטים", Icon: Sparkles, hue: HUE.blue },
+  { href: "/templates", label: "תבניות", Icon: LayoutTemplate, hue: HUE.green },
+  { href: "/guide", label: "מדריך", Icon: GraduationCap, hue: HUE.indigo },
+];
+
 type ViewMode = "home" | "library" | "personal";
 
-const NAV_ITEMS: { id: ViewMode; label: string; Icon: LucideIcon }[] = [
-  { id: "home", label: "שפר", Icon: Wand2 },
-  { id: "library", label: "ספרייה", Icon: Library },
-  { id: "personal", label: "ספרייה אישית", Icon: BookOpen },
+const NAV_ITEMS: { id: ViewMode; label: string; Icon: LucideIcon; hue: string }[] = [
+  { id: "home", label: "שפר", Icon: Wand2, hue: HUE.gold },
+  { id: "library", label: "ספרייה", Icon: Library, hue: HUE.blue },
+  { id: "personal", label: "ספרייה אישית", Icon: BookOpen, hue: HUE.green },
 ];
+
+/** Shared look of every bar section: icon on top, bold label under it. */
+export const NAV_ITEM_BASE =
+  "flex flex-col items-center justify-center gap-0.5 px-2.5 py-1 min-w-[52px] min-h-[44px] rounded-lg text-[11px] font-bold leading-none whitespace-nowrap border transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none cursor-pointer";
+export const NAV_ITEM_IDLE =
+  "border-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5";
+export const NAV_ITEM_ACTIVE =
+  "bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300";
+
+/** Thin vertical rule between groups of sections. */
+function Divider() {
+  return <span aria-hidden className="hidden sm:block h-6 w-px mx-1.5 bg-(--border-nav)" />;
+}
 
 interface TopNavBarProps {
   viewMode: ViewMode | string;
@@ -81,11 +123,11 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
       aria-label="ניווט ראשי"
     >
       <div className="flex items-center justify-between gap-3 h-14 px-4 sm:px-6 max-w-[1920px] mx-auto">
-        {/* Right: Logo + Nav links */}
-        <div className="flex min-w-0 items-center gap-0.5 sm:gap-2 overflow-visible">
+        {/* Right: Logo + sections */}
+        <div className="flex min-w-0 items-center gap-1 overflow-visible">
           <Link
             href="/"
-            className="flex items-center me-1 sm:me-4 shrink-0"
+            className="flex items-center me-2 sm:me-3 shrink-0"
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey) return;
               e.preventDefault();
@@ -110,102 +152,75 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
             />
           </Link>
 
-          {NAV_ITEMS.map(({ id, label, Icon }) => {
+          <Divider />
+
+          {/* App views. Phones reach them from the tab bar, so they are
+              desktop-only here. */}
+          {NAV_ITEMS.map(({ id, label, Icon, hue }) => {
             const isActive = viewMode === id;
-            const isPersonal = id === "personal";
             return (
               <button
                 key={id}
                 onClick={() => onNavigate(id)}
                 className={cn(
-                  // On mobile the MobileTabBar already provides home/library/personal —
-                  // hiding these avoids duplicating nav and freeing space for children.
-                  "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none relative whitespace-nowrap",
-                  isActive
-                    ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent",
+                  "hidden sm:flex",
+                  NAV_ITEM_BASE,
+                  isActive ? NAV_ITEM_ACTIVE : NAV_ITEM_IDLE,
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
-                <Icon className="w-4 h-4" />
-                <span className="hidden md:inline">{label}</span>
+                <Icon className="w-4 h-4" style={{ color: isActive ? undefined : hue }} />
+                <span>{label}</span>
               </button>
             );
           })}
 
-          {/* Graph button — navigates to personal library and opens graph view */}
+          {/* Graph: the personal library's connections view. */}
           <button
             onClick={() => {
               if (onOpenGraph) onOpenGraph();
               else onNavigate("personal");
             }}
             className={cn(
-              // Phones: the tab bar's "שלי" reaches the same screen, and on a
-              // 375px bar this icon sat flush against "עוד" and Connect.
-              "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none border",
-              viewMode === "personal"
-                ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                : "text-slate-500 dark:text-slate-400 hover:text-amber-700 dark:hover:text-amber-300 hover:bg-amber-500/8 border-transparent",
+              "hidden sm:flex",
+              NAV_ITEM_BASE,
+              viewMode === "personal" ? NAV_ITEM_ACTIVE : NAV_ITEM_IDLE,
             )}
             title="הקשרים בין הפרומפטים שלי"
             aria-label="פתח את מסך הקשרים"
           >
-            <Network className="w-4 h-4 transition-all" />
-            <span className="hidden md:inline">קשרים</span>
+            <Network
+              className="w-4 h-4"
+              style={{ color: viewMode === "personal" ? undefined : HUE.indigo }}
+            />
+            <span>קשרים</span>
           </button>
 
-          <Link
-            href="/blog"
-            className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-          >
-            בלוג
-          </Link>
+          <span aria-hidden className="hidden xl:block h-6 w-px mx-1.5 bg-(--border-nav)" />
 
-          <Link
-            href="/pricing"
-            className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-          >
-            מחירים
-          </Link>
-
-          <Link
-            href="/prompts"
-            className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-          >
-            פרומפטים
-          </Link>
-
-          <Link
-            href="/templates"
-            className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-          >
-            תבניות
-          </Link>
-
-          <Link
-            href="/guide"
-            className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-          >
-            מדריך
-          </Link>
+          {SITE_LINKS.map(({ href, label, Icon, hue }) => (
+            <Link
+              key={href}
+              href={href}
+              className={cn("hidden xl:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
+            >
+              <Icon className="w-4 h-4" style={{ color: hue }} />
+              <span>{label}</span>
+            </Link>
+          ))}
 
           <div className="relative shrink-0 xl:hidden" ref={moreWrapRef}>
             <button
               ref={moreTriggerRef}
               type="button"
               onClick={() => setMoreOpen((o) => !o)}
-              className={cn(
-                "flex items-center gap-1 px-2 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                moreOpen
-                  ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent",
-              )}
+              className={cn(NAV_ITEM_BASE, moreOpen ? NAV_ITEM_ACTIVE : NAV_ITEM_IDLE)}
               aria-expanded={moreOpen}
               aria-haspopup="menu"
               aria-label="עוד קישורים"
             >
-              <MoreHorizontal className="w-5 h-5 shrink-0" />
-              <span className="text-xs font-medium max-[360px]:hidden">עוד</span>
+              <MoreHorizontal className="w-4 h-4 shrink-0" />
+              <span className="max-[360px]:hidden">עוד</span>
             </button>
             {moreOpen && (
               <>
@@ -225,7 +240,7 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
                       key={href}
                       href={href}
                       role="menuitem"
-                      className="block px-5 py-3 text-base text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10"
+                      className="block px-5 py-3 text-base font-bold text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10"
                       onClick={() => setMoreOpen(false)}
                     >
                       {label}
@@ -237,25 +252,32 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
           </div>
         </div>
 
-        {/* Left: Controls slot */}
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        {/* Left: utilities, then the page's own controls */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           {/* Phones reach Connect from the "עוד" menu (first item). */}
           <Link
             href="/connect"
-            className="hidden sm:flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/8 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className={cn("hidden sm:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
             aria-label="Peroot Connect, חבר את הסוכן שלך"
             title="Peroot Connect, חבר את הסוכן שלך"
           >
-            <Plug className="w-4 h-4" />
+            <Plug className="w-4 h-4" style={{ color: HUE.green }} />
+            <span>Connect</span>
           </Link>
           <button
             onClick={toggleTheme}
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className={cn(NAV_ITEM_BASE, NAV_ITEM_IDLE, "min-w-[44px]")}
             aria-label={theme === "dark" ? "עבור למצב בהיר" : "עבור למצב כהה"}
             title={theme === "dark" ? "מצב בהיר" : "מצב כהה"}
           >
-            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4" style={{ color: HUE.amber }} />
+            ) : (
+              <Moon className="w-4 h-4" style={{ color: HUE.indigo }} />
+            )}
+            <span className="hidden sm:block">{theme === "dark" ? "בהיר" : "כהה"}</span>
           </button>
+          {children ? <Divider /> : null}
           {children}
         </div>
       </div>

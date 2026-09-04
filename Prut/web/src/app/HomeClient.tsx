@@ -53,7 +53,12 @@ import { consumePendingPrompt, setPendingPrompt } from "@/lib/pending-prompt";
 import { onboardingRole } from "@/lib/onboarding-roles";
 import { usePromptLimits } from "@/hooks/usePromptLimits";
 import { Clock, HelpCircle, Link2 } from "lucide-react";
-import { TopNavBar } from "@/components/layout/TopNavBar";
+import {
+  TopNavBar,
+  NAV_ITEM_BASE,
+  NAV_ITEM_IDLE,
+  NAV_ITEM_ACTIVE,
+} from "@/components/layout/TopNavBar";
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
 import { useStreamingCompletion, type StreamError } from "@/hooks/useStreamingCompletion";
@@ -1722,26 +1727,25 @@ function PageContent() {
           Keeps TopNavBar under the 375px crowding threshold. */}
       <button
         onClick={handleOpenChainsFromNav}
-        className="hidden sm:flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all border border-(--glass-border) bg-(--glass-bg) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg) cursor-pointer"
+        className={cn("hidden sm:flex", NAV_ITEM_BASE, NAV_ITEM_IDLE)}
         aria-label="שרשראות"
         title="שרשראות פרומפטים"
       >
-        <Link2 className="w-4 h-4" />
-        <span className="hidden md:inline">שרשראות</span>
+        <Link2 className="w-4 h-4" style={{ color: "#5376A4" }} />
+        <span>שרשראות</span>
       </button>
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className={cn(
-          "hidden sm:flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all border backdrop-blur-md cursor-pointer",
-          sidebarOpen
-            ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-            : "bg-(--glass-bg) border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
+          "hidden sm:flex",
+          NAV_ITEM_BASE,
+          sidebarOpen ? NAV_ITEM_ACTIVE : NAV_ITEM_IDLE,
         )}
         aria-expanded={sidebarOpen}
         aria-label="היסטוריה"
       >
-        <Clock className="w-4 h-4" />
-        <span className="hidden md:inline">היסטוריה</span>
+        <Clock className="w-4 h-4" style={{ color: sidebarOpen ? undefined : "#6468d4" }} />
+        <span>היסטוריה</span>
       </button>
       <UserMenu user={user} position="top" />
     </TopNavBar>

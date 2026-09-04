@@ -82,7 +82,7 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
           }`}
         >
           <Coins className={`w-4 h-4 ${isLow ? "text-red-400" : "text-amber-400"}`} />
-          <span className="text-xs font-medium text-[var(--text-primary)]">
+          <span className="text-xs font-bold text-[var(--text-primary)]">
             {bonusCredits > 0 ? (
               // Two buckets: the daily allowance and the referral bonus that
               // is spent after it. Shown apart so "5" never reads as a bigger
@@ -139,7 +139,7 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
       className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md transition-all hover:bg-black/10 dark:hover:bg-black/60"
     >
       <Sparkles className="w-4 h-4 text-blue-400" />
-      <span className="text-xs font-medium text-[var(--text-primary)]">
+      <span className="text-xs font-bold text-[var(--text-primary)]">
         {remainingPrompts}/{totalAllowed}
         <span className="text-[var(--text-muted)] font-normal hidden md:inline">
           {" "}
