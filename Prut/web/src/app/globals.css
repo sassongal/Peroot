@@ -803,8 +803,6 @@ select:focus-visible {
   filter: none;
 }
 
-/* SEO hero: position:absolute so it never affects the interactive UI layout.
-   HomeClient is always at top — zero CLS on desktop. */
 /* .home-seo-hero flows in-document below the app and is ALWAYS visible.
    It must never be display:none'd or opacity:0'd — Google indexes the
    mobile render, and hiding this block once made the homepage's only H1,

@@ -25,6 +25,7 @@ const GUIDE_SLUG_TO_SKILL: Record<string, { type: "image" | "video"; platform: s
   "image-prompts": { type: "image", platform: "general" },
 
   runway: { type: "video", platform: "runway" },
+  sora: { type: "video", platform: "sora" },
   kling: { type: "video", platform: "kling" },
   wan: { type: "video", platform: "wan" },
   veo: { type: "video", platform: "veo" },

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { CORS_HEADERS } from "@/lib/connect/auth";
 import { consumeAuthCode, issueTokens, rotateRefreshToken, verifyPkce } from "@/lib/connect/oauth";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 
 /**
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
   // exchange tokens from shared egress IPs — an IP bucket would let one
   // platform's users exhaust each other's quota. client_id is validated
   // against the code/refresh-token below, so it can't be spoofed usefully.
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
+  const ip = clientIp(req) ?? "unknown";
   const limit = await checkRateLimit(`oauth:token:${clientId || ip}`, "connectKey");
   if (!limit.success) {
     return tokenError(429, "invalid_request", "Too many requests, try again shortly");

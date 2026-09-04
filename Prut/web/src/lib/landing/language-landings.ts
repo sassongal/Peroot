@@ -125,7 +125,7 @@ const EN: LandingContent = {
     {
       question: "Is the output really in English?",
       answer:
-        "Yes. Peroot uses English templates for English output and checks the result's script before showing it. If a model slips into another language, the enhancement is retried at no cost.",
+        "Yes. Peroot uses English templates for English output and checks the result's script before showing it. If a model slips into another language, Peroot flags it and offers a free rewrite.",
     },
     {
       question: "Can I write my idea in Hebrew and get English?",
@@ -220,7 +220,7 @@ const AR: LandingContent = {
     {
       question: "هل المخرجات بالعربية فعلاً؟",
       answer:
-        "نعم. يستخدم Peroot قوالب عربية للمخرجات العربية ويتحقق من كتابة النتيجة قبل عرضها. إذا انزلق النموذج إلى لغة أخرى، يُعاد التحسين دون تكلفة.",
+        "نعم. يستخدم Peroot قوالب عربية للمخرجات العربية ويتحقق من كتابة النتيجة قبل عرضها. إذا انزلق النموذج إلى لغة أخرى، يشير Peroot إلى ذلك ويقدّم تحسيناً مجانياً.",
     },
     {
       question: "هل يمكنني كتابة فكرتي بالعبرية والحصول على النتيجة بالعربية؟",
@@ -315,7 +315,7 @@ const RU: LandingContent = {
     {
       question: "Результат действительно на русском?",
       answer:
-        "Да. Для русского результата Peroot использует русские шаблоны и проверяет письменность результата перед показом. Если модель сбилась на другой язык, улучшение повторяется бесплатно.",
+        "Да. Для русского результата Peroot использует русские шаблоны и проверяет письменность результата перед показом. Если модель сбилась на другой язык, Peroot отметит это и предложит бесплатную доработку.",
     },
     {
       question: "Можно написать идею на иврите и получить русский?",

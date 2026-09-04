@@ -26,6 +26,13 @@ interface ApiKeyMeta {
   last_used_at: string | null;
 }
 
+interface AuthorizedApp {
+  client_id: string;
+  client_name: string;
+  connected_at: string;
+  last_used_at: string | null;
+}
+
 const MCP_URL = "https://www.peroot.space/api/mcp";
 
 function snippetFor(client: "claude" | "cursor" | "curl", key: string): string {
@@ -79,6 +86,12 @@ export function SettingsConnectSection() {
   const [copied, setCopied] = useState<string | null>(null);
   const [snippetTab, setSnippetTab] = useState<"claude" | "cursor" | "curl">("claude");
 
+  // OAuth-connected apps (claude.ai, ChatGPT connectors…) — separate from
+  // prk_ keys: these were granted through /oauth/authorize and, with
+  // refresh-token rotation, live until revoked HERE.
+  const [apps, setApps] = useState<AuthorizedApp[]>([]);
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
+
   const loadKeys = useCallback(async () => {
     try {
       const res = await fetch("/api/developer-keys");
@@ -93,9 +106,43 @@ export function SettingsConnectSection() {
     }
   }, []);
 
+  const loadApps = useCallback(async () => {
+    try {
+      const res = await fetch("/api/connect/authorized-apps");
+      if (res.ok) {
+        const data = await res.json();
+        setApps(data.apps ?? []);
+      }
+    } catch (e) {
+      logger.warn("[Connect] apps load failed:", e);
+    }
+  }, []);
+
   useEffect(() => {
     void loadKeys();
-  }, [loadKeys]);
+    void loadApps();
+  }, [loadKeys, loadApps]);
+
+  const disconnectApp = async (app: AuthorizedApp) => {
+    setDisconnecting(app.client_id);
+    try {
+      const res = await fetch("/api/connect/authorized-apps", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client_id: app.client_id }),
+      });
+      if (res.ok) {
+        setApps((prev) => prev.filter((a) => a.client_id !== app.client_id));
+        toast.success(`${app.client_name} נותק`);
+      } else {
+        toast.error("הניתוק נכשל, נסו שוב");
+      }
+    } catch {
+      toast.error("הניתוק נכשל, נסו שוב");
+    } finally {
+      setDisconnecting(null);
+    }
+  };
 
   const copyText = async (text: string, tag: string) => {
     try {
@@ -407,6 +454,50 @@ export function SettingsConnectSection() {
           </a>
         </p>
       </div>
+
+      {/* OAuth-connected apps: without this list a grant approved once on
+          /oauth/authorize renewed itself forever with no way to undo it. */}
+      {apps.length > 0 ? (
+        <div className="p-5 bg-(--glass-bg) rounded-2xl border border-(--glass-border) space-y-3">
+          <h3 className="font-semibold text-(--text-primary) text-sm flex items-center gap-2">
+            <Plug className="w-4 h-4" />
+            אפליקציות מחוברות
+          </h3>
+          <p className="text-xs text-(--text-muted)">
+            אפליקציות שאישרתם דרך OAuth. ניתוק מבטל את הגישה שלהן מיידית.
+          </p>
+          <ul className="space-y-2">
+            {apps.map((app) => (
+              <li
+                key={app.client_id}
+                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-(--glass-border) bg-(--surface-panel)"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-(--text-primary) truncate">
+                    {app.client_name}
+                  </p>
+                  <p className="text-xs text-(--text-muted)">
+                    חובר {formatDateHe(app.connected_at)}
+                    {app.last_used_at ? ` · שימוש אחרון ${formatDateHe(app.last_used_at)}` : ""}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => disconnectApp(app)}
+                  disabled={disconnecting === app.client_id}
+                  className="shrink-0 px-3 py-1.5 min-h-[36px] rounded-lg border border-(--glass-border) text-xs text-(--text-secondary) hover:text-red-500 hover:border-red-500/40 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {disconnecting === app.client_id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    "נתקו"
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 }

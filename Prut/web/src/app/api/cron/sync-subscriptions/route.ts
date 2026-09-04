@@ -181,7 +181,7 @@ export async function GET(req: Request) {
             to: adminEmail,
             subject: `[Peroot Cron] Churn: ${(authData.user?.email || userId).slice(0, 100)}`,
             html: adminCronChurnAlertEmail({
-              customerEmail: authData.user?.email || ", ",
+              customerEmail: authData.user?.email || "לא ידוע",
               userId,
             }),
             emailType: "admin_churn_alert",

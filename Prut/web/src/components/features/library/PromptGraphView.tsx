@@ -701,7 +701,7 @@ export function PromptGraphView({
           .filter((t) => aTags.has(t.toLowerCase()))
           .slice(0, 4)
           .join(", ");
-        return `תגיות משותפות: ${shared || ", "}`;
+        return `תגיות משותפות: ${shared || "אין"}`;
       }
       if (link.type === "template") {
         const aVars = new Set(a.template_variables ?? []);
@@ -710,7 +710,7 @@ export function PromptGraphView({
           .slice(0, 4)
           .map((v) => `{{${v}}}`)
           .join(", ");
-        return `משתנים משותפים: ${shared || ", "}`;
+        return `משתנים משותפים: ${shared || "אין"}`;
       }
       if (link.type === "similarity") {
         return `דמיון תוכן · ${link.strength ?? 0} מילים משותפות`;

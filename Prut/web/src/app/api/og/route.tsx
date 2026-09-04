@@ -215,8 +215,11 @@ export async function GET(req: NextRequest) {
   const [fontData, brand] = await Promise.all([getHebrewFont(), getBrandAssets()]);
 
   const { searchParams } = req.nextUrl;
-  const title = searchParams.get("title") || "Peroot";
-  const subtitle = searchParams.get("subtitle") || "";
+  // Clamp before the UAX#9 bidi reordering below: a URL-length (~14KB) title
+  // costs real CPU per request on this unauthenticated edge route, and
+  // nothing longer fits the 1200x630 canvas anyway.
+  const title = (searchParams.get("title") || "Peroot").slice(0, 120);
+  const subtitle = (searchParams.get("subtitle") || "").slice(0, 200);
   const category = searchParams.get("category") || "";
 
   const theme = CATEGORY_THEMES[category] || DEFAULT_THEME;

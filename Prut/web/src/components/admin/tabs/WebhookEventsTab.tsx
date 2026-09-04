@@ -164,7 +164,7 @@ export default function WebhookEventsTab() {
                       className="px-4 py-3 text-xs text-red-300/80 max-w-md truncate"
                       title={evt.processing_error ?? ""}
                     >
-                      {evt.processing_error || ", "}
+                      {evt.processing_error || "-"}
                     </td>
                   </tr>
                 );

@@ -55,7 +55,10 @@ export async function generateStaticParams() {
   const { data: posts } = await supabase
     .from("blog_posts")
     .select("slug")
-    .eq("status", "published");
+    .eq("status", "published")
+    // Hebrew chrome only fits Hebrew posts — other langs stay off this route
+    // until it branches dir/locale by post.lang (review 2026-09-04).
+    .eq("lang", "he");
 
   // Legacy Hebrew slugs are NOT prerendered: they redirect at the edge
   // (proxy.ts), and an ISR render of a non-ASCII path throws on the
@@ -82,6 +85,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     )
     .eq("slug", slug)
     .eq("status", "published")
+    .eq("lang", "he")
     .single();
 
   if (!post) return { title: "מאמר לא נמצא" };
@@ -232,6 +236,7 @@ export default async function BlogPostPage({ params }: Props) {
     .select("*")
     .eq("slug", slug)
     .eq("status", "published")
+    .eq("lang", "he")
     .single();
 
   if (!post) notFound();

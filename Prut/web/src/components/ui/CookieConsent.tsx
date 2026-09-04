@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import posthog from "posthog-js";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,15 +22,27 @@ export function CookieConsent() {
 
   const handleAccept = () => {
     localStorage.setItem(CONSENT_KEY, "accepted");
+    // A returning visitor may carry a persisted opt-out from an earlier
+    // decline; accepting must clear it or they stay untracked forever.
+    try {
+      if (posthog.has_opted_out_capturing()) posthog.opt_in_capturing();
+    } catch {
+      /* posthog not initialised (missing env) — nothing to opt into */
+    }
     setVisible(false);
   };
 
   const handleDecline = () => {
     localStorage.setItem(CONSENT_KEY, "declined");
-    // Disable PostHog tracking
-    if (typeof window !== "undefined") {
-      const w = window as unknown as { posthog?: { opt_out_capturing: () => void } };
-      if (w.posthog) w.posthog.opt_out_capturing();
+    // The npm posthog-js module never attaches itself to window, so the old
+    // `window.posthog?.opt_out_capturing()` guard silently no-op'd and a user
+    // who clicked "דחה" was tracked exactly as before (review 2026-09-04).
+    // The module import is the real client; opt-out persists in its own
+    // storage across visits.
+    try {
+      posthog.opt_out_capturing();
+    } catch {
+      /* posthog not initialised — nothing was capturing anyway */
     }
     setVisible(false);
   };

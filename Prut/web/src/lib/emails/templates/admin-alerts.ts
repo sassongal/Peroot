@@ -34,7 +34,7 @@ export function adminCronChurnAlertEmail(params: {
   return emailLayoutBrandedInternal(`
     <p style="margin:0;font-size:15px;line-height:1.6;">
       סנכרון מנויים (cron) תיקן משתמש/ת Pro שפג תוקף. מזהה: <strong style="direction:ltr;display:inline-block;">${escapeHtml(userId)}</strong><br/>
-      אימייל: <strong style="direction:ltr;display:inline-block;">${escapeHtml(customerEmail || ", ")}</strong>
+      אימייל: <strong style="direction:ltr;display:inline-block;">${escapeHtml(customerEmail || "לא ידוע")}</strong>
     </p>
   `);
 }

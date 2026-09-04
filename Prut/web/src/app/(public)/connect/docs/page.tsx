@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BookOpen, KeyRound, Terminal } from "lucide-react";
 import { CONNECT_OPENAPI } from "@/lib/connect/openapi";
+import { PRO_MONTHLY_CREDITS, QUOTA_FALLBACK } from "@/lib/quota-policy";
 
 export const metadata: Metadata = {
   title: "Peroot Connect, תיעוד API",
@@ -19,7 +20,7 @@ const ERROR_ROWS: Array<[string, string, string]> = [
   ["401 invalid_key", "מפתח חסר/שגוי/מבוטל", "צור מפתח חדש ב-Settings → Peroot Connect"],
   [
     "402 no_credits",
-    "המכסה נגמרה (חינמי 1/יום · PRO 150/חודש)",
+    `המכסה נגמרה (חינמי ${QUOTA_FALLBACK.freeDaily}/יום · PRO ${PRO_MONTHLY_CREDITS}/חודש)`,
     "המתן ל-quota_resets_at או שדרג ל-PRO",
   ],
   ["429 rate_limited", "מעל 20/דקה למפתח או 40/דקה למשתמש", "כבד את Retry-After"],
@@ -179,7 +180,8 @@ export default function ConnectDocsPage() {
               <code dir="ltr" className="font-mono">
                 GET /quota
               </code>{" "}
-              חינמי, במסלול החינמי (1/יום) שווה לבדוק לפני ששורפים את הקריאה.
+              חינמי, במסלול החינמי ({QUOTA_FALLBACK.freeDaily}/יום) שווה לבדוק לפני ששורפים את
+              הקריאה.
             </li>
             <li>
               <b>השתמשו ב-Idempotency-Key.</b> retry של רשת לא יחייב אתכם פעמיים.

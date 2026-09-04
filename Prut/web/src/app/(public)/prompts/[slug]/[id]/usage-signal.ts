@@ -1,9 +1,9 @@
 /**
  * Best-effort usage signal from the catalogue detail page.
  *
- * `/api/prompt-usage` records who copied or enhanced a library prompt. Guests
- * get a 401 there and that is fine: the page must never wait on, or surface,
- * this call. `keepalive` lets the request finish while the CTA navigates away.
+ * `/api/prompt-usage` records who copied or enhanced a library prompt,
+ * guests included (rate-limited by IP). The page must never wait on, or
+ * surface, this call. `keepalive` lets the request finish while the CTA navigates away.
  */
 
 type UsageEvent = "copy" | "enhance";

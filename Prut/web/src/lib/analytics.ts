@@ -7,7 +7,18 @@ export const initAnalytics = () => {
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
-    if (key && host) {
+    // Consent integrity: a visitor who clicked "דחה" on the cookie banner
+    // must not be captured on later visits either. PostHog's own persisted
+    // opt-out flag also covers this once set; the localStorage check makes
+    // the decline effective even before posthog.init ran on this page.
+    let declined = false;
+    try {
+      declined = localStorage.getItem("peroot_cookie_consent") === "declined";
+    } catch {
+      /* storage unavailable — treat as no decision */
+    }
+
+    if (key && host && !declined) {
       posthog.init(key, {
         api_host: host,
         person_profiles: "identified_only",

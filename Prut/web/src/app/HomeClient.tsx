@@ -152,6 +152,9 @@ function PageContent() {
   // Batched debounced auto-save for variable memory
   const pendingVarsRef = useRef<Record<string, string>>({});
   const saveVarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // True once a landing-page ?lang= was consumed on this mount — the /api/me
+  // preference restore must not override an explicit landing choice.
+  const landingChoiceRef = useRef(false);
   const saveVariable = useCallback(
     (key: string, value: string) => {
       if (!user || !value.trim()) return;
@@ -205,7 +208,10 @@ function PageContent() {
       trackOutputLanguageSelected(next, source);
       // An explicit choice follows the account to the next device. Own-row
       // update under RLS; fire-and-forget, the local state already moved.
-      if (user && (source === "picker" || source === "suggestion")) {
+      // "landing" is explicit too — clicking "Улучшить промпт на русском" on
+      // /ru is a choice, and without persisting it the /api/me restore effect
+      // stomped it back to the stored preference a network round-trip later.
+      if (user && (source === "picker" || source === "suggestion" || source === "landing")) {
         void createClient()
           .from("profiles")
           .update({ preferred_output_language: next })
@@ -226,6 +232,10 @@ function PageContent() {
       .then((r) => (r.ok ? r.json() : null))
       .then((me) => {
         if (cancelled || !me || !isOutputLanguage(me.preferred_output_language)) return;
+        // A landing-page ?lang= was consumed this mount; it wins over the
+        // stored preference (and is being persisted as the new one), so the
+        // slower /api/me response must not flip the picker back.
+        if (landingChoiceRef.current) return;
         setOutputLanguageState(me.preferred_output_language);
         try {
           localStorage.setItem(OUTPUT_LANGUAGE_STORAGE_KEY, me.preferred_output_language);
@@ -258,6 +268,7 @@ function PageContent() {
                 ? "hebrew"
                 : null;
       if (landingLanguage) {
+        landingChoiceRef.current = true;
         url.searchParams.delete("lang");
         window.history.replaceState(window.history.state, "", url.toString());
         queueMicrotask(() => setOutputLanguage(landingLanguage, "landing"));
