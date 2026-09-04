@@ -1,15 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PromptLinkTile } from "@/components/ui/PromptLinkTile";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarClock, FolderOpen, SlidersHorizontal } from "lucide-react";
+import { PromptLinkTile } from "@/components/ui/PromptLinkTile";
+import { ButtonLink } from "@/components/ui/Button";
 import { createServiceClient } from "@/lib/supabase/service";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbSchema, promptCreativeWorkSchema } from "@/lib/schema";
-import { PromptBodyGate } from "./PromptBodyGate";
-import { UsePromptCTA } from "./UsePromptCTA";
+import { breadcrumbSchema, howToSchema, promptCreativeWorkSchema } from "@/lib/schema";
+import {
+  CapabilityMode,
+  ENGINE_HUE,
+  getCapabilityLabelHe,
+  parseCapabilityMode,
+} from "@/lib/capability-mode";
+import { formatDateHe } from "@/lib/dates/format";
+import { PromptWorkbench } from "./PromptWorkbench";
+import {
+  buildHowToSteps,
+  fieldsPhrase,
+  isMeaningfullyUpdated,
+  resolveVariables,
+} from "./prompt-detail-utils";
 
 // The full prompt body is public and server-rendered (owner decision,
 // 2026-08-31): the raw prompt is the SEO/GEO asset — 650+ unique landing
@@ -46,25 +59,6 @@ interface RelatedRow {
   use_case: string | null;
 }
 
-const CAPABILITY_BADGE: Record<string, { label: string; className: string }> = {
-  IMAGE_GENERATION: {
-    label: "יצירת תמונה",
-    className: "bg-indigo-500/10 text-indigo-300 border-indigo-500/20",
-  },
-  DEEP_RESEARCH: {
-    label: "מחקר מעמיק",
-    className: "bg-blue-500/10 text-blue-300 border-blue-500/20",
-  },
-  AGENT_BUILDER: {
-    label: "בונה סוכנים",
-    className: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
-  },
-  VIDEO_GENERATION: {
-    label: "יצירת וידאו",
-    className: "bg-rose-500/10 text-rose-300 border-rose-500/20",
-  },
-};
-
 export const revalidate = 86400; // 24h ISR: prompt content is stable
 
 export async function generateStaticParams() {
@@ -93,7 +87,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = createServiceClient();
   const { data: prompt } = await supabase
     .from("public_library_prompts")
-    .select("title, use_case, prompt")
+    .select("title, use_case, prompt, variables")
     .eq("id", id)
     .eq("is_active", true)
     .maybeSingle();
@@ -105,9 +99,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${prompt.title} - ${categoryData.labelHe}`;
   // Lead with the page's own unique text (use case, else the prompt opening) so
   // descriptions differ across the ~650 library pages; the suffix stays short
-  // and carries the category for variation.
+  // and carries the category, and the field count when the prompt has fields.
   const baseDesc = prompt.use_case?.trim() || prompt.prompt?.slice(0, 140)?.trim() || "";
-  const description = `${baseDesc.slice(0, 120)} · פרומפט ${categoryData.labelHe} מלא בעברית, חינם, כולל שדרוג אוטומטי ב-Peroot.`;
+  const fieldCount = resolveVariables(
+    prompt.prompt ?? "",
+    prompt.variables as string[] | null,
+  ).length;
+  const suffix =
+    fieldCount > 0
+      ? `פרומפט ${categoryData.labelHe} בעברית עם ${fieldsPhrase(fieldCount)}, חינם, כולל שדרוג אוטומטי ב-Peroot.`
+      : `פרומפט ${categoryData.labelHe} מלא בעברית, חינם, כולל שדרוג אוטומטי ב-Peroot.`;
+  const description = `${baseDesc.slice(0, 120)} · ${suffix}`;
   const canonicalUrl = `/prompts/${slug}/${id}`;
   const ogImage = buildOgImageUrl(prompt.title, description, categoryData.labelHe);
 
@@ -128,6 +130,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     robots: { index: true, follow: true },
   };
 }
+
+/** Low-alpha hex suffixes for the engine pill (DESIGN.md, Chips). */
+const HUE_BG_ALPHA = "24";
+const HUE_BORDER_ALPHA = "59";
 
 export default async function PromptPage({ params }: Props) {
   const { slug, id } = await params;
@@ -152,6 +158,7 @@ export default async function PromptPage({ params }: Props) {
       .eq("is_active", true)
       .ilike("category_id", categoryData.id.toLowerCase())
       .neq("id", id)
+      .order("created_at", { ascending: false })
       .limit(6),
   ]);
 
@@ -160,10 +167,17 @@ export default async function PromptPage({ params }: Props) {
   const p = prompt as PromptRow;
   const rel = (related ?? []) as RelatedRow[];
   const pageUrl = `${SITE_URL}/prompts/${slug}/${id}`;
-  const badge =
-    p.capability_mode && p.capability_mode !== "STANDARD"
-      ? CAPABILITY_BADGE[p.capability_mode]
+  const variables = resolveVariables(p.prompt, p.variables);
+  const hasFields = variables.length > 0;
+
+  const mode = parseCapabilityMode(p.capability_mode);
+  const modeBadge =
+    mode !== CapabilityMode.STANDARD
+      ? { label: getCapabilityLabelHe(mode), hue: ENGINE_HUE[mode] }
       : null;
+  const updatedLabel = isMeaningfullyUpdated(p.created_at, p.updated_at)
+    ? formatDateHe(p.updated_at)
+    : "";
 
   return (
     <>
@@ -186,9 +200,18 @@ export default async function PromptPage({ params }: Props) {
           keywords: `פרומפט, ${categoryData.labelHe}, ChatGPT, Claude, Gemini, AI בעברית`,
         })}
       />
+      {hasFields && (
+        <JsonLd
+          data={howToSchema({
+            name: `איך משתמשים בפרומפט ${p.title}`,
+            description: `מילוי ${fieldsPhrase(variables.length)} ושדרוג הפרומפט ב-Peroot.`,
+            steps: buildHowToSteps(variables),
+          })}
+        />
+      )}
 
       <div className="min-h-screen bg-background text-foreground" dir="rtl">
-        <div className="max-w-4xl mx-auto px-4 py-8 md:py-14">
+        <div className="max-w-5xl mx-auto px-4 py-8 md:py-14">
           {/* Breadcrumbs */}
           <nav
             aria-label="breadcrumb"
@@ -211,7 +234,7 @@ export default async function PromptPage({ params }: Props) {
 
           {/* Hero */}
           <header className="mb-8">
-            <div className="flex items-start gap-3 mb-3">
+            <div className="flex items-start gap-3">
               <span
                 className="text-3xl md:text-4xl mt-1 shrink-0"
                 role="img"
@@ -220,14 +243,7 @@ export default async function PromptPage({ params }: Props) {
                 {categoryData.emoji}
               </span>
               <div className="flex-1 min-w-0">
-                {badge && (
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border mb-2 ${badge.className}`}
-                  >
-                    {badge.label}
-                  </span>
-                )}
-                <h1 className="text-2xl md:text-4xl font-serif text-foreground leading-tight">
+                <h1 className="text-2xl md:text-4xl font-serif text-foreground leading-tight text-balance">
                   {p.title}
                 </h1>
               </div>
@@ -237,6 +253,54 @@ export default async function PromptPage({ params }: Props) {
                 {p.use_case}
               </p>
             )}
+
+            {/* Facts strip */}
+            <ul
+              className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground"
+              aria-label="פרטי הפרומפט"
+            >
+              <li>
+                <Link
+                  href={`/prompts/${slug}`}
+                  className="inline-flex items-center gap-1.5 min-h-[32px] hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded"
+                >
+                  <FolderOpen className="w-3.5 h-3.5" aria-hidden="true" />
+                  {categoryData.labelHe}
+                </Link>
+              </li>
+              {modeBadge && (
+                <li>
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-foreground font-medium"
+                    style={{
+                      backgroundColor: `${modeBadge.hue}${HUE_BG_ALPHA}`,
+                      borderColor: `${modeBadge.hue}${HUE_BORDER_ALPHA}`,
+                    }}
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: modeBadge.hue }}
+                      aria-hidden="true"
+                    />
+                    {modeBadge.label}
+                  </span>
+                </li>
+              )}
+              {hasFields && (
+                <li className="inline-flex items-center gap-1.5">
+                  <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
+                  {fieldsPhrase(variables.length)}
+                </li>
+              )}
+              {updatedLabel && (
+                <li className="inline-flex items-center gap-1.5">
+                  <CalendarClock className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>
+                    עודכן <time dateTime={p.updated_at ?? undefined}>{updatedLabel}</time>
+                  </span>
+                </li>
+              )}
+            </ul>
           </header>
 
           {/* Preview image (image generation prompts) */}
@@ -253,59 +317,46 @@ export default async function PromptPage({ params }: Props) {
             </div>
           )}
 
-          {/* Prompt text block — full body, server-rendered, open to everyone */}
-          <section aria-label="תוכן הפרומפט" className="mb-8">
-            <PromptBodyGate
+          {/* Prompt body as a live preview, the fields, and the one gold action */}
+          <section aria-label="תוכן הפרומפט" className="mb-10">
+            <PromptWorkbench
               promptId={p.id}
               title={p.title}
               slug={slug}
               capabilityMode={p.capability_mode}
               fullText={p.prompt}
+              variables={variables}
             />
           </section>
 
-          {/* How to use — answer-shaped content for search + answer engines */}
-          <section aria-label="איך משתמשים בפרומפט" className="mb-8">
+          {/* How to use: answer-shaped content for search and answer engines */}
+          <section aria-label="איך משתמשים בפרומפט" className="mb-10 max-w-2xl">
             <h2 className="text-sm font-semibold text-foreground mb-3">איך משתמשים בפרומפט הזה?</h2>
             <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside leading-relaxed">
-              <li>
-                העתיקו את הפרומפט המלא (כפתור ההעתקה למעלה) והדביקו ב-ChatGPT, Claude או Gemini.
-              </li>
-              {p.variables && p.variables.length > 0 && (
+              {hasFields && (
                 <li>
-                  החליפו את המשתנים בסוגריים המסולסלים, {p.variables.length} שדות להתאמה אישית,
-                  בפרטים שלכם.
+                  מלאו את {fieldsPhrase(variables.length)} בפאנל שליד הפרומפט, התצוגה מתעדכנת תוך
+                  כדי הקלדה.
                 </li>
               )}
               <li>
-                רוצים גרסה חדה יותר? לחצו על &quot;שדרגו פרומפט זה ב-Peroot&quot;, המערכת תרחיב אותו
-                עם הקשר, מבנה מקצועי ודירוג איכות, מותאם למודל היעד שלכם. חינם.
+                רוצים גרסה חדה יותר? לחצו על &quot;
+                {hasFields ? "מלאו ושדרגו בפירוט" : "שדרגו בפירוט"}
+                &quot;, Peroot מרחיבה את הפרומפט עם הקשר, מבנה מקצועי ודירוג איכות, מותאם למודל היעד
+                שלכם.
+              </li>
+              <li>
+                או העתיקו את הפרומפט כמו שהוא (כפתור ההעתקה בראש הכרטיס) והדביקו ב-ChatGPT, Claude
+                או Gemini.
               </li>
             </ol>
           </section>
-
-          {/* Variables */}
-          {p.variables && p.variables.length > 0 && (
-            <section aria-label="משתנים להתאמה אישית" className="mb-8">
-              <h2 className="text-sm font-semibold text-foreground mb-3">משתנים להתאמה אישית</h2>
-              <div className="flex flex-wrap gap-2">
-                {p.variables.map((v) => (
-                  <span
-                    key={v}
-                    className="px-3 py-1 rounded-full bg-secondary border border-border text-sm text-muted-foreground"
-                  >
-                    {`{${v}}`}
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
 
           {/* Related prompts */}
           {rel.length > 0 && (
             <section aria-label="פרומפטים קשורים" className="mt-12 md:mt-16">
               <h2 className="text-lg font-serif text-foreground mb-4">
-                פרומפטים נוספים ב{categoryData.labelHe}
+                עוד פרומפטים ב{categoryData.labelHe}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {rel.map((r) => (
@@ -317,42 +368,28 @@ export default async function PromptPage({ params }: Props) {
                   />
                 ))}
               </div>
-              <div className="mt-4">
-                <Link
-                  href={`/prompts/${slug}`}
-                  className="text-sm text-amber-600/80 dark:text-amber-400/80 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-                >
-                  לכל הפרומפטים בקטגוריה →
-                </Link>
-              </div>
             </section>
           )}
 
-          {/* CTA */}
-          <section
-            className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-linear-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
-            aria-label="קריאה לפעולה"
-          >
-            <p className="text-sm text-amber-600/70 dark:text-amber-400/70 font-medium mb-2">
-              Peroot - מחולל פרומפטים בעברית
-            </p>
-            <h2 className="text-xl md:text-2xl font-serif text-foreground mb-3">
-              רוצים לשדרג את הפרומפט הזה?
-            </h2>
-            <p className="text-muted-foreground mb-5 max-w-lg mx-auto text-sm leading-relaxed">
-              Peroot משדרגת כל פרומפט אוטומטית: מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר
-              ב-ChatGPT, Claude ו-Gemini.
-            </p>
-            <UsePromptCTA id={p.id} title={p.title} slug={slug} previewText={p.prompt} />
-          </section>
+          {/* Cross-links */}
+          <div className="mt-8 flex flex-wrap gap-3">
+            <ButtonLink href={`/prompts/${slug}`} variant="ghost">
+              לכל הפרומפטים ב{categoryData.labelHe}
+            </ButtonLink>
+            {hasFields && (
+              <ButtonLink href="/templates" variant="ghost">
+                לכל התבניות למילוי
+              </ButtonLink>
+            )}
+          </div>
 
           {/* Back to category */}
           <div className="mt-10">
             <Link
               href={`/prompts/${slug}`}
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-2 min-h-[44px] text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
               חזרה ל{categoryData.labelHe}
             </Link>
           </div>
