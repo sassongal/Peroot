@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger";
 import { withUser } from "@/lib/api-middleware";
 
 const EventSchema = z.object({
-  prompt_key: z.string().min(1),
+  prompt_key: z.string().min(1).max(128),
   event_type: z.enum(["copy", "save", "refine", "enhance"]),
   prompt_length: z.number().optional(),
   /** Which surface the action came from (catalogue page, templates, home). */
@@ -13,8 +13,11 @@ const EventSchema = z.object({
 });
 
 /**
- * POST /api/prompt-usage — record a usage event (authenticated). Auth owned by
- * withUser; keeps the original IP-keyed guest-bucket rate limit via rateLimitKey.
+ * POST /api/prompt-usage — record a usage event. Guests are accepted since
+ * 2026-09-04 (most catalogue visitors are guests, and a source column that
+ * only counted members would compare nothing): their rows carry a null
+ * user_id and are written through the service client because the table's
+ * INSERT policy is "own row only". The IP-keyed guest bucket bounds the rate.
  */
 export const POST = withUser(
   async (req, ctx) => {
@@ -25,7 +28,7 @@ export const POST = withUser(
       event_type: payload.event_type,
       prompt_length: payload.prompt_length ?? null,
       source: payload.source ?? null,
-      user_id: ctx.user!.id,
+      user_id: ctx.user?.id ?? null,
     });
 
     if (error) {
@@ -34,7 +37,12 @@ export const POST = withUser(
 
     return NextResponse.json({ ok: true });
   },
-  { rateLimit: "guest", rateLimitKey: ({ ip }) => `prompt-usage:${ip ?? "unknown"}` },
+  {
+    rateLimit: "guest",
+    rateLimitKey: ({ ip }) => `prompt-usage:${ip ?? "unknown"}`,
+    allowGuest: true,
+    forceServiceClient: true,
+  },
 );
 
 // GET stays public (no auth) — aggregate counts for a prompt key.
