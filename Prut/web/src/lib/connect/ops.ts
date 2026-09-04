@@ -5,6 +5,7 @@ import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getRefreshAt } from "@/lib/services/credit-service";
 import { autoTags } from "@/lib/library/auto-tags";
+import { VARIABLE_TOKEN_REGEX } from "@/lib/variable-utils";
 import type { PersonalPrompt } from "@/lib/types";
 import { logger } from "@/lib/logger";
 
@@ -437,11 +438,23 @@ export function fillTemplateText(
   declared: string[],
   values: Record<string, string>,
 ): { filled: string; missing: string[] } {
-  let filled = prompt;
-  for (const [name, value] of Object.entries(values)) {
-    filled = filled.split(`{${name}}`).join(value);
-  }
-  const missing = declared.filter((name) => filled.includes(`{${name}}`));
+  // Single pass over the ORIGINAL text, declared variables only. The old
+  // iterative split/join-per-value re-scanned its own output, so a value
+  // containing placeholder syntax ({"a": "{b}", "b": "X"} on
+  // "Hello {a} and {b}") corrupted the fill — and undeclared client keys
+  // could rewrite literal braces inside the prompt body (a JSON example, a
+  // {{handlebars}} block). A regex pass never sees substituted text, and the
+  // declared-set filter makes undeclared keys inert.
+  const fillable = new Set(declared);
+  const filled = prompt.replace(VARIABLE_TOKEN_REGEX, (token, name: string) => {
+    const key = name.trim();
+    return fillable.has(key) && Object.prototype.hasOwnProperty.call(values, key)
+      ? values[key]
+      : token;
+  });
+  const missing = declared.filter(
+    (name) => !Object.prototype.hasOwnProperty.call(values, name) && prompt.includes(`{${name}}`),
+  );
   return { filled, missing };
 }
 

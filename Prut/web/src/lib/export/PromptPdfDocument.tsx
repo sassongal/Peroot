@@ -405,14 +405,24 @@ export function PromptPdfDocument({
             <View style={styles.breakdownBox}>
               {(strengths && strengths.length > 0) || (weaknesses && weaknesses.length > 0) ? (
                 <View style={styles.strengthsBox}>
+                  {/* The chip CONTENT is AI text that follows the output
+                      language — nested Text picks the right font per block
+                      (an Arabic/Russian strength in NotoHebrew renders as
+                      tofu boxes), while the Hebrew label keeps its own. */}
                   {strengths && strengths.length > 0 ? (
                     <Text style={[styles.chipLine, styles.chipLineGood]}>
-                      ✓ מה עובד: {strengths.slice(0, 3).join(" · ")}
+                      ✓ מה עובד:{" "}
+                      <Text style={{ fontFamily: textStyle(strengths.join(" ")).fontFamily }}>
+                        {strengths.slice(0, 3).join(" · ")}
+                      </Text>
                     </Text>
                   ) : null}
                   {weaknesses && weaknesses.length > 0 ? (
                     <Text style={[styles.chipLine, styles.chipLineWarn]}>
-                      ! איך לשפר: {weaknesses.slice(0, 3).join(" · ")}
+                      ! איך לשפר:{" "}
+                      <Text style={{ fontFamily: textStyle(weaknesses.join(" ")).fontFamily }}>
+                        {weaknesses.slice(0, 3).join(" · ")}
+                      </Text>
                     </Text>
                   ) : null}
                 </View>

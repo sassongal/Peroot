@@ -183,4 +183,21 @@ describe("Scorer, review regressions", () => {
     expect(hasSpecificityProperNouns(parse("כתוב פוסט קצר."))).toBe(false);
     expect(hasSpecificityProperNouns(parse('כתוב פוסט על "פרויקט אלפא" השבוע'))).toBe(true);
   });
+
+  it("Research/Agent detectors see Arabic and Russian prose (review 2026-09-04)", async () => {
+    const { hasBoundaries, hasFailureModes, hasToolsSpec, hasConfidenceProtocol, hasInfoGaps } =
+      await import("../prompt-parse");
+    // Russian prose mentions, no headings — used to score 0 on each.
+    expect(hasBoundaries(parse("Определи границы задачи и эскалация при сомнении."))).toBe(true);
+    expect(hasFailureModes(parse("Опиши ошибки и крайние случаи, которые нужно учесть."))).toBe(
+      true,
+    );
+    expect(hasToolsSpec(parse("Перечисли инструменты и интеграции, которые понадобятся."))).toBe(
+      true,
+    );
+    expect(hasConfidenceProtocol(parse("Отметь уверенность для каждого вывода."))).toBe(true);
+    // Arabic prose.
+    expect(hasBoundaries(parse("حدد الحدود والنطاق لهذه المهمة."))).toBe(true);
+    expect(hasInfoGaps(parse("اذكر فجوات المعلومات في التحليل."))).toBe(true);
+  });
 });

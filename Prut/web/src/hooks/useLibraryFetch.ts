@@ -5,6 +5,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { PersonalPrompt } from "@/lib/types";
 import { logger } from "@/lib/logger";
 import { escapePostgrestValue, escapePostgrestArrayValue } from "@/lib/sanitize";
+import { normalizeHebrew } from "@/lib/hebrew-search";
 import { rowToPrompt, readOrderMap } from "@/lib/library/row-mapper";
 
 interface UseLibraryFetchParams {
@@ -135,22 +136,37 @@ export function useLibraryFetch({
           query = query.eq("capability_mode", opts.capabilityFilter);
         }
         if (opts.searchQuery) {
-          const safeSearch = escapePostgrestValue(opts.searchQuery);
+          // Parity with every other search surface (review 2026-09-04): the
+          // query is normalized (niqqud/tashkeel stripped, Arabic hamza and
+          // Russian ё folded) and split into words that are ANDed as
+          // independent OR-groups — so "פוסט שיווקי" matches a prompt with
+          // "פוסט" in the title and "שיווקי" in the body, exactly like the
+          // public catalogue search does. A single %whole phrase% pattern
+          // required the exact word sequence and returned 0 where the guest
+          // and graph searches matched.
+          const words = normalizeHebrew(opts.searchQuery)
+            .replace(/[%_,().]/g, " ")
+            .split(/\s+/)
+            .map((w) => escapePostgrestValue(w))
+            .filter(Boolean)
+            .slice(0, 5);
           // The client filter (LibraryUIContext) also searches tags and the
           // category, so a paged server search that skipped them returned
-          // fewer results than the same query on a small library: the same
-          // words, two different answers, depending on how much you had saved.
-          // Tags are a text[], where PostgREST can only test containment, so
-          // this matches a whole tag rather than part of one.
+          // fewer results than the same query on a small library. Tags are a
+          // text[], where PostgREST can only test containment, so this
+          // matches a whole tag rather than part of one — the full original
+          // query, attached to the first word's OR-group.
           const safeTag = escapePostgrestArrayValue(opts.searchQuery);
-          const clauses = [
-            `title.ilike.%${safeSearch}%`,
-            `prompt.ilike.%${safeSearch}%`,
-            `use_case.ilike.%${safeSearch}%`,
-            `personal_category.ilike.%${safeSearch}%`,
-          ];
-          if (safeTag) clauses.push(`tags.cs.{"${safeTag}"}`);
-          query = query.or(clauses.join(","));
+          words.forEach((w, i) => {
+            const clauses = [
+              `title.ilike.%${w}%`,
+              `prompt.ilike.%${w}%`,
+              `use_case.ilike.%${w}%`,
+              `personal_category.ilike.%${w}%`,
+            ];
+            if (i === 0 && safeTag) clauses.push(`tags.cs.{"${safeTag}"}`);
+            query = query.or(clauses.join(","));
+          });
         }
 
         // Pinned items always float to top — this MUST be the primary sort, so
