@@ -128,7 +128,7 @@ export default async function TemplatesPage() {
             <div className="flex items-center gap-4 text-sm mt-6 heading-enter-delay-3">
               <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
-                {templates.length} תבניות עם משתנים
+                {templates.length} תבניות עם שדות למילוי
               </span>
               <span className="text-slate-600 dark:text-slate-500">|</span>
               <span className="text-muted-foreground">
