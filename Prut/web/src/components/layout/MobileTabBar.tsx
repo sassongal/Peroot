@@ -15,7 +15,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { name: "home", label: "שפר", icon: Home },
-  { name: "library", label: "ספרייה", icon: Library },
+  { name: "library", label: "פרומפטים", icon: Library },
   { name: "personal", label: "שלי", icon: BookOpen },
   { name: "more", label: "עוד", icon: MoreHorizontal },
 ];

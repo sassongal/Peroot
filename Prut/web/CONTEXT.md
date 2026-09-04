@@ -24,6 +24,15 @@ once is governed by [`docs/agents/parallel-work.md`](docs/agents/parallel-work.m
   unauthenticated). `admin` is sourced from the `user_roles` table (canonical),
   **not** `profiles.plan_tier`.
 - **Personal Library** — a user's saved prompts, folders, favorites, history.
+- **Vocabulary (owner decision 2026-09-04)** — one word per surface, everywhere a
+  human sees it: **פרומפטים** = the public catalogue (`/prompts`,
+  `public_library_prompts`); **הספרייה שלי** = the user's Personal Library (the
+  `personal` view; the phone tab bar keeps the short "שלי"); **תבניות** = only
+  prompts with `{משתנים}` (`/templates`). The long form "ספריית פרומפטים" is
+  reserved for SEO copy, page H1s, breadcrumbs and the footer link, never a nav
+  item. Code identifiers, routes, analytics events and `viewMode` values
+  (`library` / `personal`) are unchanged. Pinned by
+  `src/components/layout/__tests__/nav-vocabulary.test.ts`.
 - **Context Attachment** — an external source (url / file / image) extracted and
   enriched into a context block fed into an Enhancement.
 

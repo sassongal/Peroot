@@ -25,7 +25,7 @@
     "mission_description": "אתה מנהל שירות לקוחות בחברת איקומרס מובילה...",
     "mission_task": "נסח התנצלות אישית ללקוח בשם {name}...",
     "ready_title": "אנחנו מוכנים!",
-    "ready_description": "למדת איך להשתמש במשתנים ולשפר פרומפטים לרמה הגבוהה ביותר.\nכעת הספריה האישית וכל הכלים המתקדמים פתוחים בפניך.",
+    "ready_description": "למדת איך להשתמש במשתנים ולשפר פרומפטים לרמה הגבוהה ביותר.\nכעת הספרייה שלך וכל הכלים המתקדמים פתוחים בפניך.",
     "roles": {
       "marketing": "שיווק ופרסום",
       "dev": "פיתוח תוכנה",
@@ -46,20 +46,20 @@
     "sim_placeholder": "למשל: דני כהן",
     "sim_issue_val": "איחור במשלוח",
     "buttons": {
-        "start": "מתחילים?",
-        "understand": "הבנתי, בוא ננסה",
-        "advanced": "מתקדם",
-        "amazing": "וואו, מדהים",
-        "lets_go": "בוא נתחיל",
-        "continue": "ממשיכים",
-        "enhance_cta": "שפר עבורי!",
-        "analyzing": "מנתח..."
+      "start": "מתחילים?",
+      "understand": "הבנתי, בוא ננסה",
+      "advanced": "מתקדם",
+      "amazing": "וואו, מדהים",
+      "lets_go": "בוא נתחיל",
+      "continue": "ממשיכים",
+      "enhance_cta": "שפר עבורי!",
+      "analyzing": "מנתח..."
     }
   },
   "home": {
-    "personal_library": "ספריה אישית",
+    "personal_library": "הספרייה שלי",
     "favorites": "מועדפים",
-    "public_library": "ספריה ציבורית",
+    "public_library": "פרומפטים",
     "footer_credits": "Peroot © 2026 · Made by Joyatech",
     "privacy_policy": "מדיניות פרטיות",
     "accessibility": "הצהרת נגישות",
@@ -134,58 +134,58 @@
       }
     },
     "users": {
-        "title_desc": "ניהול זהויות, הרשאות ניטור ושימוש במשאבים. שליטה מלאה על גישת המשתמשים לליבת ה-AI.",
-        "search_placeholder": "חיפוש לפי אימייל, שם או מזהה...",
-        "filters": {
-            "all": "הכל",
-            "admin": "מנהלים",
-            "active": "פעילים",
-            "banned": "חסומים",
-            "churn": "נטשו"
-        },
-        "stats": {
-            "total": "Total Identity",
-            "admins": "Nexus Admins",
-            "active": "Active Streams",
-            "credits": "Credits Liquid"
-        },
-        "table": {
-            "identity": "Unified Identity",
-            "access": "Access Tier",
-            "telemetry": "Telemetry Join",
-            "credits": "Credits",
-            "actions": "Actions",
-            "loading": "Accessing Data Stream...",
-            "empty": "No matched identities in terminal"
-        },
-        "toasts": {
-            "load_error": "שגיאה בטעינת משתמשים",
-            "sync_success": "סונכרנו {count} משתמשים בהצלחה",
-            "sync_error": "שגיאה בסנכרון מול Auth",
-            "comm_error": "נכשל בתקשורת עם השרת",
-            "admin_confirm": "האם אתה בטוח שברצונך {action} הרשאות ניהול למשתמש זה?",
-            "action_add": "להוסיף",
-            "action_remove": "להסיר",
-            "update_success": "הרשאות עודכנו בהצלחה",
-            "update_error": "עדכון הרשאות נכשל"
-        }
+      "title_desc": "ניהול זהויות, הרשאות ניטור ושימוש במשאבים. שליטה מלאה על גישת המשתמשים לליבת ה-AI.",
+      "search_placeholder": "חיפוש לפי אימייל, שם או מזהה...",
+      "filters": {
+        "all": "הכל",
+        "admin": "מנהלים",
+        "active": "פעילים",
+        "banned": "חסומים",
+        "churn": "נטשו"
+      },
+      "stats": {
+        "total": "Total Identity",
+        "admins": "Nexus Admins",
+        "active": "Active Streams",
+        "credits": "Credits Liquid"
+      },
+      "table": {
+        "identity": "Unified Identity",
+        "access": "Access Tier",
+        "telemetry": "Telemetry Join",
+        "credits": "Credits",
+        "actions": "Actions",
+        "loading": "Accessing Data Stream...",
+        "empty": "No matched identities in terminal"
+      },
+      "toasts": {
+        "load_error": "שגיאה בטעינת משתמשים",
+        "sync_success": "סונכרנו {count} משתמשים בהצלחה",
+        "sync_error": "שגיאה בסנכרון מול Auth",
+        "comm_error": "נכשל בתקשורת עם השרת",
+        "admin_confirm": "האם אתה בטוח שברצונך {action} הרשאות ניהול למשתמש זה?",
+        "action_add": "להוסיף",
+        "action_remove": "להסיר",
+        "update_success": "הרשאות עודכנו בהצלחה",
+        "update_error": "עדכון הרשאות נכשל"
+      }
     },
     "prompts": {
-        "title_desc": "ניהול גרסאות, ניתוב לוגיקה והנחיות Bi-Directional בזמן אמת",
-        "search_placeholder": "חיפוש פרומפטים לפי מפתח או תוכן...",
-        "edit_model": "ערוך מודל",
-        "history": "היסטוריה",
-        "save_changes": "שמור שינויים",
-        "cancel": "ביטול",
-        "toasts": {
-            "load_error": "שגיאה בטעינת פרומפטים",
-            "login_required": "עליך להיות מחובר כדי לערוך פרומפטים",
-            "update_success": "הפרומפט עודכן! נוצרה גרסה חדשה.",
-            "update_error": "נכשל בשמירת הפרומפט",
-            "rollback_confirm": "האם אתה בטוח שברצונך לחזור לגרסה {version}?",
-            "rollback_success": "הפרומפט שוחזר לגרסה שנבחרה",
-            "rollback_error": "שגיאה בשחזור גרסה"
-        }
+      "title_desc": "ניהול גרסאות, ניתוב לוגיקה והנחיות Bi-Directional בזמן אמת",
+      "search_placeholder": "חיפוש פרומפטים לפי מפתח או תוכן...",
+      "edit_model": "ערוך מודל",
+      "history": "היסטוריה",
+      "save_changes": "שמור שינויים",
+      "cancel": "ביטול",
+      "toasts": {
+        "load_error": "שגיאה בטעינת פרומפטים",
+        "login_required": "עליך להיות מחובר כדי לערוך פרומפטים",
+        "update_success": "הפרומפט עודכן! נוצרה גרסה חדשה.",
+        "update_error": "נכשל בשמירת הפרומפט",
+        "rollback_confirm": "האם אתה בטוח שברצונך לחזור לגרסה {version}?",
+        "rollback_success": "הפרומפט שוחזר לגרסה שנבחרה",
+        "rollback_error": "שגיאה בשחזור גרסה"
+      }
     }
   },
   "gamification": {

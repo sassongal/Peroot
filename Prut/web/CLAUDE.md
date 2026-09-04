@@ -279,6 +279,12 @@ when the trigger fires.
   fails `src/components/__tests__/light-mode.test.ts`. Deliberately dark screens
   (login gate, onboarding, maintenance, Connect docs) are listed there by name.
 - Server Components by default, `"use client"` only when necessary
+- **One word per surface (owner decision, 2026-09-04):** "פרומפטים" is the public
+  catalogue (`/prompts`), "הספרייה שלי" is the user's saved prompts, "תבניות" is
+  only prompts with `{משתנים}` (`/templates`). Never "ספרייה" alone or "ספרייה אישית"
+  as a nav/tab/button label; "ספריית פרומפטים" only in SEO copy, H1s, breadcrumbs
+  and the footer. Glossary entry in `CONTEXT.md`; pinned by
+  `src/components/layout/__tests__/nav-vocabulary.test.ts`.
 
 ## Personal Library Architecture
 - `PersonalLibraryView` orchestrates all library state and exposes it through `PersonalLibraryContext` to header, sidebar, grid, modals

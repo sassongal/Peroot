@@ -56,9 +56,9 @@ const ALL_TIPS: DiscoveryTip[] = [
   },
   {
     id: "tip_library",
-    text: "אפשר לשמור את הפרומפט לספרייה האישית ולהשתמש בו שוב בכל עת",
+    text: "אפשר לשמור את הפרומפט לספרייה שלי ולהשתמש בו שוב בכל עת",
     emoji: "📚",
-    feature: "ספרייה אישית",
+    feature: "הספרייה שלי",
     usedKey: "peroot_used_personal_library",
     minEnhances: 3,
     cta: "שמרו עכשיו",
@@ -114,12 +114,12 @@ const ALL_TIPS: DiscoveryTip[] = [
   },
   {
     id: "tip_public_library",
-    text: `יש ספרייה עם ${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים לכל תחום, אפשר להתחיל מהם`,
+    text: `יש ${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים לכל תחום, אפשר להתחיל מהם`,
     emoji: "📋",
-    feature: "ספרייה ציבורית",
+    feature: "פרומפטים",
     usedKey: "peroot_used_public_library",
     minEnhances: 18,
-    cta: "גלו את הספרייה",
+    cta: "גלו את הפרומפטים",
     ctaAction: "public-library",
   },
 ];

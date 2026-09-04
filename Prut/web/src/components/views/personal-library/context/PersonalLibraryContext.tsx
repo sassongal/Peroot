@@ -777,7 +777,7 @@ export function PersonalLibraryProvider({
         prompt_style: undefined,
         tags: [],
       });
-      toast.success("נשמר לספרייה האישית");
+      toast.success("נשמר לספרייה שלי");
     } catch (e) {
       logger.error(e);
       toast.error("שגיאה בשמירה");

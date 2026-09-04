@@ -182,7 +182,7 @@ export const InputSection = memo<InputSectionProps>(
               dir="rtl"
             >
               <ArrowRight className="w-3.5 h-3.5" />
-              חזרה לספרייה
+              {previousView === "library" ? "חזרה לפרומפטים" : "חזרה לספרייה שלי"}
             </button>
           </div>
         )}
@@ -259,7 +259,7 @@ export const InputSection = memo<InputSectionProps>(
                   onClick={onNavToPersonalLibrary}
                   className="text-xs text-(--text-muted) hover:text-amber-500 transition-colors"
                 >
-                  לכל הספרייה &larr;
+                  לספרייה שלי &larr;
                 </button>
               </div>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">

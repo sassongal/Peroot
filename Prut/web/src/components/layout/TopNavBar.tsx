@@ -14,7 +14,6 @@ import {
   Plug,
   Newspaper,
   Tag,
-  Sparkles,
   LayoutTemplate,
   GraduationCap,
   type LucideIcon,
@@ -42,15 +41,15 @@ const MORE_NAV_LINKS: { href: string; label: string }[] = [
   { href: "/connect", label: "Peroot Connect, חיבור סוכנים" },
   { href: "/blog", label: "בלוג" },
   { href: "/pricing", label: "מחירים" },
-  { href: "/prompts", label: "פרומפטים" },
   { href: "/templates", label: "תבניות" },
   { href: "/guide", label: "מדריך" },
 ];
 
+// One word per surface (owner decision 2026-09-04): the catalogue is
+// "פרומפטים" and lives in NAV_ITEMS, so /prompts is not repeated here.
 const SITE_LINKS: { href: string; label: string; Icon: LucideIcon; hue: string }[] = [
   { href: "/blog", label: "בלוג", Icon: Newspaper, hue: HUE.red },
   { href: "/pricing", label: "מחירים", Icon: Tag, hue: HUE.amber },
-  { href: "/prompts", label: "פרומפטים", Icon: Sparkles, hue: HUE.blue },
   { href: "/templates", label: "תבניות", Icon: LayoutTemplate, hue: HUE.green },
   { href: "/guide", label: "מדריך", Icon: GraduationCap, hue: HUE.indigo },
 ];
@@ -59,8 +58,8 @@ type ViewMode = "home" | "library" | "personal";
 
 const NAV_ITEMS: { id: ViewMode; label: string; Icon: LucideIcon; hue: string }[] = [
   { id: "home", label: "שפר", Icon: Wand2, hue: HUE.gold },
-  { id: "library", label: "ספרייה", Icon: Library, hue: HUE.blue },
-  { id: "personal", label: "ספרייה אישית", Icon: BookOpen, hue: HUE.green },
+  { id: "library", label: "פרומפטים", Icon: Library, hue: HUE.blue },
+  { id: "personal", label: "הספרייה שלי", Icon: BookOpen, hue: HUE.green },
 ];
 
 /** Shared look of every bar section: icon on top, bold label under it. */

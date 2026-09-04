@@ -1394,7 +1394,7 @@ function PageContent() {
         source_history_id: item.id,
       });
       recordUsageSignal("save", item.enhanced);
-      toast.success("נשמר לספרייה האישית!");
+      toast.success("נשמר לספרייה שלי!");
     },
     [user, addPrompt],
   );
@@ -1417,7 +1417,7 @@ function PageContent() {
     });
     recordUsageSignal("save", ps.completion);
     markFeatureUsed("peroot_used_personal_library");
-    toast.success("נשמר לספרייה האישית!");
+    toast.success("נשמר לספרייה שלי!");
   }, [
     user,
     ps.completion,
@@ -1540,12 +1540,12 @@ function PageContent() {
         tags: [] as string[],
       }));
     if (itemsToAdd.length === 0) {
-      toast.info("כל ההיסטוריה כבר שמורה בספרייה");
+      toast.info("כל ההיסטוריה כבר שמורה בספרייה שלי");
       return;
     }
     const ok = await confirmDialog({
-      title: "ייבוא היסטוריה לספרייה",
-      message: `לשמור ${itemsToAdd.length} פרומפטים מההיסטוריה לספרייה האישית? כפילויות קיימות ידולגו.`,
+      title: "ייבוא היסטוריה לספרייה שלי",
+      message: `לשמור ${itemsToAdd.length} פרומפטים מההיסטוריה לספרייה שלי? כפילויות קיימות ידולגו.`,
       confirmLabel: "ייבוא",
     });
     if (!ok) return;
@@ -1608,7 +1608,7 @@ function PageContent() {
     setPersonalView("favorites");
   }, [setViewMode, setPersonalView]);
 
-  // U3.1 (owner decision 31.8): the in-app LibraryView is gone. "ספרייה"
+  // U3.1 (owner decision 31.8): the in-app LibraryView is gone. "פרומפטים"
   // navigates to /prompts — the same table, public, indexed and paginated.
   const handleNavLibrary = useCallback(() => {
     router.push("/prompts");
