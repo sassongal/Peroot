@@ -458,9 +458,10 @@ export function useLibrary() {
   }, []);
 
   const updateProfile = async (updates: {
+    // plan_tier / credits_balance deliberately absent: those columns are
+    // guarded server-side (trg_protect_profile_credit_columns) and change
+    // only through the credit RPCs or the service role.
     onboarding_completed?: boolean;
-    plan_tier?: "free" | "pro";
-    credits_balance?: number;
     preferred_output_language?: "hebrew" | "english" | "arabic" | "russian";
   }) => {
     if (!user) return;

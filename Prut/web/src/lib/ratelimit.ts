@@ -145,6 +145,14 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(3, "1 h"),
     prefix: "@peroot/ratelimit:password-reset",
   }),
+  // Account creation — keyed by IP. Signup mints a pre-confirmed account that
+  // carries daily_free_limit credits, so an unthrottled loop here bypasses
+  // every guest ceiling (review 2026-09-04).
+  signup: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, "1 h"),
+    prefix: "@peroot/ratelimit:signup",
+  }),
   // Background questions endpoint — lighter than enhance, no credits consumed.
   questions: new Ratelimit({
     redis,
@@ -195,6 +203,7 @@ type RateLimitTier =
   | "chainPro"
   | "publicPromptFetch"
   | "passwordReset"
+  | "signup"
   | "questions"
   | "personaRefresh"
   | "faqChat"

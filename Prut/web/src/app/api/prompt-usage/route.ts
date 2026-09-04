@@ -44,7 +44,11 @@ export const POST = withUser(
     return NextResponse.json({ ok: true });
   },
   {
-    rateLimit: "guest",
+    // usageEvents (60/min), NOT "guest": the guest bucket is the 3-per-24h
+    // ceiling on anonymous GENERATIONS. Keying an analytics beacon on it meant
+    // a guest's 4th catalogue event in a day silently 429'd, and an office NAT
+    // shared 3 events total (review 2026-09-04).
+    rateLimit: "usageEvents",
     rateLimitKey: ({ ip }) => `prompt-usage:${ip ?? "unknown"}`,
     allowGuest: true,
   },

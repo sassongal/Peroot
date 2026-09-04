@@ -146,7 +146,11 @@ export async function GET(request: Request) {
       );
       const totalCredits = dailyLimit;
 
-      await supabase
+      // Service client: the credit columns are guarded by
+      // trg_protect_profile_credit_columns against anon/authenticated writers,
+      // so the initial grant must run as service_role (the value is
+      // server-derived, never client input).
+      await createServiceClient()
         .from("profiles")
         .update({
           credits_balance: totalCredits,

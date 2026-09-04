@@ -84,8 +84,7 @@ interface LibraryDataContextType {
   updateTags: (id: string, tags: string[]) => Promise<void>;
   updateProfile: (updates: {
     onboarding_completed?: boolean;
-    plan_tier?: "free" | "pro";
-    credits_balance?: number;
+    preferred_output_language?: "hebrew" | "english" | "arabic" | "russian";
   }) => Promise<void>;
   /** `role` is the onboarding answer; it becomes a memory fact server side. */
   completeOnboarding: (role?: string) => Promise<boolean | undefined>;
