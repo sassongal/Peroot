@@ -268,7 +268,7 @@ export default async function CategoryPage({ params }: Props) {
               {PROMPT_LIBRARY_COUNT} פרומפטים.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <ButtonLink href="/?ref=prompts-library" size="lg">
+              <ButtonLink href="/?utm_source=prompts-library" size="lg">
                 נסו Peroot - חינם
               </ButtonLink>
               <Link

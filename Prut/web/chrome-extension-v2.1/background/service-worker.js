@@ -178,6 +178,13 @@ async function bearer() {
 }
 
 async function siteFetch(path, init = {}, retry = true) {
+  // The path arrives over runtime messaging from content scripts. Without
+  // this check, "@evil.com/x" (userinfo trick) or ".evil.com/x" turns
+  // `${SITE_URL}${path}` into an attacker-controlled origin that receives
+  // the user's bearer token. Same-origin absolute paths only.
+  if (typeof path !== "string" || !path.startsWith("/") || path.startsWith("//")) {
+    return new Response(JSON.stringify({ error: "invalid path" }), { status: 400 });
+  }
   const token = await bearer();
   const headers = { "Content-Type": "application/json", ...(init.headers || {}) };
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -297,8 +304,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "peroot-stream") return;
   let aborted = false;
+  let activeReader = null;
   port.onDisconnect.addListener(() => {
     aborted = true;
+    // Actually cancel the upstream fetch: without this the enhance request
+    // ran (and billed) to completion after the user closed the preview.
+    if (activeReader) activeReader.cancel().catch(() => {});
   });
   port.onMessage.addListener(async (msg) => {
     if (!msg || msg.type !== "start") return;
@@ -313,12 +324,14 @@ chrome.runtime.onConnect.addListener((port) => {
         return;
       }
       const reader = res.body.getReader();
+      activeReader = reader;
       const decoder = new TextDecoder();
       for (;;) {
         const { done, value } = await reader.read();
         if (done || aborted) break;
         port.postMessage({ type: "chunk", text: decoder.decode(value, { stream: true }) });
       }
+      if (aborted) reader.cancel().catch(() => {});
       if (!aborted) {
         port.postMessage({
           type: "done",

@@ -540,7 +540,7 @@ export default function UserDetailPage() {
           <QuickStat label="Generations" value={historyCount ?? 0} icon={Sparkles} color="blue" />
           <QuickStat
             label="Last Active"
-            value={lastActive ? timeAgo(lastActive) : ", "}
+            value={lastActive ? timeAgo(lastActive) : "-"}
             icon={Activity}
             color="emerald"
           />

@@ -7,8 +7,9 @@ export type CatalogEventType = "copy" | "enhance";
  * Best-effort record of what people do with a catalogue prompt, and from
  * which page. Until 2026-09-04 the event carried no source, so nobody could
  * say whether the templates page or the category pages did the converting.
- * Guests are rejected by the route (401) and that is fine: the call never
- * blocks the copy or the navigation it describes.
+ * Guest events are accepted too (rate-limited by IP) since the source
+ * attribution fix; the call still never blocks the copy or the navigation
+ * it describes.
  */
 export function trackCatalogEvent(
   promptId: string,

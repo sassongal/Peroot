@@ -6,6 +6,8 @@
  * Keep it in lockstep with the zod schemas in ops.ts and the route behavior.
  */
 
+import { PRO_MONTHLY_CREDITS, QUOTA_FALLBACK } from "@/lib/quota-policy";
+
 const MODES = [
   "STANDARD",
   "DEEP_RESEARCH",
@@ -31,8 +33,7 @@ export const CONNECT_OPENAPI = {
   info: {
     title: "Peroot Connect API",
     version: "1.0.0",
-    description:
-      "חיבור סוכני AI ל-Peroot: שדרוג פרומפטים בכל 5 המודים עם המוח המלא של המשתמש (עובדות, סגנון, סקילים פר-פלטפורמה), ספרייה אישית וציבורית, זיכרון ומשוב. אימות: מפתח prk_live_ בכותרת Authorization. מכסה: חינמי 1/יום · PRO 150/חודש (get_quota חינמי). Rate limit: 20/דקה למפתח, 40/דקה למשתמש.",
+    description: `חיבור סוכני AI ל-Peroot: שדרוג פרומפטים בכל 5 המודים עם המוח המלא של המשתמש (עובדות, סגנון, סקילים פר-פלטפורמה), ספרייה אישית וציבורית, זיכרון ומשוב. אימות: מפתח prk_live_ בכותרת Authorization. מכסה: חינמי ${QUOTA_FALLBACK.freeDaily}/יום · PRO ${PRO_MONTHLY_CREDITS}/חודש (get_quota חינמי). Rate limit: 20/דקה למפתח, 40/דקה למשתמש.`,
   },
   servers: [{ url: "https://www.peroot.space/api/v1" }],
   security: bearerSecurity,

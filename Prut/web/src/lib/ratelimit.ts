@@ -133,7 +133,7 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(120, "1 m"),
     prefix: "@peroot/ratelimit:admin-write",
   }),
-  // Public prompt body fetch (/api/p/[id] and /api/p/batch) — authenticated only.
+  // Public prompt body fetch (/api/p/[id]) — authenticated only.
   publicPromptFetch: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(300, "1 m"),
@@ -144,6 +144,21 @@ export const rateLimiters = {
     redis,
     limiter: Ratelimit.slidingWindow(3, "1 h"),
     prefix: "@peroot/ratelimit:password-reset",
+  }),
+  // Account creation — keyed by IP. Signup mints a pre-confirmed account that
+  // carries daily_free_limit credits, so an unthrottled loop here bypasses
+  // every guest ceiling (review 2026-09-04).
+  signup: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, "1 h"),
+    prefix: "@peroot/ratelimit:signup",
+  }),
+  // Contact-form messages — the route used the "guest" bucket, which is the
+  // 3-per-24h GENERATION ceiling; its own comment promised 5/hour.
+  contact: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, "1 h"),
+    prefix: "@peroot/ratelimit:contact",
   }),
   // Background questions endpoint — lighter than enhance, no credits consumed.
   questions: new Ratelimit({
@@ -195,6 +210,8 @@ type RateLimitTier =
   | "chainPro"
   | "publicPromptFetch"
   | "passwordReset"
+  | "signup"
+  | "contact"
   | "questions"
   | "personaRefresh"
   | "faqChat"

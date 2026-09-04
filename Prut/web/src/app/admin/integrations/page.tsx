@@ -1017,7 +1017,9 @@ export default function IntegrationsPage() {
                   <MetricCard
                     label="From"
                     value={
-                      data.resend.fromEmail !== "not set" ? data.resend.fromEmail || ", " : ", "
+                      data.resend.fromEmail !== "not set"
+                        ? data.resend.fromEmail || "לא הוגדר"
+                        : "לא הוגדר"
                     }
                   />
                   <MetricCard

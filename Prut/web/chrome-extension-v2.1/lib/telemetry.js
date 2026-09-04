@@ -26,12 +26,31 @@
     return false;
   }
 
+  // Keys the ingest zod schema accepts at the top level. Everything else is
+  // silently STRIPPED by the server, so extras (selector_kind, chain_length —
+  // exactly what the admin dashboard reads via meta.*) must ride inside
+  // `meta` or they vanish. Review 2026-09-04: every selector_miss arrived as
+  // "unknown" because of this.
+  const TOP_LEVEL_KEYS = new Set([
+    "site",
+    "target_model",
+    "latency_ms",
+    "success",
+    "chain_index",
+    "meta",
+  ]);
+
   function basePayload(extra) {
-    return {
-      ext_version: EXT_VERSION,
-      ts: Date.now(),
-      ...extra,
-    };
+    const top = { ext_version: EXT_VERSION };
+    const meta = {};
+    for (const [k, v] of Object.entries(extra || {})) {
+      if (v === undefined || v === null) continue;
+      if (k === "meta" && v && typeof v === "object") Object.assign(meta, v);
+      else if (TOP_LEVEL_KEYS.has(k)) top[k] = v;
+      else meta[k] = v;
+    }
+    if (Object.keys(meta).length > 0) top.meta = meta;
+    return top;
   }
 
   async function fireTelemetry(event, payload) {

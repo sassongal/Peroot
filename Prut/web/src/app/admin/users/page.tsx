@@ -770,7 +770,7 @@ export default function UsersPage() {
                                         month: "2-digit",
                                         year: "numeric",
                                       })
-                                    : ", "}
+                                    : "-"}
                               </div>
                               <div className="text-[10px] font-black uppercase tracking-widest mt-0.5">
                                 {daysUntilRenewal !== null ? (
@@ -783,7 +783,7 @@ export default function UsersPage() {
                                   </span>
                                 ) : (
                                   <span className="text-zinc-700">
-                                    {u.subscription_status ?? ", "}
+                                    {u.subscription_status ?? "-"}
                                   </span>
                                 )}
                               </div>

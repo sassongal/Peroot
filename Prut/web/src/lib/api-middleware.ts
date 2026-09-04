@@ -183,7 +183,7 @@ export interface WithUserDeps {
 }
 
 /** Extract a trustworthy client IP (Vercel-injected), validated with net.isIP(). */
-function clientIp(req: NextRequest): string | null {
+export function clientIp(req: Pick<NextRequest, "headers">): string | null {
   const rawRealIp = req.headers.get("x-real-ip");
   const rawXff = req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim();
   return (

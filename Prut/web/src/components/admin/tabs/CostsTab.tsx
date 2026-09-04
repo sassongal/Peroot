@@ -202,7 +202,7 @@ function CacheHitRateCard({ stats }: { stats: CoverageData["cacheStats"] }) {
       </div>
       <div className="space-y-1">
         <div className="text-4xl font-black text-white tracking-tighter transition-transform duration-700 group-hover:scale-110 group-hover:translate-x-2 origin-right leading-none">
-          {stats.totalRequests > 0 ? `${pct}%` : ", "}
+          {stats.totalRequests > 0 ? `${pct}%` : "-"}
         </div>
         <div className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
           Cache Hit Rate

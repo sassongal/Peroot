@@ -175,7 +175,7 @@ export default async function TemplatesPage() {
               Peroot משדרגת כל פרומפט - מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר ב-AI.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <ButtonLink href="/?ref=templates" size="lg">
+              <ButtonLink href="/?utm_source=templates" size="lg">
                 נסו Peroot - חינם
               </ButtonLink>
               <Link

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePromptLimits } from "@/hooks/usePromptLimits";
+import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Crown, Coins, Sparkles, Shield, Zap } from "lucide-react";
 import { ProBadge } from "@/components/ui/ProBadge";
@@ -126,7 +127,7 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
         <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
         <span className="text-xs font-bold text-amber-700 dark:text-amber-300">הירשמו בחינם</span>
         <span className="hidden sm:inline text-[10px] font-black text-black bg-amber-500 px-2 py-0.5 rounded-full">
-          2/יום
+          {resolveDailyLimit(settings?.daily_free_limit, QUOTA_FALLBACK.freeDaily)}/יום
         </span>
       </Link>
     );

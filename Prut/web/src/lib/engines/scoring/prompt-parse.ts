@@ -313,50 +313,75 @@ export function hasMethodology(p: Parsed): boolean {
   ).test(p.text);
 }
 
+// The Research/Agent detectors below are i18n-widened with the section
+// vocabulary (review 2026-09-04): a prompt that writes its boundaries or
+// failure modes in Arabic/Russian PROSE (not as a heading) used to score 0 on
+// dimensions worth 10-12 points each, and the UI told the user to add
+// sections that already existed.
 export function hasConfidenceProtocol(p: Parsed): boolean {
   if (p.sections.has("confidence")) return true;
-  return /confidence|ביטחון|רמת\s+ודאות|ודאות|ודאי|אמינות|דרג\s+(?:כל|לפי)|certainty|probability|likelihood|high\s+confidence|low\s+confidence|uncertain/i.test(
-    p.text,
-  );
+  return i18n(
+    /confidence|ביטחון|רמת\s+ודאות|ודאות|ודאי|אמינות|דרג\s+(?:כל|לפי)|certainty|probability|likelihood|high\s+confidence|low\s+confidence|uncertain/i,
+    I18N_SECTIONS.confidence,
+  ).test(p.text);
 }
 
 export function hasFalsifiability(p: Parsed): boolean {
   if (p.sections.has("falsifiability")) return true;
-  return /יפריך|מפריך|falsif|counter[-\s]?example|מה\s+(לא\s+)?נכון|disconfirm/i.test(p.text);
+  return i18n(
+    /יפריך|מפריך|falsif|counter[-\s]?example|מה\s+(לא\s+)?נכון|disconfirm/i,
+    I18N_SECTIONS.falsifiability,
+  ).test(p.text);
 }
 
 export function hasInfoGaps(p: Parsed): boolean {
   if (p.sections.has("info_gaps")) return true;
-  return /פערי?\s+מידע|info\s+gaps?|unknowns?|חסר\s+מידע|missing\s+data|data\s+gap/i.test(p.text);
+  return i18n(
+    /פערי?\s+מידע|info\s+gaps?|unknowns?|חסר\s+מידע|missing\s+data|data\s+gap/i,
+    I18N_SECTIONS.info_gaps,
+  ).test(p.text);
 }
 
 export function hasMECE(p: Parsed): boolean {
+  // MECE is a Latin acronym in every language; no fragments to widen with.
   return /mece|ממצה\s+וזרה|mutually\s+exclusive|collectively\s+exhaustive/i.test(p.text);
 }
 
 export function hasToolsSpec(p: Parsed): boolean {
   if (p.sections.has("tools")) return true;
-  return /כלים|tools|api|integration|function\s+calling|ממשק/i.test(p.text);
+  return i18n(/כלים|tools|api|integration|function\s+calling|ממשק/i, I18N.tools).test(p.text);
 }
 
 export function hasBoundaries(p: Parsed): boolean {
   if (p.sections.has("boundaries")) return true;
-  return /גבולות|boundary|boundaries|scope|escalat|fallback|handoff|העברה/i.test(p.text);
+  return i18n(
+    /גבולות|boundary|boundaries|scope|escalat|fallback|handoff|העברה/i,
+    I18N_SECTIONS.boundaries,
+  ).test(p.text);
 }
 
 export function hasInputsOutputs(p: Parsed): boolean {
   if (p.sections.has("inputs_outputs")) return true;
-  return /קלט|פלט|inputs?|outputs?|schema|מבנה\s+תשובה|response\s+format/i.test(p.text);
+  return i18n(
+    /קלט|פלט|inputs?|outputs?|schema|מבנה\s+תשובה|response\s+format/i,
+    I18N_SECTIONS.inputs_outputs,
+  ).test(p.text);
 }
 
 export function hasPolicies(p: Parsed): boolean {
   if (p.sections.has("policies")) return true;
-  return /מדיניות|policy|policies|rules|חוקים|guidelines|הנחיות/i.test(p.text);
+  return i18n(
+    /מדיניות|policy|policies|rules|חוקים|guidelines|הנחיות/i,
+    I18N_SECTIONS.policies,
+  ).test(p.text);
 }
 
 export function hasFailureModes(p: Parsed): boolean {
   if (p.sections.has("failure_modes")) return true;
-  return /כשל|שגיאה|failure|error|edge\s+case|מקרי\s+קצה|exception/i.test(p.text);
+  return i18n(
+    /כשל|שגיאה|failure|error|edge\s+case|מקרי\s+קצה|exception/i,
+    I18N_SECTIONS.failure_modes,
+  ).test(p.text);
 }
 
 export function hasImageSubject(p: Parsed): boolean {

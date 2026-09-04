@@ -334,7 +334,7 @@ export default async function PromptsIndexPage() {
               Peroot משדרגת כל פרומפט אוטומטית - מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר ב-AI.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <ButtonLink href="/?ref=prompts-index" size="lg">
+              <ButtonLink href="/?utm_source=prompts-index" size="lg">
                 נסו Peroot - חינם
               </ButtonLink>
               <Link

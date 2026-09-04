@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { logger } from "@/lib/logger";
 
@@ -23,12 +23,26 @@ export interface PublicAnnouncement {
   starts_at: string;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    // Audience filtering happens HERE, not only in the banner: without it an
+    // anonymous curl received the full text of users/pro-targeted notes. The
+    // viewer rides as a query param (3 values) so the CDN still caches — one
+    // variant per audience instead of one per visitor.
+    const viewerParam = req.nextUrl.searchParams.get("viewer");
+    const viewer = viewerParam === "user" || viewerParam === "pro" ? viewerParam : "guest";
+    const audiences =
+      viewer === "pro"
+        ? ["all", "users", "pro"]
+        : viewer === "user"
+          ? ["all", "users"]
+          : ["all", "guests"];
+
     const supabase = createAnonClient();
     const { data, error } = await supabase
       .from("announcements")
       .select("id, title, body, href, href_label, audience, lang, starts_at")
+      .in("audience", audiences)
       .order("priority", { ascending: false })
       .order("starts_at", { ascending: false })
       .limit(5);

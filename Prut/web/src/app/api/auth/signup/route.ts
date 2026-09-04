@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
+import { checkRateLimit } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/api-middleware";
 
 /**
  * POST /api/auth/signup
@@ -14,6 +16,17 @@ import { QUOTA_FALLBACK, resolveDailyLimit } from "@/lib/quota-policy";
  */
 export async function POST(req: NextRequest) {
   try {
+    // Signup mints a pre-confirmed account carrying daily_free_limit credits,
+    // so an unthrottled loop here bypasses every guest ceiling. 3/hour per IP.
+    const ip = clientIp(req);
+    const rl = await checkRateLimit(ip ?? "signup:unknown-ip", "signup");
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "יותר מדי נסיונות הרשמה, נסו שוב מאוחר יותר", code: "rate_limited" },
+        { status: 429 },
+      );
+    }
+
     let body: { email?: unknown; password?: unknown; fullName?: unknown };
     try {
       body = await req.json();

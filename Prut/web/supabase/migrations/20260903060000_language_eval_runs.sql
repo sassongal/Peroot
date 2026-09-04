@@ -1,5 +1,5 @@
 -- Language evaluation runs (languages spec B6): one row per case per run,
--- written by the weekly cron (service role) and read in the admin "שפות"
+-- written by the monthly cron (service role, 1st of the month) and read in the admin "שפות"
 -- tab. Admin-only read; nothing here is user data.
 
 CREATE TABLE IF NOT EXISTS public.language_eval_runs (

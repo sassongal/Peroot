@@ -40,8 +40,12 @@ CREATE TABLE IF NOT EXISTS public.credit_ledger (
 ALTER TABLE public.credit_ledger ENABLE ROW LEVEL SECURITY;
 CREATE INDEX IF NOT EXISTS idx_credit_ledger_created_at ON public.credit_ledger USING btree (created_at);
 CREATE INDEX IF NOT EXISTS idx_credit_ledger_user_id ON public.credit_ledger USING btree (user_id);
+-- NOTE: the historical "Service can insert credit_ledger" WITH CHECK (true)
+-- policy is deliberately NOT recreated here. 20260901130000 removes it as a
+-- security fix (it let any authenticated user forge audit rows; the service
+-- role bypasses RLS and needs no policy). Recreating it in a backfill would
+-- silently reopen the hole on a single-file re-run.
 DROP POLICY IF EXISTS "Service can insert credit_ledger" ON public.credit_ledger;
-CREATE POLICY "Service can insert credit_ledger" ON public.credit_ledger AS PERMISSIVE FOR INSERT TO public WITH CHECK (true);
 DROP POLICY IF EXISTS "Users can read own credit_ledger" ON public.credit_ledger;
 CREATE POLICY "Users can read own credit_ledger" ON public.credit_ledger AS PERMISSIVE FOR SELECT TO public USING ((( SELECT auth.uid() AS uid) = user_id));
 

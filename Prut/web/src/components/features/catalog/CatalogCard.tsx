@@ -90,7 +90,7 @@ export function CatalogCard({
         capability_mode: item.capabilityMode ?? undefined,
         source: SOURCE_REF[source],
       });
-      router.push(`/?ref=${SOURCE_REF[source]}`);
+      router.push(`/?utm_source=${SOURCE_REF[source]}`);
     } catch (e) {
       logger.warn("[catalog] failed to load prompt body", e);
       toast.error("לא הצלחנו לטעון את הפרומפט, נסו שוב");

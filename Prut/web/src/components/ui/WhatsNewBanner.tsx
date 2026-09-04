@@ -45,7 +45,10 @@ export function WhatsNewBanner({ viewer = "guest" }: WhatsNewBannerProps) {
   useEffect(() => {
     let cancelled = false;
     const dismissed = readDismissed();
-    fetch(getApiPath("/api/announcements"))
+    // viewer as a query param: the route filters by audience server-side (a
+    // pro-only note must not ship to an anonymous fetch), the client checks
+    // stay as belt-and-braces for a cached cross-variant response.
+    fetch(getApiPath(`/api/announcements?viewer=${viewer}`))
       .then((res) => (res.ok ? (res.json() as Promise<PublicAnnouncement[]>) : []))
       .then((notes) => {
         if (cancelled) return;

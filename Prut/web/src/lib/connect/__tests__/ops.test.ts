@@ -128,6 +128,33 @@ describe("fillTemplateText", () => {
     expect(filled).toBe("אחת ועוד אחת");
     expect(missing).toEqual([]);
   });
+
+  it("a value containing placeholder syntax is inserted literally, never re-substituted", async () => {
+    const { fillTemplateText } = await import("@/lib/connect/ops");
+    // Regression (review 2026-09-04): the old iterative split/join re-scanned
+    // its own output, so a="{b}" was overwritten by b's substitution and the
+    // caller's literal answer vanished.
+    const { filled, missing } = fillTemplateText("Hello {a} and {b}", ["a", "b"], {
+      a: "{b}",
+      b: "X",
+    });
+    expect(filled).toBe("Hello {b} and X");
+    expect(missing).toEqual([]);
+  });
+
+  it("literal braces in the prompt body survive unrelated value keys", async () => {
+    const { fillTemplateText } = await import("@/lib/connect/ops");
+    // A JSON example inside the template must not be rewritten just because a
+    // client sent a key whose braced form appears in it.
+    const tpl = 'החזר JSON: { "handlebars": "{{handlebars}}" } עבור {נושא}';
+    const { filled } = fillTemplateText(tpl, ["נושא"], {
+      נושא: "שיווק",
+      handlebars: "PWNED",
+    });
+    expect(filled).toContain('"{{handlebars}}"');
+    expect(filled).toContain("עבור שיווק");
+    expect(filled).not.toContain("PWNED");
+  });
 });
 
 describe("conversation/project context", () => {

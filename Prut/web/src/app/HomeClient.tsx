@@ -152,6 +152,9 @@ function PageContent() {
   // Batched debounced auto-save for variable memory
   const pendingVarsRef = useRef<Record<string, string>>({});
   const saveVarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // True once a landing-page ?lang= was consumed on this mount — the /api/me
+  // preference restore must not override an explicit landing choice.
+  const landingChoiceRef = useRef(false);
   const saveVariable = useCallback(
     (key: string, value: string) => {
       if (!user || !value.trim()) return;
@@ -205,7 +208,10 @@ function PageContent() {
       trackOutputLanguageSelected(next, source);
       // An explicit choice follows the account to the next device. Own-row
       // update under RLS; fire-and-forget, the local state already moved.
-      if (user && (source === "picker" || source === "suggestion")) {
+      // "landing" is explicit too — clicking "Улучшить промпт на русском" on
+      // /ru is a choice, and without persisting it the /api/me restore effect
+      // stomped it back to the stored preference a network round-trip later.
+      if (user && (source === "picker" || source === "suggestion" || source === "landing")) {
         void createClient()
           .from("profiles")
           .update({ preferred_output_language: next })
@@ -226,6 +232,10 @@ function PageContent() {
       .then((r) => (r.ok ? r.json() : null))
       .then((me) => {
         if (cancelled || !me || !isOutputLanguage(me.preferred_output_language)) return;
+        // A landing-page ?lang= was consumed this mount; it wins over the
+        // stored preference (and is being persisted as the new one), so the
+        // slower /api/me response must not flip the picker back.
+        if (landingChoiceRef.current) return;
         setOutputLanguageState(me.preferred_output_language);
         try {
           localStorage.setItem(OUTPUT_LANGUAGE_STORAGE_KEY, me.preferred_output_language);
@@ -258,6 +268,7 @@ function PageContent() {
                 ? "hebrew"
                 : null;
       if (landingLanguage) {
+        landingChoiceRef.current = true;
         url.searchParams.delete("lang");
         window.history.replaceState(window.history.state, "", url.toString());
         queueMicrotask(() => setOutputLanguage(landingLanguage, "landing"));
@@ -1071,9 +1082,17 @@ function PageContent() {
 
   const handleRefine = useCallback(
     async (instruction: string) => {
-      if (ps.isLoading) return;
+      // Same synchronous double-fire guard as handleEnhance: `ps.isLoading`
+      // alone is an async state read, so two near-simultaneous refine
+      // triggers (Quick Refine + the free-retry toast) both pass it and
+      // clobber the shared stream accumulator.
+      if (ps.isLoading || enhanceCooldownRef.current) return;
       const hasAnswers = Object.values(ps.questionAnswers).some((a) => a.trim());
       if ((!instruction.trim() && !hasAnswers) || !ps.completion) return;
+      enhanceCooldownRef.current = true;
+      setTimeout(() => {
+        enhanceCooldownRef.current = false;
+      }, 500);
 
       const currentCompletion = ps.completion;
 
@@ -1632,6 +1651,17 @@ function PageContent() {
     dispatch({ type: "STREAM_INTERRUPTED" });
   }, [abortStream, dispatch]);
 
+  // Navigating away mid-stream must abort the fetch: without this the stream
+  // keeps running against an unmounted page, its onDone/onError callbacks
+  // toast into whatever screen the user moved to, and the server keeps
+  // generating (and billing) a result nobody will see.
+  useEffect(() => {
+    return () => {
+      streamInterruptedRef.current = true;
+      abortStream();
+    };
+  }, [abortStream]);
+
   const handleDiscoveryCtaClick = useCallback(
     (action: string) => {
       if (action === "library") saveCompletionToPersonal();
@@ -1639,7 +1669,7 @@ function PageContent() {
       // The advanced modes are Pro (the route returns pro_required for free
       // accounts), so the tip sends a free user to the plans, not to a locked mode.
       else if (action === "research" || action === "image") {
-        if (!isProPlan) router.push("/pricing?ref=tip");
+        if (!isProPlan) router.push("/pricing?utm_source=tip");
         else
           dispatch({
             type: "SET_CAPABILITY",

@@ -21,4 +21,6 @@ export interface CreditsState {
   balance: number;
   dailyLimit: number;
   refreshedAt: string | null;
+  /** Live referral-bonus bucket (0 when expired or absent). */
+  bonus: number;
 }

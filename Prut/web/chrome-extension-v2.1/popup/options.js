@@ -20,8 +20,14 @@
     document.querySelectorAll(selector).forEach((b) => b.classList.toggle("active", b.dataset[attr] === value));
   }
   let savedTimer = null;
-  function saved() {
+  function saved(message) {
     const b = $("save-banner");
+    if (message) {
+      b.dataset.defaultText ??= b.textContent;
+      b.textContent = message;
+    } else if (b.dataset.defaultText) {
+      b.textContent = b.dataset.defaultText;
+    }
     b.classList.add("show");
     clearTimeout(savedTimer);
     savedTimer = setTimeout(() => b.classList.remove("show"), 1600);
@@ -48,12 +54,17 @@
     loadNews();
   }
 
+  // Mirrors the popup's Pro gate: free accounts stay on STANDARD. The server
+  // enforces this anyway (403 pro_required), but without the client gate the
+  // 403 surfaced as "נגמרו הקרדיטים" — a billing message for a tier limit.
+  let accountTier = null;
   async function loadAccount() {
     const auth = await checkAuth();
     if (!auth.authenticated) return;
     const res = await Api.me();
     if (!res.ok || !res.data) return;
     const me = res.data;
+    accountTier = me.plan_tier || "free";
     const name = me.display_name || me.email || "";
     $("account-name").textContent = name;
     $("account-avatar").textContent = (name || "?").trim()[0]?.toUpperCase() || "?";
@@ -124,6 +135,10 @@
   });
   document.querySelectorAll("#mode-chips .chip-btn").forEach((b) => {
     b.addEventListener("click", async () => {
+      if (b.dataset.mode !== "STANDARD" && accountTier && accountTier === "free") {
+        saved("המצבים המתקדמים פתוחים למנויי Pro");
+        return;
+      }
       await Prefs.set({ mode: b.dataset.mode });
       setActive("#mode-chips .chip-btn", "mode", b.dataset.mode);
       saved();

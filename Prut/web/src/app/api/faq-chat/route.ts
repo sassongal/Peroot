@@ -3,6 +3,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/api-middleware";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -10,7 +11,7 @@ export const maxDuration = 30;
 type FAQContext = { question: string; answer: string; category: string };
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
+  const ip = clientIp(req) ?? "127.0.0.1";
   const limitResult = await checkRateLimit(ip, "faqChat");
   if (!limitResult.success) {
     return NextResponse.json({ error: "יותר מדי בקשות. נסה שוב בעוד דקה." }, { status: 429 });
@@ -42,9 +43,17 @@ export async function POST(req: NextRequest) {
         .filter((item) => typeof item?.question === "string" && typeof item?.answer === "string")
     : [];
 
+  // The route is unauthenticated by design; without length caps a scripted
+  // caller could ship multi-hundred-KB "answers" into the Gemini prompt on
+  // every request within the rate limit — pure token-cost amplification.
+  // Real FAQ entries are far shorter than these ceilings.
   const contextText =
     contextItems.length > 0
-      ? contextItems.map((item) => `שאלה: ${item.question}\nתשובה: ${item.answer}`).join("\n\n")
+      ? contextItems
+          .map(
+            (item) => `שאלה: ${item.question.slice(0, 500)}\nתשובה: ${item.answer.slice(0, 2000)}`,
+          )
+          .join("\n\n")
       : "אין מידע זמין.";
 
   const cfGateway = process.env.CF_AI_GATEWAY_URL?.replace(/\/$/, "");

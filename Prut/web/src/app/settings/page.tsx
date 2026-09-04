@@ -127,6 +127,7 @@ export default function SettingsPage() {
     balance: number;
     dailyLimit: number;
     refreshedAt: string | null;
+    bonus: number;
   } | null>(null);
   const [referral, setReferral] = useState<{
     code: string;
@@ -263,7 +264,7 @@ export default function SettingsPage() {
             supabase
               .from("profiles")
               .select(
-                "display_name, credits_balance, credits_refreshed_at, preferred_output_language",
+                "display_name, credits_balance, credits_refreshed_at, preferred_output_language, bonus_credits, bonus_expires_at",
               )
               .eq("id", user.id)
               .single(),
@@ -278,10 +279,17 @@ export default function SettingsPage() {
           savedNameRef.current = loadedName.trim();
           const lang = profile?.preferred_output_language;
           if (isOutputLanguage(lang)) setPreferredLanguage(lang);
+          // The referral bonus counts only while alive — an expired bucket is
+          // worth nothing and must not be shown.
+          const bonusLive =
+            (profile?.bonus_credits ?? 0) > 0 &&
+            !!profile?.bonus_expires_at &&
+            new Date(profile.bonus_expires_at).getTime() > Date.now();
           setCredits({
             balance: profile?.credits_balance ?? 0,
             dailyLimit: resolveDailyLimit(settings?.daily_free_limit, QUOTA_FALLBACK.freeDaily),
             refreshedAt: profile?.credits_refreshed_at ?? null,
+            bonus: bonusLive ? (profile?.bonus_credits ?? 0) : 0,
           });
 
           try {

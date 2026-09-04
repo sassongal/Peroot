@@ -25,7 +25,7 @@ import {
   hasPolicies,
   hasFailureModes,
 } from "./prompt-parse";
-import { I18N, I18N_QUANTITY, I18N_ROLE_RE, i18n } from "./lexicon-i18n";
+import { I18N, I18N_QUANTITY, I18N_ROLE_RE, I18N_SECTIONS, i18n } from "./lexicon-i18n";
 
 // ---------------------------------------------------------------------------
 // Domain detection — used by both EnhancedScorer and InputScorer
@@ -759,18 +759,22 @@ function scoreSafety(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "sa
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
+  // i18n-widened (review 2026-09-04): a scope boundary or edge-case clause
+  // written in Arabic/Russian used to be invisible to this dimension.
   if (
-    /מחוץ\s+לתחום|לא\s+בתחום|גבול\s+תחום|מגבלת\s+תחום|out\s+of\s+scope|not\s+covered|beyond\s+scope|outside\s+my\s+(?:scope|expertise)/i.test(
-      t,
-    )
+    i18n(
+      /מחוץ\s+לתחום|לא\s+בתחום|גבול\s+תחום|מגבלת\s+תחום|out\s+of\s+scope|not\s+covered|beyond\s+scope|outside\s+my\s+(?:scope|expertise)/i,
+      I18N_SECTIONS.boundaries,
+    ).test(t)
   ) {
     matched.push("גבול תחום");
     pts += 3;
   }
   if (
-    /מקרה\s+קצה|מקרי\s+קצה|חריג|יוצא\s+דופן|מצב\s+חריג|edge\s+case|exception|corner\s+case|fallback|אם\s+.*\s+אז|במקרה\s+ש|כאשר\s+.*\s+אז/i.test(
-      t,
-    )
+    i18n(
+      /מקרה\s+קצה|מקרי\s+קצה|חריג|יוצא\s+דופן|מצב\s+חריג|edge\s+case|exception|corner\s+case|fallback|אם\s+.*\s+אז|במקרה\s+ש|כאשר\s+.*\s+אז/i,
+      I18N_SECTIONS.failure_modes,
+    ).test(t)
   ) {
     matched.push("מקרי קצה");
     pts += 2;

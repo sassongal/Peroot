@@ -56,6 +56,10 @@ describe("quota law", () => {
       /(קרדיט|שיפור|שדרוג)\s+אחד\s+(ביום|ליום)/,
       /(שני|שתי)\s+(קרדיטים|שיפורים|שדרוגים)\s+(ביום|ליום)/,
       /\d+\s*(ליום|ביום)\s*(\)|,|\.|"|')/,
+      // Compact slash notation: "1/יום", "2/day". The Connect docs used it and
+      // sailed past the ביום/ליום patterns with a stale number for two days
+      // (review 2026-09-04).
+      /\d+\s*\/\s*(יום|day)/,
     ];
 
     const offenders: string[] = [];

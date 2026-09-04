@@ -529,7 +529,8 @@ export async function POST(req: Request) {
     // 3. In-flight dedup — acquired BEFORE credit deduction to prevent TOCTOU:
     // two concurrent identical requests would both pass the credit check before
     // either lock is visible in Redis. Lock first, then charge. A double-click
-    // or retry within the 10-second window is rejected with 409.
+    // or retry while the lock is held is rejected with 409 (TTL ~5 min; a
+    // failed stream releases it immediately via the handlers below).
     // If Redis is unreachable the helper fails open — see inflight-lock.ts.
     const contextFingerprint =
       contextAttachments && contextAttachments.length > 0
@@ -1028,6 +1029,11 @@ export async function POST(req: Request) {
       Math.ceil((engineOutput.systemPrompt.length + engineOutput.userPrompt.length) / 4) +
       contextTokens;
 
+    // Exactly one of onFinish / onAbort / the stream-error handler below owns
+    // this generation's refund + inflight-lock release. Without the guard an
+    // abort that also rejects result.text would refund twice.
+    let streamSettled = false;
+
     const { result, modelId } = await AIGateway.generateStream({
       system: engineOutput.systemPrompt,
       prompt: engineOutput.userPrompt,
@@ -1035,6 +1041,32 @@ export async function POST(req: Request) {
       preferredModel,
       outputLanguage: output_language,
       estimatedInputTokens,
+      // A client disconnect (stop button, navigation) cancels the upstream
+      // model call instead of letting it run and bill to completion.
+      abortSignal: req.signal,
+      onAbort: async () => {
+        if (streamSettled) return;
+        streamSettled = true;
+        try {
+          // The user paid for a generation they walked away from. Registered
+          // users get the credit back; guests do NOT — an abort at 95% still
+          // delivered most of the stream, and refunding the single guest
+          // credit would turn it into an unlimited loop (same rationale as
+          // the truncation-refund guest exemption in onFinish).
+          if (userId) {
+            await refundEnhanceCredit({
+              chargedFrom: chargedFromOuter,
+              userId,
+              guestId: null,
+              isRefinement,
+              context: { stage: "abort" },
+            });
+            logger.info("[Enhance] Client aborted mid-stream, credit refunded", { userId });
+          }
+        } finally {
+          await lock.release();
+        }
+      },
       // Refine lifts the ceiling from 4096 → 8192; everything else stays
       // on the task preset (undefined = use pickDefaults).
       ...(refinementMaxTokens !== undefined ? { maxOutputTokens: refinementMaxTokens } : {}),
@@ -1043,6 +1075,7 @@ export async function POST(req: Request) {
         ? { imageAttachments: engineOutput.imageAttachments }
         : {}),
       onFinish: async (completion) => {
+        streamSettled = true;
         const durationMs = Date.now() - startTime;
         // The client received the scrubbed stream; persist and cache the same
         // text, so history, the enhance cache and the Connect API agree with
@@ -1249,6 +1282,35 @@ export async function POST(req: Request) {
           }
         });
       },
+    });
+
+    // Mid-stream provider failure: onFinish never fires for a rejected
+    // stream, so without this the inflight lock survives its full TTL (the
+    // user's retry answers 409 "כבר בתהליך" for up to 5 minutes) and the
+    // charge is never refunded. Mirrors the slot-release pattern inside the
+    // gateway.
+    Promise.resolve(result.text).catch(async () => {
+      if (streamSettled) return;
+      streamSettled = true;
+      try {
+        // Same refund policy as finishReason === "error": guests included, a
+        // provider failure is never attacker-induced.
+        await refundEnhanceCredit({
+          chargedFrom: chargedFromOuter,
+          userId,
+          guestId,
+          isRefinement,
+          context: { stage: "stream-error" },
+        });
+        logger.warn("[Enhance] Stream rejected mid-flight, refunded and released lock", {
+          userId,
+          guestId,
+        });
+      } catch {
+        /* best effort — Sentry already captured inside refundEnhanceCredit */
+      } finally {
+        await lock.release();
+      }
     });
 
     // Project law: no em or en dashes reach a reader, whatever the model did.

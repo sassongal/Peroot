@@ -347,8 +347,8 @@ function SitemapsPanel({ sitemaps, loading }: { sitemaps: Sitemap[]; loading: bo
                   <div key={j} className="bg-zinc-800/60 rounded-lg px-3 py-2 text-xs space-y-0.5">
                     <div className="text-zinc-400 font-medium capitalize">{c.type}</div>
                     <div className="text-zinc-500">
-                      הוגש: {c.submitted ?? ", "} | מתוייג:{" "}
-                      <span className="text-white font-bold">{c.indexed ?? ", "}</span>
+                      הוגש: {c.submitted ?? "-"} | מתוייג:{" "}
+                      <span className="text-white font-bold">{c.indexed ?? "-"}</span>
                     </div>
                   </div>
                 ))}
@@ -439,7 +439,7 @@ function InspectPanel() {
             {fields.map((f) => (
               <div key={f.label} className="space-y-1">
                 <div className="text-xs text-zinc-500 font-medium">{f.label}</div>
-                <div className="text-sm text-white font-medium">{f.value ?? ", "}</div>
+                <div className="text-sm text-white font-medium">{f.value ?? "-"}</div>
               </div>
             ))}
           </div>

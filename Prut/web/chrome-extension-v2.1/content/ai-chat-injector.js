@@ -287,7 +287,7 @@
    * Streamed enhance through the service worker (a content script cannot
    * fetch the site itself). Resolves with { ok, status, text, cache, error }.
    */
-  function streamEnhance(body, onChunk) {
+  function streamEnhance(body, onChunk, abortRef) {
     return new Promise((resolve) => {
       let full = "";
       let settled = false;
@@ -307,6 +307,13 @@
         }
         resolve(r);
       };
+      // Closing the preview must actually stop the stream: disconnecting the
+      // port makes the service worker cancel the upstream fetch, and the
+      // aborted flag lets the caller skip overwriting the composer with a
+      // result the user already dismissed.
+      if (abortRef) {
+        abortRef.abort = () => finish({ ok: false, status: 0, error: "aborted", aborted: true });
+      }
       port.onMessage.addListener((m) => {
         if (m.type === "chunk") {
           full += m.text;
@@ -513,6 +520,8 @@
     }
 
     const preview = showPreview();
+    const abortRef = {};
+    preview.onClose(() => abortRef.abort?.());
     let lastPaint = 0;
     try {
       const res = await streamEnhance(
@@ -533,7 +542,16 @@
           lastPaint = now;
           preview.setText(cleanOutput(full, mode, imgPlat), true);
         },
+        abortRef,
       );
+
+      // The user closed the preview mid-stream: nothing to show, and the
+      // composer must NOT be overwritten with the dismissed result.
+      if (res.aborted) {
+        updateButtonState("idle");
+        isEnhancing = false;
+        return;
+      }
 
       if (!res.ok) {
         preview.close();
@@ -603,6 +621,7 @@
     const started = Date.now();
     const timer = setInterval(() => (meta.textContent = `${((Date.now() - started) / 1000).toFixed(1)}s`), 200);
     let autoClose = null;
+    const closeCallbacks = [];
     const api = {
       setText(t, streaming) {
         textEl.textContent = t;
@@ -632,6 +651,9 @@
       },
       showQuestions(questions, original, enhanced, ctx) {
         clearTimeout(autoClose);
+        // Closing the card mid-refine aborts that stream too.
+        const refineAbortRef = {};
+        closeCallbacks.push(() => refineAbortRef.abort?.());
         const box = card.querySelector(".peroot-preview-questions");
         box.hidden = false;
         box.innerHTML = '<div class="peroot-preview-qtitle">לדייק עוד? בחרו תשובה:</div>';
@@ -665,7 +687,9 @@
                   answers: { [String(q.id || q.question.slice(0, 40))]: ex },
                 },
                 (full) => api.setText(cleanOutput(full, ctx.mode, ctx.imgPlat), true),
+                refineAbortRef,
               );
+              if (res.aborted) return;
               if (!res.ok) return showToast("הדיוק נכשל. נסו שוב", "error");
               const refined = cleanOutput(res.text || "", ctx.mode, ctx.imgPlat);
               api.setText(refined, false);
@@ -679,10 +703,21 @@
         }
       },
       close() {
+        for (const cb of closeCallbacks.splice(0)) {
+          try {
+            cb();
+          } catch {
+            /* listener error must not block closing */
+          }
+        }
         clearInterval(timer);
         clearTimeout(autoClose);
         card.classList.add("peroot-preview-exit");
         setTimeout(() => card.remove(), 180);
+      },
+      /** Register a callback for when the card closes (✕ or programmatic). */
+      onClose(cb) {
+        closeCallbacks.push(cb);
       },
     };
     card.querySelector(".peroot-preview-close").addEventListener("click", api.close);

@@ -220,25 +220,25 @@ export function TabCreation({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="פרומפטים בספרייה"
-          value={stats?.totalPrompts ?? ", "}
+          value={stats?.totalPrompts ?? "-"}
           color="blue"
           icon={BookOpen}
         />
         <StatCard
           label="פוסטי בלוג"
-          value={stats?.totalBlogPosts ?? ", "}
+          value={stats?.totalBlogPosts ?? "-"}
           color="purple"
           icon={PenTool}
         />
         <StatCard
           label="ממתינים לאישור"
-          value={stats?.pendingApproval ?? ", "}
+          value={stats?.pendingApproval ?? "-"}
           color="amber"
           icon={Clock}
         />
         <StatCard
           label="נוצרו השבוע"
-          value={stats?.createdThisWeek ?? ", "}
+          value={stats?.createdThisWeek ?? "-"}
           color="emerald"
           icon={TrendingUp}
         />

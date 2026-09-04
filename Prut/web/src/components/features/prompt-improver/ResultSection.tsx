@@ -327,8 +327,20 @@ export function ResultSection({
                   }}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-[#FDBE00] shadow-[0_0_8px_#FDBE00] animate-pulse shrink-0" />
-                  פרומפט מוכן
+                  {isLoading ? "מייצר..." : "פרומפט מוכן"}
                 </div>
+                {/* Stop stays reachable for the WHOLE stream, not only before
+                    the first token (the pre-token pane has its own in
+                    ThinkingStagesIndicator). */}
+                {isLoading && onStop && (
+                  <button
+                    type="button"
+                    onClick={onStop}
+                    className="px-4 py-1.5 min-h-[36px] rounded-lg border border-(--glass-border) text-xs text-(--text-secondary) hover:text-red-500 hover:border-red-500/40 transition-colors cursor-pointer"
+                  >
+                    עצור
+                  </button>
+                )}
               </div>
               <BeforeAfterSplit
                 original={originalPrompt ?? ""}

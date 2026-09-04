@@ -296,8 +296,15 @@ export function SettingsProfileSection({
             </div>
             <p className="text-xs text-(--text-muted)">
               {credits.balance === 0
-                ? "נגמרו להיום. המכסה מתחדשת מדי יום."
-                : `${credits.balance} מתוך ${credits.dailyLimit} נותרו להיום`}
+                ? credits.bonus > 0
+                  ? // A live referral bonus keeps working after the daily bucket
+                    // empties, so "נגמרו להיום" next to usable credits read as a
+                    // broken referral program.
+                    `המכסה היומית נגמרה, נשארו ${credits.bonus} קרדיטים מבונוס ההפניות`
+                  : "נגמרו להיום. המכסה מתחדשת מדי יום."
+                : credits.bonus > 0
+                  ? `${credits.balance} מתוך ${credits.dailyLimit} להיום + ${credits.bonus} בונוס הפניות`
+                  : `${credits.balance} מתוך ${credits.dailyLimit} נותרו להיום`}
             </p>
           </>
         ) : (
