@@ -58,6 +58,10 @@ async function clearAuth() {
   await chrome.storage.local.remove([
     "peroot_token",
     "peroot_refresh_token",
+    // A stale API key permanently shadows the JWT in bearer(): once revoked,
+    // every request 401s and the refresh-retry loop can never recover
+    // (review 2026-09-04). Logout is the one place it gets cleared.
+    "peroot_api_key",
   ]);
 }
 

@@ -158,7 +158,12 @@ if (!window.__peerootContentLoaded) {
       handleEnhance(message.text, message.action || "enhance");
     }
     if (message.type === "INSERT_TEXT") {
-      insertIntoActive(message.text);
+      // On ChatGPT/Claude/Gemini the declarative injector is already present
+      // and handles INSERT_TEXT itself; running both handlers duplicated the
+      // prompt in the composer (review 2026-09-04).
+      if (!window.__peerootAIChatInjected) {
+        insertIntoActive(message.text);
+      }
     }
     if (message.type === "ENHANCE_KEYBOARD_SHORTCUT") {
       const sel = window.getSelection()?.toString()?.trim();

@@ -222,6 +222,18 @@
     if (/chat\.mistral\.ai/.test(host)) return "mistral";
     return "general";
   }
+  /**
+   * Map a hostname to the telemetry `site` enum (chatgpt|claude|gemini) or
+   * undefined. The ingest schema rejects anything else, and a non-chat
+   * hostname is browsing history that must never leave the browser.
+   */
+  function siteEnumFromHost(host) {
+    if (!host) return undefined;
+    if (/chat\.openai\.com|chatgpt\.com/.test(host)) return "chatgpt";
+    if (/claude\.ai/.test(host)) return "claude";
+    if (/gemini\.google\.com/.test(host)) return "gemini";
+    return undefined;
+  }
   async function detectSite() {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -525,7 +537,18 @@
     }
     state.historyLoaded = false;
     loadMe();
-    if (onFinishLabel) Api.telemetry(onFinishLabel, { target_model: currentProfileSlug(), site: state.host || null });
+    if (onFinishLabel) {
+      // The ingest schema takes site as an enum key and rejects null values
+      // (.optional() means absent, not null) — the raw hostname 400'd every
+      // popup beacon. And a non-chat hostname is the user's browsing history:
+      // never send it (review 2026-09-04).
+      const payload = {};
+      const tm = currentProfileSlug();
+      if (tm) payload.target_model = tm;
+      const siteKey = siteEnumFromHost(state.host);
+      if (siteKey) payload.site = siteKey;
+      Api.telemetry(onFinishLabel, payload);
+    }
     return res;
   }
   async function doEnhance() {
