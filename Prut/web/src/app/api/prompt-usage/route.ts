@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { withUser } from "@/lib/api-middleware";
 
@@ -23,7 +24,12 @@ export const POST = withUser(
   async (req, ctx) => {
     const payload = EventSchema.parse(await req.json());
 
-    const { error } = await ctx.db.from("prompt_usage_events").insert({
+    // withUser refuses to hand a service client to a guest (an unscoped
+    // query risk). This write is scoped by construction: one validated row,
+    // fixed shape, user_id null, behind the IP bucket. So the guest path
+    // takes the service client here, deliberately and only for this insert.
+    const db = ctx.user ? ctx.db : createServiceClient();
+    const { error } = await db.from("prompt_usage_events").insert({
       prompt_id: payload.prompt_key, // Map key to id column
       event_type: payload.event_type,
       prompt_length: payload.prompt_length ?? null,
@@ -41,7 +47,6 @@ export const POST = withUser(
     rateLimit: "guest",
     rateLimitKey: ({ ip }) => `prompt-usage:${ip ?? "unknown"}`,
     allowGuest: true,
-    forceServiceClient: true,
   },
 );
 
