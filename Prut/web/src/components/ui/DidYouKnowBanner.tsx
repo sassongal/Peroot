@@ -11,22 +11,10 @@ import {
 } from "@/lib/peroot-facts";
 
 const SESSION_KEY = "peroot_fun_fact_dismissed";
-const LAST_SHOWN_KEY = "peroot_fun_fact_last_shown";
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 function isDismissedThisSession(): boolean {
   try {
     return sessionStorage.getItem(SESSION_KEY) === "true";
-  } catch {
-    return false;
-  }
-}
-
-// At most one fact a day (one-overlay law, UX plan U2.2).
-function shownWithinLastDay(): boolean {
-  try {
-    const raw = localStorage.getItem(LAST_SHOWN_KEY);
-    return !!raw && Date.now() - Number(raw) < DAY_MS;
   } catch {
     return false;
   }
@@ -38,8 +26,10 @@ export function DidYouKnowBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Don't show if already dismissed this session or shown today
-    if (isDismissedThisSession() || shownWithinLastDay()) return;
+    // A fixed box beside "מה חדש" (owner decision, 2026-09-04): a new fact
+    // on every visit, hidden for the session once closed. The old once-a-day
+    // rule left the row empty most of the time.
+    if (isDismissedThisSession()) return;
 
     const detectedLocale = detectFactLocale();
     queueMicrotask(() => {
@@ -47,14 +37,7 @@ export function DidYouKnowBanner() {
       setFactIndex(getNextFactIndex(detectedLocale));
     });
     // Small delay for smooth entrance
-    const timer = setTimeout(() => {
-      setVisible(true);
-      try {
-        localStorage.setItem(LAST_SHOWN_KEY, String(Date.now()));
-      } catch {
-        /* ignore */
-      }
-    }, 800);
+    const timer = setTimeout(() => setVisible(true), 400);
     return () => clearTimeout(timer);
   }, []);
 
@@ -75,12 +58,12 @@ export function DidYouKnowBanner() {
   return (
     <div
       className={cn(
-        "w-full transition-all duration-500 ease-out",
+        "w-full h-full transition-all duration-500 ease-out",
         visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4",
       )}
       dir={locale === "en" ? "ltr" : "rtl"}
     >
-      <div className="relative flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/6 border border-amber-500/15 group">
+      <div className="relative h-full flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/6 border border-amber-500/15 group">
         {/* Icon */}
         <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/15 mt-0.5">
           <Lightbulb className="w-4 h-4 text-amber-400" />

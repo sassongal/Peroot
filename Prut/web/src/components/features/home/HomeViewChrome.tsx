@@ -32,8 +32,9 @@ const DidYouKnowBanner = dynamic(
   () => import("@/components/ui/DidYouKnowBanner").then((mod) => mod.DidYouKnowBanner),
   { ssr: false, loading: () => <div className="h-[48px]" /> },
 );
-// "מה חדש", one line under "הידעת?" in the same shell (owner decision,
-// 2026-09-02): never above the task area, never a ticker.
+// "מה חדש" and "הידעת?" share one row under the task area, each in its own
+// box (owner decision, 2026-09-04); stacked on phones. Never above the task
+// area, never a ticker.
 const WhatsNewBanner = dynamic(
   () => import("@/components/ui/WhatsNewBanner").then((mod) => mod.WhatsNewBanner),
   { ssr: false, loading: () => null },
@@ -175,7 +176,7 @@ function HomeViewChromeInner({
         {/* Did You Know — BELOW the task area (U2.2: never above the mode
             selector), reserved height to prevent CLS. */}
         {!hasCompletion && !isLoading && (
-          <div className="min-h-[48px] flex flex-col gap-3">
+          <div className="min-h-[48px] grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch [&>*:only-child]:md:col-span-2">
             <DidYouKnowBanner />
             <WhatsNewBanner viewer={isPro ? "pro" : user ? "user" : "guest"} />
           </div>

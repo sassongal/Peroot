@@ -10,8 +10,8 @@ import type { PublicAnnouncement } from "@/app/api/announcements/route";
 const DISMISSED_KEY = "peroot_whats_new_dismissed";
 
 /**
- * "מה חדש": one line, under "הידעת?", in the same shell and width (owner
- * decision, 2026-09-02). Not a ticker at the top of the page: nothing moves,
+ * "מה חדש": one box beside "הידעת?" on the same row, stacked on phones
+ * (owner decision, 2026-09-04). Not a ticker at the top of the page: nothing moves,
  * nothing scrolls, one note at a time, and a dismissed note stays dismissed
  * in this browser. Notes come from the announcements table through a cached
  * public endpoint, so a launch is an admin edit.
@@ -86,7 +86,7 @@ export function WhatsNewBanner({ viewer = "guest" }: WhatsNewBannerProps) {
   return (
     <div
       className={cn(
-        "w-full transition-all duration-500 ease-out motion-reduce:transition-none",
+        "w-full h-full transition-all duration-500 ease-out motion-reduce:transition-none",
         visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2",
       )}
       dir={dir}
@@ -94,7 +94,7 @@ export function WhatsNewBanner({ viewer = "guest" }: WhatsNewBannerProps) {
       role="status"
       aria-label="מה חדש"
     >
-      <div className="relative flex items-start gap-3 px-4 py-3 rounded-xl bg-(--glass-bg) border border-(--glass-border)">
+      <div className="relative h-full flex items-start gap-3 px-4 py-3 rounded-xl bg-(--glass-bg) border border-(--glass-border)">
         <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/15 mt-0.5">
           <Megaphone className="w-4 h-4 text-amber-500" aria-hidden="true" />
         </div>
