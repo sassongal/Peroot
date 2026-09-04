@@ -255,7 +255,12 @@ export function SettingsReferralSection({
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                  toast.success(`קיבלתם ${creditsPhrase(Number(data.creditsAwarded) || 0)}`);
+                  // The redeeming friend gets no immediate credits in the
+                  // two-bucket design (the REFERRER is paid, later, by the
+                  // grant sweep) — interpolating credits_awarded here printed
+                  // "קיבלתם 0 קרדיטים" on every successful redemption. Same
+                  // fix HomeClient's auto-redeem already got.
+                  toast.success("הקוד מומש! מי שהזמין אתכם יקבל את הבונוס");
                   setRedeemCode("");
                 } else {
                   toast.error(data.error || "שגיאה במימוש הקוד");

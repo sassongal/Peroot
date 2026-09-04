@@ -11,6 +11,9 @@ interface Quota {
   credits_balance: number;
   daily_limit: number;
   refresh_at: string | null;
+  /** Live referral-bonus bucket (0 when expired/absent). */
+  bonus_credits?: number;
+  bonus_expires_at?: string | null;
 }
 
 interface LedgerEntry {
@@ -134,6 +137,14 @@ export function CreditsPanel() {
         ) : (
           <span className="text-sm text-(--text-muted)">חשבון מנהל, ללא מדידה</span>
         )}
+        {/* The referral bonus is a second bucket, spent after the daily one.
+            Without this line a user whose daily ran out saw "נגמרו להיום"
+            while sitting on live bonus credits nobody showed them. */}
+        {(quota.bonus_credits ?? 0) > 0 ? (
+          <span className="text-sm font-semibold text-amber-500">
+            + {quota.bonus_credits} בונוס הפניות
+          </span>
+        ) : null}
       </div>
 
       {tier === "free" && quota.refresh_at ? (

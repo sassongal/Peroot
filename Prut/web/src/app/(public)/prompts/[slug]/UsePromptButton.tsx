@@ -25,7 +25,7 @@ export function UsePromptButton({ id, title, prompt, category }: UsePromptButton
       is_template: false,
       source: "prompts-library",
     });
-    router.push("/?ref=prompts-library");
+    router.push("/?utm_source=prompts-library");
   };
 
   return (

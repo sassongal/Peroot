@@ -260,7 +260,22 @@ export async function proxy(request: NextRequest) {
   // Capture referral code from URL (?ref=CODE) into a cookie for redemption after signup
   // Uses rewrite (not redirect) to avoid an extra round-trip that hurts LCP/TTFB
   const refCode = request.nextUrl.searchParams.get("ref");
-  const isValidRefCode = refCode && refCode.length <= 30 && /^[a-zA-Z0-9_-]+$/.test(refCode);
+  // Internal traffic tags use ?utm_source= since 2026-09-05, but a stale link
+  // or bookmark with the old ?ref= form must not poison the first-wins
+  // referral cookie for 30 days and rob a real referrer of the bonus.
+  const INTERNAL_REF_TAGS = new Set([
+    "compare",
+    "templates",
+    "prompts-index",
+    "prompts-library",
+    "library-prompt",
+    "tip",
+  ]);
+  const isValidRefCode =
+    refCode &&
+    refCode.length <= 30 &&
+    /^[a-zA-Z0-9_-]+$/.test(refCode) &&
+    !INTERNAL_REF_TAGS.has(refCode);
   if (isValidRefCode && !request.cookies.get("referral_code")) {
     supabaseResponse.cookies.set("referral_code", refCode, {
       path: "/",

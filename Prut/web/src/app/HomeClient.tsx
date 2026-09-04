@@ -1658,7 +1658,7 @@ function PageContent() {
       // The advanced modes are Pro (the route returns pro_required for free
       // accounts), so the tip sends a free user to the plans, not to a locked mode.
       else if (action === "research" || action === "image") {
-        if (!isProPlan) router.push("/pricing?ref=tip");
+        if (!isProPlan) router.push("/pricing?utm_source=tip");
         else
           dispatch({
             type: "SET_CAPABILITY",

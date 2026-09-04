@@ -65,7 +65,7 @@ export function PromptWorkbench({
       capability_mode: capabilityMode ?? undefined,
       source: USAGE_SOURCE,
     });
-    router.push("/?ref=library-prompt");
+    router.push("/?utm_source=library-prompt");
   };
 
   const handleCopy = () => sendUsageSignal(promptId, "copy", substituted.length);

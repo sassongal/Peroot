@@ -264,12 +264,12 @@ export default function ChatgptVsClaudePage() {
 
           <section className="grid gap-4 sm:grid-cols-3">
             <CrossLinkCard
-              href="/?ref=compare"
+              href="/?utm_source=compare"
               title="לבנות פרומפט ל-Claude"
               description="פירוט כותב אותו עם תגיות ומשלב מדויק."
             />
             <CrossLinkCard
-              href="/?ref=compare"
+              href="/?utm_source=compare"
               title="לבנות פרומפט ל-ChatGPT"
               description="רשימות, כותרות והגבלות, מוכן להדבקה."
             />
