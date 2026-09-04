@@ -451,7 +451,7 @@ function Scene2({
           מוכן להתחיל!
         </h2>
         <p className="text-white/56 max-w-[17rem] mx-auto text-[0.97rem] leading-relaxed">
-          הכל מוכן: ספרייה אישית, זיכרון AI ותוסף Chrome מחכים לך
+          הכל מוכן: הספרייה שלך, זיכרון AI ותוסף Chrome מחכים לך
         </p>
       </motion.div>
 

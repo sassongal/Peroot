@@ -227,7 +227,7 @@ export function PersonalLibraryGrid() {
         <div className="rounded-xl border border-(--glass-border) bg-(--glass-bg) p-4 space-y-3">
           <h3 className="text-sm font-semibold text-(--text-secondary) flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-blue-400" />
-            מועדפים מהספרייה הציבורית
+            מועדפים מהפרומפטים הציבוריים
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {libraryFavorites.map((p) => (
@@ -239,7 +239,7 @@ export function PersonalLibraryGrid() {
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 inline-block mb-1">
-                      ספרייה ציבורית
+                      פרומפטים
                     </span>
                     <h4 className="text-sm text-(--text-primary) font-medium truncate">
                       {p.title}
@@ -345,7 +345,7 @@ export function PersonalLibraryGrid() {
                     ? "עוד לא סימנת מועדפים"
                     : effectiveFolder === "pinned"
                       ? "אין פרומפטים מוצמדים"
-                      : "הספרייה האישית שלך ריקה"}
+                      : "הספרייה שלך ריקה"}
                 </p>
                 <p className="text-sm text-(--text-muted) max-w-xs mx-auto">
                   {effectiveFolder === "all"

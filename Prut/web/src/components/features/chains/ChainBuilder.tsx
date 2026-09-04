@@ -249,7 +249,7 @@ export function ChainBuilder({
                   {personalPrompts.length > 0 && !step.prompt_id && (
                     <details className="group">
                       <summary className="text-xs text-(--text-muted) hover:text-amber-400 cursor-pointer transition-colors">
-                        בחר מהספרייה האישית
+                        בחר מהספרייה שלי
                       </summary>
                       <div className="mt-2 max-h-32 overflow-y-auto space-y-1 border border-(--glass-border) rounded-lg p-2 bg-(--glass-bg)">
                         {personalPrompts.slice(0, 20).map((p) => (

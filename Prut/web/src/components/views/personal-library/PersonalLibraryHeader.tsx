@@ -82,7 +82,7 @@ export function PersonalLibraryHeader() {
             <Menu className="w-4 h-4" />
           </button>
           <div>
-            <h2 className="text-xl md:text-3xl font-serif text-(--text-primary)">ספרייה אישית</h2>
+            <h2 className="text-xl md:text-3xl font-serif text-(--text-primary)">הספרייה שלי</h2>
             <p className="text-xs text-(--text-muted) mt-0.5">
               {localViewType === "graph" ? (
                 <>הקשרים בין הפרומפטים שלך</>
@@ -169,7 +169,7 @@ export function PersonalLibraryHeader() {
             className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg border border-(--glass-border) text-(--text-secondary) hover:bg-(--glass-bg) hover:text-(--text-primary) transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <BookOpen className="w-4 h-4" />
-            <span className="hidden lg:inline">ספרייה מלאה</span>
+            <span className="hidden lg:inline">פרומפטים</span>
           </button>
           {/* New prompt button */}
           <button

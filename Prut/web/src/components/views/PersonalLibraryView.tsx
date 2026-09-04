@@ -64,9 +64,7 @@ function GuestGate() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-            הספרייה האישית שלך מחכה
-          </h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">הספרייה שלך מחכה</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
             התחבר כדי לגשת לכל הפרומפטים שלך, המועדפים, הקשרים ביניהם וההיסטוריה.
           </p>
@@ -77,7 +75,7 @@ function GuestGate() {
             {
               Icon: BookOpen,
               color: "text-amber-500",
-              label: "ספרייה אישית, כל הפרומפטים שלך במקום אחד",
+              label: "הספרייה שלי, כל הפרומפטים שלך במקום אחד",
             },
             {
               Icon: Star,
@@ -161,7 +159,7 @@ function PersonalLibraryLayout() {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="תיקיות הספרייה האישית"
+        aria-label="תיקיות הספרייה שלי"
         aria-hidden={!sidebarOpen}
         inert={!sidebarOpen}
         className={cn(

@@ -95,7 +95,7 @@ export function LoginRequiredModal({
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                גישה לכל ספריות הפרומפטים, התבניות והספרייה הציבורית
+                גישה לכל הפרומפטים והתבניות, ולספרייה שלכם
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
