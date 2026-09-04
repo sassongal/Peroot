@@ -387,8 +387,13 @@ clears the user's rows. Do not re-add a badge without a surface that shows it.
 - SEO content pages: `/glossary` (40 terms, DefinedTermSet) and
   `/compare/chatgpt-vs-claude`. Both are in the sitemap and the footer's
   "ללמוד" column; add new evergreen pages to both.
-- `/templates` ships a `TemplateSummary` per card (preview, variables), and
-  the grid reads the body through the anon RLS policy on "השתמש בתבנית".
+- **One catalogue (2026-09-04).** `/prompts/[category]` and `/templates` are
+  the same `CatalogGrid` + `CatalogCard` (`src/components/features/catalog/`)
+  over `fetchCatalogItems()` (`src/lib/catalog/`); templates is the
+  `variables` facet, not a second implementation. Category pages ship whole
+  bodies, the facet ships previews and reads the body on "use" through the
+  anon RLS policy. Catalogue usage events carry a `source`
+  (`prompt_usage_events.source`), so the surfaces can be compared.
 
 ---
 

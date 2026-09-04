@@ -17,6 +17,8 @@ interface CopyButtonProps {
   label?: string;
   variant?: CopyButtonVariant;
   className?: string;
+  /** Called once the text is actually on the clipboard (analytics hooks). */
+  onCopied?: () => void;
 }
 
 const VARIANT_CLASSES: Record<CopyButtonVariant, string> = {
@@ -38,7 +40,13 @@ const VARIANT_CLASSES: Record<CopyButtonVariant, string> = {
  * there looking normal, so the user pasted whatever was in the clipboard
  * before.
  */
-export function CopyButton({ text, label, variant = "inline", className }: CopyButtonProps) {
+export function CopyButton({
+  text,
+  label,
+  variant = "inline",
+  className,
+  onCopied,
+}: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -58,6 +66,7 @@ export function CopyButton({ text, label, variant = "inline", className }: CopyB
       return;
     }
     setCopied(true);
+    onCopied?.();
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setCopied(false), COPIED_MS);
   }

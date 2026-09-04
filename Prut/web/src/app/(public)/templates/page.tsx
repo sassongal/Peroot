@@ -3,22 +3,19 @@ import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/service";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
-import { fetchAllActiveLibraryPrompts } from "@/lib/public-library";
-import { extractVariables } from "@/lib/variable-utils";
+import { fetchCatalogItems } from "@/lib/catalog/fetch";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, faqSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
-import { TemplateGrid, type TemplateSummary } from "./TemplateGrid";
+import { CatalogGrid } from "@/components/features/catalog/CatalogGrid";
+import type { CatalogItem } from "@/components/features/catalog/types";
 
 // ISR: template data is public + near-static; a cookieless fetch (below) keeps
 // this cacheable instead of forcing a live DB query on every request.
 export const revalidate = 3600;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
-
-/** Enough of the body for search to find a template by its content. */
-const PREVIEW_CHARS = 240;
 
 const OG_IMAGE = `${SITE_URL}/api/og?title=${encodeURIComponent("תבניות פרומפטים בעברית")}&subtitle=${encodeURIComponent("שדות למילוי, שדרוג אוטומטי, חינם")}`;
 
@@ -48,43 +45,13 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-/** Server-side fetch of library prompts that contain {variable} placeholders.
- *  Cookieless service client + ISR (revalidate below): public data only.
- *  Fetches the WHOLE catalog (batched) so the displayed template count is
- *  real, not the length of a truncated page. */
-async function getTemplates(): Promise<TemplateSummary[]> {
-  try {
-    const supabase = createServiceClient();
-    const mapped = await fetchAllActiveLibraryPrompts(supabase);
-
-    // Filter to only prompts that contain at least one FILLABLE variable, using
-    // the same strict tokenizer the fill UI uses (extractVariables), so the
-    // card's "N משתנים" count matches what the Variables Panel actually renders,
-    // and prompts with only JSON-ish/over-long `{...}` are not shown as templates.
-    //
-    // Only a summary crosses to the client. Shipping every prompt body made
-    // this page a 1.9MB HTML document (the RSC payload carries the props
-    // twice); the grid fetches the full body on "השתמש בתבנית".
-    const summaries: TemplateSummary[] = [];
-    for (const p of mapped) {
-      const variables = extractVariables(p.prompt);
-      if (variables.length === 0) continue;
-      summaries.push({
-        id: p.id,
-        title: p.title,
-        use_case: p.use_case ?? "",
-        category: p.category,
-        capability_mode: p.capability_mode,
-        variables,
-        preview: p.prompt.slice(0, PREVIEW_CHARS),
-      });
-    }
-    return summaries;
-  } catch (e) {
-    // Re-throw real failures to the route error boundary instead of silently
-    // collapsing into an empty grid.
-    throw e instanceof Error ? e : new Error("templates_load_failed");
-  }
+/**
+ * The templates facet of the one catalogue: every active prompt with at
+ * least one fillable field, as a preview (the body is read on "use"). Same
+ * grid and card as the category pages; only the filter and the copy differ.
+ */
+async function getTemplates(): Promise<CatalogItem[]> {
+  return fetchCatalogItems(createServiceClient(), { preview: true, onlyTemplates: true });
 }
 
 const FAQ_ITEMS = [
@@ -96,12 +63,12 @@ const FAQ_ITEMS = [
   {
     question: "האם השימוש בתבניות חינמי?",
     answer:
-      "כן! כל התבניות הבסיסיות זמינות בחינם. תבניות Pro עם מצבים מתקדמים כמו יצירת תמונות, סרטונים ומחקר מעמיק דורשות מנוי Pro.",
+      "כן, כל התבניות זמינות בחינם. תבניות במצבים המתקדמים (יצירת תמונה, סרטון, מחקר מעמיק וסוכנים) נפתחות בפירוט למנויי Pro.",
   },
   {
     question: "איך משתמשים בתבנית?",
     answer:
-      'לחצו על "השתמש בתבנית", מלאו את המשתנים המסומנים בסוגריים מסולסלות, ו-Peroot ישדרג את הפרומפט אוטומטית לתוצאות מדויקות ב-ChatGPT, Claude או Gemini.',
+      'לחצו על "מלאו ושדרגו", מלאו את השדות המסומנים בסוגריים מסולסלות, ו-Peroot ישדרג את הפרומפט אוטומטית לתוצאות מדויקות ב-ChatGPT, Claude או Gemini.',
   },
 ];
 
@@ -170,8 +137,17 @@ export default async function TemplatesPage() {
             </div>
           </header>
 
-          {/* Template grid with category filter */}
-          <TemplateGrid templates={templates} />
+          {/* The shared catalogue grid, locked to the templates facet */}
+          <CatalogGrid
+            items={templates}
+            source="templates"
+            initialFacet="variables"
+            facetToggle={false}
+            categoryChips
+            groupByCategory
+            noun="תבניות"
+            searchPlaceholder="חפשו תבנית: כותרת, נושא או מילת מפתח"
+          />
 
           {/* Cross-links */}
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-3">

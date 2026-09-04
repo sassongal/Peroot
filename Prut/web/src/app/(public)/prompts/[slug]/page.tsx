@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { ButtonLink } from "@/components/ui/Button";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import Image from "next/image";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/service";
 import { CATEGORY_SLUG_MAP, HEBREW_SLUG_TO_ENGLISH } from "@/lib/category-slugs";
@@ -10,7 +9,8 @@ import { CATEGORY_LABELS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, promptCollectionSchema, howToSchema, faqSchema } from "@/lib/schema";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
-import { PromptCardBodyGate } from "./PromptCardBodyGate";
+import { CatalogGrid } from "@/components/features/catalog/CatalogGrid";
+import { fetchCatalogItems } from "@/lib/catalog/fetch";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
@@ -69,17 +69,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-interface LibraryRow {
-  id: string;
-  title: string;
-  use_case: string;
-  prompt: string;
-  variables: string[] | null;
-  category_id: string | null;
-  preview_image_url: string | null;
-  capability_mode: string | null;
-}
-
 export default async function CategoryPage({ params }: Props) {
   const { slug: rawSlug } = await params;
   const decoded = decodeURIComponent(rawSlug);
@@ -100,18 +89,10 @@ export default async function CategoryPage({ params }: Props) {
   // the page stays statically ISR-cacheable (revalidate=3600), a cookie-bound
   // client forces dynamic rendering and voids the cache. Only public
   // (is_active=true) data is read; no user session is needed here.
-  const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("public_library_prompts")
-    .select(
-      "id, title, use_case, prompt, variables, category_id, preview_image_url, capability_mode",
-    )
-    .eq("is_active", true)
-    .ilike("category_id", categoryData.id.toLowerCase())
-    .order("created_at", { ascending: false })
-    .limit(200); // covers the largest category (68) with headroom — a 60 cap orphaned tail prompts into sitemap-only pages
-
-  const prompts: LibraryRow[] = error ? [] : data || [];
+  const prompts = await fetchCatalogItems(createServiceClient(), {
+    categoryId: categoryData.id,
+    limit: 200, // covers the largest category (68) with headroom
+  });
 
   // Build category map for the "all categories" section
   const allCategorySlugs = Object.entries(CATEGORY_SLUG_MAP);
@@ -201,75 +182,13 @@ export default async function CategoryPage({ params }: Props) {
           {/* Prompt grid */}
           {prompts.length > 0 ? (
             <section aria-label="רשימת פרומפטים">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-                {prompts.map((prompt) => (
-                  <article
-                    key={prompt.id}
-                    className="rounded-2xl border border-border bg-card p-5 md:p-6 flex flex-col gap-3 hover:bg-secondary transition-colors"
-                  >
-                    {/* Title + use_case */}
-                    <div>
-                      <Link href={`/prompts/${slug}/${prompt.id}`}>
-                        <h2 className="text-base md:text-lg font-semibold text-foreground leading-snug line-clamp-2 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
-                          {prompt.title}
-                        </h2>
-                      </Link>
-                      {prompt.use_case && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {prompt.use_case}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Capability badge */}
-                    {prompt.capability_mode && prompt.capability_mode !== "STANDARD" && (
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
-                          prompt.capability_mode === "IMAGE_GENERATION"
-                            ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20"
-                            : prompt.capability_mode === "DEEP_RESEARCH"
-                              ? "bg-blue-500/10 text-blue-300 border border-blue-500/20"
-                              : prompt.capability_mode === "AGENT_BUILDER"
-                                ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
-                                : "bg-secondary text-muted-foreground border border-border"
-                        }`}
-                      >
-                        {prompt.capability_mode === "IMAGE_GENERATION"
-                          ? "יצירת תמונה"
-                          : prompt.capability_mode === "DEEP_RESEARCH"
-                            ? "מחקר מעמיק"
-                            : prompt.capability_mode === "AGENT_BUILDER"
-                              ? "בונה סוכנים"
-                              : prompt.capability_mode}
-                      </span>
-                    )}
-
-                    {/* Preview image for image generation prompts */}
-                    {prompt.preview_image_url && (
-                      <div className="rounded-xl overflow-hidden border border-border">
-                        <Image
-                          src={prompt.preview_image_url}
-                          alt={prompt.title}
-                          width={400}
-                          height={400}
-                          className="w-full h-auto object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-
-                    <PromptCardBodyGate
-                      promptId={prompt.id}
-                      title={prompt.title}
-                      slug={slug}
-                      capabilityMode={prompt.capability_mode}
-                      variables={prompt.variables}
-                      detailHref={`/prompts/${slug}/${prompt.id}`}
-                      fullText={prompt.prompt}
-                    />
-                  </article>
-                ))}
-              </div>
+              <CatalogGrid
+                items={prompts}
+                source="catalog_category"
+                facetToggle
+                noun="פרומפטים"
+                searchPlaceholder={`חפשו בפרומפטים של ${categoryData.labelHe}`}
+              />
             </section>
           ) : (
             <div className="flex flex-col items-center gap-4 py-20 text-center">

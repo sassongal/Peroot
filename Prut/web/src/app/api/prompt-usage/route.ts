@@ -8,6 +8,8 @@ const EventSchema = z.object({
   prompt_key: z.string().min(1),
   event_type: z.enum(["copy", "save", "refine", "enhance"]),
   prompt_length: z.number().optional(),
+  /** Which surface the action came from (catalogue page, templates, home). */
+  source: z.string().trim().min(1).max(40).optional(),
 });
 
 /**
@@ -22,6 +24,7 @@ export const POST = withUser(
       prompt_id: payload.prompt_key, // Map key to id column
       event_type: payload.event_type,
       prompt_length: payload.prompt_length ?? null,
+      source: payload.source ?? null,
       user_id: ctx.user!.id,
     });
 
