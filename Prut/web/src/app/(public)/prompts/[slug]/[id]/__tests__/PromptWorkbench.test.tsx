@@ -73,7 +73,9 @@ describe("PromptWorkbench", () => {
       capability_mode: "STANDARD",
       source: "catalog_detail",
     });
-    expect(push).toHaveBeenCalledWith("/?ref=library-prompt");
+    // utm_source, not ref: proxy.ts captures ?ref= as a first-wins 30-day
+    // referral cookie, so internal traffic tags must not ride on it.
+    expect(push).toHaveBeenCalledWith("/?utm_source=library-prompt");
   });
 
   it("hands a fully filled prompt over as a plain prompt and signals usage", () => {
