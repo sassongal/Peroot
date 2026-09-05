@@ -4,16 +4,18 @@ import { AVAILABLE_MODELS } from "@/lib/ai/models";
 import { logger } from "@/lib/logger";
 
 /**
- * Pricing per 1M tokens (USD) - updated March 2026
- * Most models used are free-tier, but we track estimated costs
- * based on equivalent commercial pricing for budgeting purposes.
+ * Pricing per 1M tokens (USD) - updated September 2026 against the official
+ * provider price lists. The Google key runs on the PAID tier, so these are
+ * real costs now, not budgeting estimates.
  */
 const PRICING: Record<string, { input: number; output: number }> = {
-  "gemini-2.5-flash": { input: 0.15, output: 0.6 },
-  "gemini-2.5-flash-lite": { input: 0.075, output: 0.3 },
+  "gemini-3-flash": { input: 0.5, output: 3.0 },
+  "gemini-2.5-flash": { input: 0.3, output: 2.5 },
+  "gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
+  "gpt-5-mini": { input: 0.25, output: 2.0 },
   "llama-4-scout": { input: 0.11, output: 0.34 },
   "gpt-oss-20b": { input: 0.0, output: 0.0 },
-  "mistral-small": { input: 0.1, output: 0.3 },
+  "mistral-small": { input: 0.15, output: 0.6 },
 };
 
 function estimateCost(modelId: string, inputTokens: number, outputTokens: number): number {

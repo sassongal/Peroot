@@ -1,6 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { groq as defaultGroq, createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
+import { createGateway } from "@ai-sdk/gateway";
 import { LanguageModel } from "ai";
 
 /**
@@ -27,9 +28,11 @@ const gatewayBase = (provider: string) =>
   CF_GATEWAY ? `${CF_GATEWAY}/${provider}${PROVIDER_SUFFIX[provider] ?? ""}` : undefined;
 
 export type ModelId =
+  | "gemini-3-flash"
   | "gemini-2.5-flash"
   | "gemini-2.5-flash-backup"
   | "gemini-2.5-flash-lite"
+  | "gpt-5-mini"
   | "llama-4-scout"
   | "gpt-oss-20b"
   | "mistral-small";
@@ -61,6 +64,15 @@ const groq = CF_GATEWAY
   ? createGroq({ apiKey: process.env.GROQ_API_KEY, baseURL: gatewayBase("groq") })
   : defaultGroq;
 
+// Vercel AI Gateway — cross-vendor fallback lane (0% markup, provider list
+// prices, $5/month included on the team plan). Gives the chain a non-Google
+// model with STRONG Hebrew (GPT-5 family, #4 on the HF Hebrew leaderboard)
+// without opening an OpenAI account. Only constructed when the key is set,
+// same pattern as the backup Google key.
+const vercelGateway = process.env.AI_GATEWAY_API_KEY
+  ? createGateway({ apiKey: process.env.AI_GATEWAY_API_KEY })
+  : null;
+
 // Re-exported so callers route through the optional CF AI Gateway instead of
 // importing from `@ai-sdk/{google,groq,mistral}` directly. Keeping the same
 // import surface (`google("model-id")`, etc.) means callers don't need any
@@ -69,7 +81,7 @@ export { google, groq, mistralProvider };
 
 interface ModelConfig {
   id: ModelId;
-  provider: "google" | "google-backup" | "groq" | "mistral";
+  provider: "google" | "google-backup" | "groq" | "mistral" | "vercel-gateway";
   model: LanguageModel;
   label: string;
   contextWindow: number;
@@ -84,11 +96,24 @@ interface ModelConfig {
 }
 
 export const AVAILABLE_MODELS: Partial<Record<ModelId, ModelConfig>> = {
+  // Primary since 2026-09-05 (branch "gateway"). Family holds #1+#2 on the HF
+  // Hebrew LLM leaderboard; live A/B against 2.5-flash on the production
+  // STANDARD prompt measured TTFT 0.95s vs 5.2s (5x faster) with sharper
+  // output. MUST run with thinkingConfig.thinkingLevel "minimal"/"low"
+  // (buildProviderOptions handles it) — default thinking makes TTFT 15s+.
+  "gemini-3-flash": {
+    id: "gemini-3-flash",
+    provider: "google",
+    model: google("gemini-3-flash-preview"),
+    label: "Gemini 3 Flash (Primary)",
+    contextWindow: 1000000,
+    supportsVision: true,
+  },
   "gemini-2.5-flash": {
     id: "gemini-2.5-flash",
     provider: "google",
     model: google("gemini-2.5-flash"),
-    label: "Gemini 2.5 Flash (Primary)",
+    label: "Gemini 2.5 Flash",
     contextWindow: 1000000,
     supportsVision: true,
   },
@@ -112,6 +137,18 @@ export const AVAILABLE_MODELS: Partial<Record<ModelId, ModelConfig>> = {
     contextWindow: 1000000,
     supportsVision: true,
   },
+  ...(vercelGateway
+    ? {
+        "gpt-5-mini": {
+          id: "gpt-5-mini" as const,
+          provider: "vercel-gateway" as const,
+          model: vercelGateway("openai/gpt-5-mini"),
+          label: "GPT-5 Mini (Vercel AI Gateway)",
+          contextWindow: 400000,
+          supportsVision: true,
+        },
+      }
+    : {}),
   "llama-4-scout": {
     id: "llama-4-scout",
     provider: "groq",
@@ -119,6 +156,12 @@ export const AVAILABLE_MODELS: Partial<Record<ModelId, ModelConfig>> = {
     label: "Llama 4 Scout (Groq)",
     contextWindow: 512000,
     supportsVision: false,
+    // Meta's 12 official Llama 4 languages include Arabic but NOT Hebrew or
+    // Russian. Hebrew can't be filtered (the language filter deliberately
+    // leaves he/en chains untouched), so the tail position is its Hebrew
+    // guard; Russian is filtered here. Arabic stays available — the Arabic
+    // chain relies on it (see the language-filter tests).
+    weakLanguages: ["russian"],
   },
   "gpt-oss-20b": {
     id: "gpt-oss-20b",
@@ -141,47 +184,65 @@ export const AVAILABLE_MODELS: Partial<Record<ModelId, ModelConfig>> = {
 };
 
 const HAS_BACKUP_KEY = Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP);
+const HAS_GATEWAY_KEY = Boolean(process.env.AI_GATEWAY_API_KEY);
 
-// Drop the backup model from any chain when its key isn't configured —
-// otherwise every fallback wastes a round-trip waiting for the circuit
-// breaker to open on the missing-key error.
-const dropBackupIfMissing = (ids: ModelId[]): ModelId[] =>
-  HAS_BACKUP_KEY ? ids : ids.filter((id) => id !== "gemini-2.5-flash-backup");
+// Drop models whose keys aren't configured — otherwise every fallback wastes
+// a round-trip waiting for the circuit breaker to open on a missing-key error.
+const dropUnkeyed = (ids: ModelId[]): ModelId[] =>
+  ids.filter(
+    (id) =>
+      (HAS_BACKUP_KEY || id !== "gemini-2.5-flash-backup") &&
+      (HAS_GATEWAY_KEY || id !== "gpt-5-mini"),
+  );
+// Kept under the old name so existing call sites/tests read naturally.
+const dropBackupIfMissing = dropUnkeyed;
 
-export const FALLBACK_ORDER: ModelId[] = dropBackupIfMissing([
-  "gemini-2.5-flash", // Best quality, free tier on Google
+// Chain philosophy (2026-09-05, branch "gateway"): the Google key is on the
+// PAID tier (verified live: 15 parallel calls, zero 429s), so ordering is by
+// Hebrew quality + latency, not by free-tier juggling. Hebrew-weak models
+// (Mistral historically mediocre; Llama 4 does not officially support Hebrew)
+// sit at the tail as absolute last resorts.
+export const FALLBACK_ORDER: ModelId[] = dropUnkeyed([
+  "gemini-3-flash", // Primary: #2 Hebrew (HF leaderboard), TTFT ~1s at thinkingLevel minimal
+  "gemini-2.5-flash", // Proven previous primary, same key
   "gemini-2.5-flash-backup", // Same model, backup API key (skipped if key not set)
-  "mistral-small", // Fast, free tier on Mistral
-  "gemini-2.5-flash-lite", // Lighter Google backup
-  "llama-4-scout", // Free on Groq
-  "gpt-oss-20b", // Free on Groq
+  "gpt-5-mini", // Cross-vendor lane via Vercel AI Gateway — strong-Hebrew family
+  "gemini-2.5-flash-lite", // Light + cheapest, fastest TTFT
+  "mistral-small", // Tail: fallback of last resort
+  "llama-4-scout", // Tail: no official Hebrew support
+  "gpt-oss-20b", // Tail
 ]);
 
 type TaskType = "enhance" | "research" | "agent" | "image" | "video" | "chain" | "classify";
 
-// All models are free/low-cost — no expensive pro models in any route
+// No expensive pro models in any route; primary lanes run on the paid Google
+// tier at flash-class prices.
 export const TASK_ROUTING: Record<string, ModelId[]> = {
-  enhance: dropBackupIfMissing([
+  enhance: dropUnkeyed([
+    "gemini-3-flash",
     "gemini-2.5-flash",
     "gemini-2.5-flash-backup",
-    "mistral-small",
+    "gpt-5-mini",
     "gemini-2.5-flash-lite",
+    "mistral-small",
     "llama-4-scout",
     "gpt-oss-20b",
   ]),
-  research: dropBackupIfMissing([
+  research: dropUnkeyed([
+    "gemini-3-flash",
     "gemini-2.5-flash",
     "gemini-2.5-flash-backup",
-    "mistral-small",
+    "gpt-5-mini",
     "gemini-2.5-flash-lite",
-    "llama-4-scout",
+    "mistral-small",
   ]),
-  agent: dropBackupIfMissing([
+  agent: dropUnkeyed([
+    "gemini-3-flash",
     "gemini-2.5-flash",
     "gemini-2.5-flash-backup",
+    "gpt-5-mini",
     "mistral-small",
     "llama-4-scout",
-    "gpt-oss-20b",
   ]),
   image: dropBackupIfMissing([
     "gemini-2.5-flash",
@@ -234,5 +295,5 @@ export function getModelsForTask(task: string, userTier?: "free" | "pro" | "gues
  * which is ~70% cheaper. Threshold is 200 chars by default.
  */
 export function selectModelByLength(charCount: number, threshold: number = 200): ModelId {
-  return charCount < threshold ? "gemini-2.5-flash-lite" : "gemini-2.5-flash";
+  return charCount < threshold ? "gemini-2.5-flash-lite" : "gemini-3-flash";
 }

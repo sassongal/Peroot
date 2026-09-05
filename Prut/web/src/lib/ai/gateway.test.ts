@@ -33,21 +33,21 @@ describe("AIGateway", () => {
     process.env = originalEnv;
   });
 
-  it("should use the primary model (Gemini 2.5) if it succeeds", async () => {
+  it("should use the primary model (Gemini 3 Flash) if it succeeds", async () => {
     mockStreamText.mockResolvedValueOnce({ text: "success" });
 
     const result = await AIGateway.generateStream({ system: "sys", prompt: "user" });
 
-    expect(result.modelId).toBe("gemini-2.5-flash");
+    expect(result.modelId).toBe("gemini-3-flash");
     expect(mockStreamText).toHaveBeenCalledTimes(1);
     expect(mockStreamText).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: AVAILABLE_MODELS["gemini-2.5-flash"]!.model,
+        model: AVAILABLE_MODELS["gemini-3-flash"]!.model,
       }),
     );
   });
 
-  it("should fallback to secondary (Mistral Small) if primary fails", async () => {
+  it("should fallback to secondary (Gemini 2.5 Flash) if primary fails", async () => {
     // Fail first call
     mockStreamText.mockRejectedValueOnce(new Error("Rate Limited"));
     // Succeed second call
@@ -55,12 +55,12 @@ describe("AIGateway", () => {
 
     const result = await AIGateway.generateStream({ system: "sys", prompt: "user" });
 
-    expect(result.modelId).toBe("mistral-small");
+    expect(result.modelId).toBe("gemini-2.5-flash");
     expect(mockStreamText).toHaveBeenCalledTimes(2);
     expect(mockStreamText).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
-        model: AVAILABLE_MODELS["mistral-small"]!.model,
+        model: AVAILABLE_MODELS["gemini-2.5-flash"]!.model,
       }),
     );
   });
@@ -84,8 +84,9 @@ describe("AIGateway", () => {
 
     await expect(AIGateway.generateStream({ system: "sys", prompt: "user" })).rejects.toThrow();
 
-    // FALLBACK_ORDER: flash, mistral-small, flash-lite, llama-4-scout(skip), gpt-oss-20b(skip) = 3 calls
-    expect(mockStreamText).toHaveBeenCalledTimes(3);
+    // FALLBACK_ORDER without backup/gateway keys: gemini-3-flash, gemini-2.5-flash,
+    // flash-lite, mistral-small; llama-4-scout + gpt-oss-20b skipped = 4 calls
+    expect(mockStreamText).toHaveBeenCalledTimes(4);
   });
 
   it("should throw if all models fail", async () => {
@@ -93,7 +94,7 @@ describe("AIGateway", () => {
 
     await expect(AIGateway.generateStream({ system: "sys", prompt: "user" })).rejects.toThrow();
 
-    // FALLBACK_ORDER: flash, mistral-small, flash-lite, llama-4-scout, gpt-oss-20b = 5 models
+    // FALLBACK_ORDER: gemini-3-flash, gemini-2.5-flash, flash-lite, mistral, llama-4-scout, gpt-oss-20b
     // Note: circuit breaker may skip providers after first failure
     expect(mockStreamText.mock.calls.length).toBeGreaterThanOrEqual(3);
   });
@@ -101,7 +102,7 @@ describe("AIGateway", () => {
   it("should use task-based routing when task is provided", async () => {
     mockStreamText.mockResolvedValueOnce({ text: "success" });
 
-    // Research routing: flash, mistral-small, flash-lite, llama-4-scout
+    // Research routing head: gemini-3-flash first
     const result = await AIGateway.generateStream({
       system: "sys",
       prompt: "user",
@@ -109,7 +110,7 @@ describe("AIGateway", () => {
       userTier: "free",
     });
 
-    expect(result.modelId).toBe("gemini-2.5-flash");
+    expect(result.modelId).toBe("gemini-3-flash");
     expect(mockStreamText).toHaveBeenCalledTimes(1);
   });
 });
@@ -118,20 +119,20 @@ describe("Task-Based Model Routing", () => {
   it("returns models for enhance task", () => {
     const models = getModelsForTask("enhance");
     expect(models.length).toBeGreaterThan(0);
-    expect(models[0]).toBe("gemini-2.5-flash");
+    expect(models[0]).toBe("gemini-3-flash");
   });
 
   it("returns models for research task", () => {
     const models = getModelsForTask("research");
     expect(models.length).toBeGreaterThan(0);
-    expect(models[0]).toBe("gemini-2.5-flash");
+    expect(models[0]).toBe("gemini-3-flash");
   });
 
   it("returns same low-cost models for all tiers (no expensive pro models)", () => {
     const freeModels = getModelsForTask("enhance", "free");
     const proModels = getModelsForTask("enhance", "pro");
     expect(freeModels).toEqual(proModels);
-    expect(freeModels[0]).toBe("gemini-2.5-flash");
+    expect(freeModels[0]).toBe("gemini-3-flash");
   });
 
   it("falls back to enhance routing for unknown task", () => {
@@ -162,16 +163,19 @@ describe("Language-aware routing (languages spec B3.6)", () => {
     const arabic = filterModelsForLanguage(chain, "arabic");
     expect(arabic).not.toContain("mistral-small");
     expect(arabic).not.toContain("gpt-oss-20b");
-    expect(arabic[0]).toBe("gemini-2.5-flash");
+    expect(arabic[0]).toBe("gemini-3-flash");
     expect(arabic).toContain("gemini-2.5-flash-lite");
   });
 
-  it("leaves Hebrew, English and Russian chains untouched", () => {
+  it("leaves Hebrew and English chains untouched; Russian drops Llama 4", () => {
     const chain = getModelsForTask("enhance");
     expect(filterModelsForLanguage(chain, "hebrew")).toEqual(chain);
     expect(filterModelsForLanguage(chain, "english")).toEqual(chain);
-    expect(filterModelsForLanguage(chain, "russian")).toEqual(chain);
     expect(filterModelsForLanguage(chain, undefined)).toEqual(chain);
+    // Russian is not among Llama 4's 12 official languages (Meta model card).
+    const russian = filterModelsForLanguage(chain, "russian");
+    expect(russian).not.toContain("llama-4-scout");
+    expect(russian[0]).toBe("gemini-3-flash");
   });
 
   it("never empties the chain: a weak answer beats no answer", () => {

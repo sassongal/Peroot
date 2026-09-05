@@ -165,9 +165,17 @@ export function pickDefaults(
  */
 type PerootProviderOptions = {
   google: {
-    thinkingConfig: {
-      thinkingBudget: number;
-    };
+    thinkingConfig:
+      | {
+          thinkingBudget: number;
+        }
+      | {
+          // Gemini 3.x replaced numeric budgets with discrete levels and
+          // REJECTS thinkingBudget. "minimal" is the streaming-latency mode:
+          // measured TTFT ~1s on the production STANDARD prompt vs 15s+ with
+          // the model's default thinking.
+          thinkingLevel: "minimal" | "low" | "medium" | "high";
+        };
   };
 };
 
@@ -194,8 +202,33 @@ type PerootProviderOptions = {
  *
  * @internal Exported for tests only.
  */
-export function buildProviderOptions(task?: string): PerootProviderOptions | undefined {
+export function buildProviderOptions(
+  task?: string,
+  modelId?: string,
+): PerootProviderOptions | undefined {
   const thinkingDisabledTasks = new Set(["image", "video", "chain", "classify"]);
+
+  // Gemini 3.x models take thinkingLevel, not thinkingBudget — the API 400s
+  // on a budget and, worse, runs its slow default thinking when neither is
+  // sent. Split measured live on 2026-09-05 through the real gateway path:
+  //   - enhance (streaming UX critical): "minimal" → TTFT ~1s, near-zero
+  //     reasoning tokens, [PROMPT_TITLE] still emitted correctly.
+  //   - research/agent (Pro long-form): "low" → ~500 reasoning tokens and
+  //     ~4-5s slower first token, verified to follow the full multi-block
+  //     output contract (agent PASS with GENIUS x3 in test-engines-live).
+  // Note: standard-mode [GENIUS_QUESTIONS] come from /api/enhance/questions,
+  // NOT inline — do not chase them here (verified against 2.5 as control).
+  if (modelId?.startsWith("gemini-3")) {
+    const level = task === "research" || task === "agent" ? "low" : "minimal";
+    return {
+      google: {
+        thinkingConfig: {
+          thinkingLevel: level,
+        },
+      },
+    };
+  }
+
   if (thinkingDisabledTasks.has(task ?? "")) {
     return {
       google: {
@@ -333,6 +366,7 @@ export class AIGateway {
         // Provider API key checks
         if (config.provider === "groq" && !process.env.GROQ_API_KEY) continue;
         if (config.provider === "mistral" && !process.env.MISTRAL_API_KEY) continue;
+        if (config.provider === "vercel-gateway" && !process.env.AI_GATEWAY_API_KEY) continue;
         if (config.provider === "google-backup" && !process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP)
           continue;
 
@@ -340,7 +374,7 @@ export class AIGateway {
           logger.info(`[AIGateway] Attempting: ${config.label}...`);
 
           const defaults = pickDefaults(params.task, params.maxOutputTokens, params.temperature);
-          const providerOptions = buildProviderOptions(params.task);
+          const providerOptions = buildProviderOptions(params.task, modelId);
           const result = await streamText({
             model: config.model,
             system: params.system,
@@ -471,13 +505,14 @@ export class AIGateway {
         }
         if (config.provider === "groq" && !process.env.GROQ_API_KEY) continue;
         if (config.provider === "mistral" && !process.env.MISTRAL_API_KEY) continue;
+        if (config.provider === "vercel-gateway" && !process.env.AI_GATEWAY_API_KEY) continue;
         if (config.provider === "google-backup" && !process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP)
           continue;
 
         try {
           logger.info(`[AIGateway] generateFull: ${config.label}...`);
           const defaults = pickDefaults(params.task, params.maxOutputTokens, params.temperature);
-          const providerOptions = buildProviderOptions(params.task);
+          const providerOptions = buildProviderOptions(params.task, modelId);
           const result = await generateText({
             model: config.model,
             system: params.system,

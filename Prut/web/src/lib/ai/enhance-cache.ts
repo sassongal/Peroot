@@ -22,7 +22,7 @@ import { logger } from "@/lib/logger";
 // Bumped from v1-2026-04-07 after the cross-user leak fix — the old keys
 // were scoped globally (no userId) and must not be reused even after the
 // fix ships, because they could still return another user's output.
-export const ENGINE_VERSION = "v2-2026-04-07";
+export const ENGINE_VERSION = "v3-2026-09-05";
 const CACHE_PREFIX = `peroot:enhance:${ENGINE_VERSION}`;
 const DEFAULT_TTL_SECONDS = 60 * 60; // 1 hour
 
