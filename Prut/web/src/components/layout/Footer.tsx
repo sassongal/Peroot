@@ -109,7 +109,7 @@ export function Footer() {
         {/* Brand row */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-black/5 dark:border-white/5">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2" title="דף הבית" aria-label="דף הבית">
               <Image
                 src="/images/peroot_logo_pack/logo_dark_240.png"
                 alt=""

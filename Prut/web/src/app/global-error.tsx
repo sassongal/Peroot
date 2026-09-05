@@ -32,12 +32,25 @@ export default function GlobalError({
               Error ID: {error.digest}
             </div>
           )}
-          <button
-            onClick={() => reset()}
-            className="px-6 py-3 rounded-2xl bg-(--text-primary) text-(--surface-body) font-bold hover:opacity-80 transition-colors cursor-pointer"
-          >
-            נסה שוב
-          </button>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => reset()}
+              className="px-6 py-3 rounded-2xl bg-(--text-primary) text-(--surface-body) font-bold hover:opacity-80 transition-colors cursor-pointer"
+            >
+              נסה שוב
+            </button>
+            {/* Plain anchor: global-error replaces the root layout and the app
+                may be too broken for the client router, so a full page load is
+                exactly what we want here. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a
+              href="/"
+              title="דף הבית"
+              className="px-6 py-3 rounded-2xl border border-(--glass-border) text-(--text-primary) font-bold hover:bg-(--glass-bg) transition-colors"
+            >
+              חזרה לדף הבית
+            </a>
+          </div>
         </div>
       </body>
     </html>

@@ -101,7 +101,8 @@ export function PublicNavBar() {
           <Link
             href="/"
             className="flex items-center me-2 sm:me-3 shrink-0"
-            aria-label="Peroot, לדף הבית"
+            title="דף הבית"
+            aria-label="דף הבית"
           >
             <Image
               src="/images/peroot_logo_pack/logo_dark_240.png"

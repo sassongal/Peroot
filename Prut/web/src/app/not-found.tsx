@@ -10,20 +10,22 @@ export default function NotFound() {
       <div className="text-center max-w-md">
         {/* Brand mark */}
         <div className="flex justify-center mb-2">
-          <Image
-            src="/images/peroot_logo_pack/logo_dark_240.png"
-            alt="Peroot"
-            width={240}
-            height={240}
-            className="block dark:hidden h-12 w-auto opacity-90"
-          />
-          <Image
-            src="/images/peroot_logo_pack/logo_dark_navbar_2x.png"
-            alt="Peroot"
-            width={240}
-            height={240}
-            className="hidden dark:block h-12 w-auto opacity-90"
-          />
+          <Link href="/" title="דף הבית" aria-label="דף הבית" className="flex">
+            <Image
+              src="/images/peroot_logo_pack/logo_dark_240.png"
+              alt="Peroot"
+              width={240}
+              height={240}
+              className="block dark:hidden h-12 w-auto opacity-90"
+            />
+            <Image
+              src="/images/peroot_logo_pack/logo_dark_navbar_2x.png"
+              alt="Peroot"
+              width={240}
+              height={240}
+              className="hidden dark:block h-12 w-auto opacity-90"
+            />
+          </Link>
         </div>
         {/* 404 Number */}
         <div className="text-[120px] md:text-[180px] font-bold leading-none bg-linear-to-b from-(--text-primary) to-(--text-muted) bg-clip-text text-transparent">

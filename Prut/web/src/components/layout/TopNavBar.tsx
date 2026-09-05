@@ -127,6 +127,8 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
           <Link
             href="/"
             className="flex items-center me-2 sm:me-3 shrink-0"
+            title="דף הבית"
+            aria-label="דף הבית"
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey) return;
               e.preventDefault();

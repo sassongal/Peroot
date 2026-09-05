@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getAssetPath } from "@/lib/asset-path";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -80,13 +81,15 @@ export default function ResetPasswordPage() {
         <div className="glass-card p-8 rounded-2xl border border-white/10 bg-black/40 shadow-2xl shadow-black/50">
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <Image
-              src={getAssetPath("/assets/branding/logo.svg")}
-              alt="לוגו פרוט"
-              width={48}
-              height={48}
-              className="h-12 w-auto brightness-110 contrast-110"
-            />
+            <Link href="/" title="דף הבית" aria-label="דף הבית">
+              <Image
+                src={getAssetPath("/assets/branding/logo.svg")}
+                alt="לוגו פרוט"
+                width={48}
+                height={48}
+                className="h-12 w-auto brightness-110 contrast-110"
+              />
+            </Link>
           </div>
 
           {done ? (

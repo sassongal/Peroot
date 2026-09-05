@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Suspense } from "react";
 import { AuthForm } from "@/components/auth/auth-form";
 import type { Metadata } from "next";
@@ -30,14 +31,21 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[420px]">
         {/* Hero image */}
         <div className="flex justify-center mb-6 relative">
-          <Image
-            src="/Peroot-hero.webp"
-            alt="פירוט"
-            width={720}
-            height={316}
-            className="relative w-full max-w-[340px] h-auto"
-            priority
-          />
+          <Link
+            href="/"
+            title="דף הבית"
+            aria-label="דף הבית"
+            className="block w-full max-w-[340px]"
+          >
+            <Image
+              src="/Peroot-hero.webp"
+              alt="פירוט"
+              width={720}
+              height={316}
+              className="relative w-full h-auto"
+              priority
+            />
+          </Link>
         </div>
 
         {/* Card */}
@@ -50,6 +58,15 @@ export default function LoginPage() {
         {/* Footer trust line */}
         <p className="text-center text-[11px] text-white/15 mt-6 tracking-wide">
           המידע שלך מאובטח ומוגן
+        </p>
+
+        <p className="text-center mt-3">
+          <Link
+            href="/"
+            className="text-[13px] text-white/50 hover:text-white/80 underline underline-offset-4 transition-colors"
+          >
+            חזרה לדף הבית
+          </Link>
         </p>
       </div>
     </main>
