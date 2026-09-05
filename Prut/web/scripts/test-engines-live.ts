@@ -62,7 +62,11 @@ const cases: EngineCase[] = [
     engine: new StandardEngine(),
     input: baseInput("תכתוב פוסט לינקדאין על AI לעסקים קטנים", { mode: CapabilityMode.STANDARD }),
     expectTitle: true,
-    expectGeniusQuestions: true,
+    // Standard-mode questions come from the separate /api/enhance/questions
+    // endpoint (SmartRefinement), not inline — verified 2026-09-05: neither
+    // 2.5-flash nor 3-flash emits the block here because the composed system
+    // prompt never asks for it.
+    expectGeniusQuestions: false,
     jsonOutput: false,
   },
   {
@@ -74,7 +78,8 @@ const cases: EngineCase[] = [
       mode: CapabilityMode.DEEP_RESEARCH,
     }),
     expectTitle: true,
-    expectGeniusQuestions: true,
+    // Same as Standard: questions are the /api/enhance/questions endpoint's job.
+    expectGeniusQuestions: false,
     jsonOutput: false,
   },
   {
