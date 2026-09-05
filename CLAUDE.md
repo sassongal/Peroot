@@ -76,6 +76,19 @@ and it proceeds.
 (re-engagement or marketing email runs). Those are outward-facing and get
 confirmed separately. See `Prut/web/docs/adr/0007-email-logs-dedupe.md`.
 
+### HOLD: the re-engagement drip stays OFF
+
+`REENGAGEMENT_EMAILS_ENABLED` is `false` in production **by an explicit decision
+from Gal on 2026-09-05: "we are not ready for it yet."** Verified that day: flag
+`false`, and zero `inactive_*` rows in `email_logs`, so nothing has ever gone out.
+
+Do **not** flip it, and do not suggest flipping it as a quick win, until Gal says
+so in his own words. The code is finished and dry-run clean (224 emails, one per
+person, capped at 50/run), which is exactly what makes it tempting. The blocker is
+not technical readiness, it is business readiness, and that is his call alone.
+
+`ONBOARDING_EMAILS_ENABLED` is `true` and unaffected: welcome mail keeps flowing.
+
 ## Before you say "done"
 
 ```bash
