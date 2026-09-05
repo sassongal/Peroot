@@ -1020,9 +1020,18 @@ export async function POST(req: Request) {
     const preferredModel: ModelId =
       contextBlocks.length > 0
         ? selectEngineModel({ blocks: contextBlocks })
-        : isRefinement
-          ? "gemini-2.5-flash"
-          : selectModelByLength(prompt.length);
+        : isGuest
+          ? // Guests are the 1/day trial lane: flash-lite is ~6x cheaper on
+            // output than the primary, still fast (best TTFT measured) and
+            // good enough for a first taste. Guests cannot attach context or
+            // refine (rejected above), so this branch covers all guest calls.
+            "gemini-2.5-flash-lite"
+          : isRefinement
+            ? // Refines follow the primary: same streaming UX as first
+              // enhance, and gemini-3-flash was measured faster AND slightly
+              // cheaper per call than 2.5 (zero reasoning at minimal).
+              "gemini-3-flash"
+            : selectModelByLength(prompt.length);
     const contextTokens = contextBlocks.reduce((sum, b) => sum + (b.injected?.tokenCount ?? 0), 0);
     // Rough token estimate: system + user prompt chars ÷ 4, plus injected context
     const estimatedInputTokens =
