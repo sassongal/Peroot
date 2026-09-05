@@ -1021,7 +1021,7 @@ export async function POST(req: Request) {
       contextBlocks.length > 0
         ? selectEngineModel({ blocks: contextBlocks })
         : isGuest
-          ? // Guests are the 1/day trial lane: flash-lite is ~6x cheaper on
+          ? // Guests are the daily-trial lane: flash-lite is ~6x cheaper on
             // output than the primary, still fast (best TTFT measured) and
             // good enough for a first taste. Guests cannot attach context or
             // refine (rejected above), so this branch covers all guest calls.
